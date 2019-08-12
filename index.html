@@ -18,15 +18,19 @@
 
   <div id="Gather" class="tabcontent">
     <h3>Nuts</h3>
-    <div id="myProgress" onclick:"move()">
-      <div onclick="getNuts();" id="myBar" class="production"></div>
+    <div id="myProgress" onclick="move(); getNuts()">
+      <div id="detail">Gather</div>
+      <div id="price">1/10sec</div>
+        <div id="myBar" class="production"></div>
+      </div>
     </div>
+<!--
       <button onclick="getNutsBulk()" class="buyBulk">x10</button>
       <br>
 
       <button onclick="shakeTree()" id="progressBar" class="production">Shake Tree</button>
   </div>
-
+-->
   <div id="Research" class="tabcontent">
     <h3>Research</h3>
     <a onclick="buyNutsPerClick()" id="perClickUpgrade" class="upgrade">Upgrade Nuts (Currently Level 1) Cost: 10 Nuts</a>
@@ -45,9 +49,6 @@
   <div id="Settings" class="tabcontent">
     <h3>Settings</h3>
   </div>
-<div id="myProgress" onclick="move()">
-  <div id="myBar"></div>
-</div>
 
 </body>
 </html>

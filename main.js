@@ -13,19 +13,10 @@ function openTab(evt, tabName) {
   evt.currentTarget.className += " active";
 }
 
+var speed = {
+  gather: 100,
+  shakeTree: 100,
 
-function move() {
-  var elem = document.getElementById("myBar");
-  var width = 1;
-  var id = setInterval(frame, 10);
-  function frame() {
-    if (width >= 100) {
-      clearInterval(id);
-    } else {
-      width++;
-      elem.style.width = width + '%';
-    }
-  }
 }
 
 var gameData = {
@@ -36,13 +27,31 @@ var gameData = {
   nutsTimeLevel: 1
 }
 
-var mainGameLoop = window.setInterval(function() {
-  getNuts()
-}, 100)
+//var mainGameLoop = window.setInterval(function() {
+//  getNuts()
+//}, 100)
 
 function getNuts() {
+  setTimeout(gather, (speed.gather * 100))
+}
+  function gather() {
     gameData.nuts += gameData.nutsPerClick
     document.getElementById('nutsTotal').innerHTML = gameData.nuts + " Total Nuts"
+}
+
+function move() {
+  var elem = document.getElementById("myBar");
+  var width = 1;
+  var id = setInterval(frame, speed.gather);
+  function frame() {
+    if (width >= 100) {
+      clearInterval(id);
+    } else {
+      width++;
+      elem.style.width = width + '%';
+
+    }
+  }
 }
 
 function getNutsBulk() {
@@ -56,6 +65,7 @@ function buyNutsPerClick() {
     gameData.nutsPerClickCost *= 2
     document.getElementById('nutsTotal').innerHTML = gameData.nuts + " Total Nuts"
     document.getElementById('perClickUpgrade').innerHTML = "Upgrade Nuts (Currently Level " + gameData.nutsPerClick + ") Cost: " + gameData.nutsPerClickCost + " Nuts"
+    document.getElementById('price').innerHTML = gameData.nutsPerClick + "/10sec"
   }
 }
 
