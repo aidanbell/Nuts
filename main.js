@@ -1,10 +1,11 @@
 function openTab(evt, tabName) {
   var i, tabcontent, tablinks;
 
-  tabcontent = document.getElementsByClassName('tabcontent');
+  tabcontent = document.getElementsByClassName("tabcontent");
   for (i = 0; i < tabcontent.length; i++) {
     tabcontent[i].style.display = "none";
   }
+
   tablinks = document.getElementsByClassName('tablinks');
   for (i = 0; i < tablinks.length; i++) {
     tablinks[i].className = tablinks[i].className.replace(" active", "");
@@ -13,18 +14,28 @@ function openTab(evt, tabName) {
   evt.currentTarget.className += " active";
 }
 
-var speed = {
-  gather: 100,
-  shakeTree: 100,
+document.getElementById("defaultOpen").click();
 
+// should add in scripts that run on load
+//      -price checker to disable things you can't afford
+//      -things to hide/reveal tabs until checkpoints
+
+var speed = {
+  gather: 10,
+  shakeTree: 100,
 }
 
 var gameData = {
   nuts: 0,
-  nutsPerClick: 1,
-  nutsPerClickCost: 10,
+
+}
+
+var gatherData = {
+  perClick: 1,
+  buyCost: 10,
+  level: 0,
   nutsTimeCost: 100,
-  nutsTimeLevel: 1
+  nutsTimeLevel: 1,
 }
 
 //var mainGameLoop = window.setInterval(function() {
@@ -32,41 +43,42 @@ var gameData = {
 //}, 100)
 
 function getNuts() {
-  setTimeout(gather, (speed.gather * 100))
+  setTimeout(gather, (speed.gather * 100));
 }
-  function gather() {
-    gameData.nuts += gameData.nutsPerClick
-    document.getElementById('nutsTotal').innerHTML = gameData.nuts + " Total Nuts"
+function gather() {
+    Math.round(gameData.nuts += gatherData.perClick);
+    document.getElementById('nutsTotal').innerHTML = Math.round(gameData.nuts) + " Total Nuts";
 }
-
-function move() {
-  var elem = document.getElementById("myBar");
-  var width = 1;
-  var id = setInterval(frame, speed.gather);
-  function frame() {
-    if (width >= 100) {
-      clearInterval(id);
+function buyGather() {
+  if (gameData.nuts >= gatherData.buyCost) {
+    if (gatherData.level > 0 && gatherData.level % 10 === 0){
+      Math.round(gameData.nuts -= gatherData.buyCost);
+      Math.round(gatherData.perClick *= 1.25);
+      Math.round(gatherData.buyCost *= 1.25);
+      gatherData.level++;
+      document.getElementById('nutsTotal').innerHTML = Math.round(gameData.nuts) + " Total Nuts";
+      document.getElementById('gatherLevel').innerHTML = gatherData.level;
+      document.getElementById('gatherCost').innerHTML = Math.round(gatherData.buyCost);
+      document.getElementById('gatherEffect').innerHTML = Math.round(gatherData.perClick);
     } else {
-      width++;
-      elem.style.width = width + '%';
-
-    }
+    Math.round(gameData.nuts -= gatherData.buyCost);
+    Math.round(gatherData.perClick += 1);
+    Math.round(gatherData.buyCost *= 1.25);
+    gatherData.level++;
+    document.getElementById('nutsTotal').innerHTML = Math.round(gameData.nuts) + " Total Nuts";
+    document.getElementById('gatherLevel').innerHTML = gatherData.level;
+    document.getElementById('gatherCost').innerHTML = Math.round(gatherData.buyCost);
+    document.getElementById('gatherEffect').innerHTML = Math.round(gatherData.perClick);
   }
+}
+}
+
+function disableClick() {
+
 }
 
 function getNutsBulk() {
 
-}
-
-function buyNutsPerClick() {
-  if (gameData.nuts >= gameData.nutsPerClickCost) {
-    gameData.nuts -= gameData.nutsPerClickCost
-    gameData.nutsPerClick += 1
-    gameData.nutsPerClickCost *= 2
-    document.getElementById('nutsTotal').innerHTML = gameData.nuts + " Total Nuts"
-    document.getElementById('perClickUpgrade').innerHTML = "Upgrade Nuts (Currently Level " + gameData.nutsPerClick + ") Cost: " + gameData.nutsPerClickCost + " Nuts"
-    document.getElementById('price').innerHTML = gameData.nutsPerClick + "/10sec"
-  }
 }
 
 function buyEfficiencyUpgrade() {

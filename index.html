@@ -2,28 +2,32 @@
 <html>
 <head>
   <title>Nuts</title>
-  <script src="main.js" charset="utf-8" type="text/javascript"></script>
   <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 
 <body>
   <p id="nutsTotal">0 Nuts</p>
   <div class="main">
-    <button class="tablinks" onclick="openTab(event, 'Gather')">Nuts</button>
+    <button class="tablinks" onclick="openTab(event, 'nutsTab')" id="defaultOpen">Nuts</button>
     <button class="tablinks" onclick="openTab(event, 'Research')">Research</button>
     <button class="tablinks" onclick="openTab(event, 'Civil Science')">Civil Science</button>
     <button class="tablinks" onclick="openTab(event, 'Population')">Population</button>
     <button class="tablinks" onclick="openTab(event, 'Settings')">Settings</button>
   </div>
 
-  <div id="Gather" class="tabcontent">
+  <wrapper id="nutsTab" class="tabcontent">
     <h3>Nuts</h3>
-    <div id="myProgress" onclick="move(); getNuts()">
-      <div id="detail">Gather</div>
-      <div id="price">1/10sec</div>
-        <div id="myBar" class="production"></div>
-      </div>
-    </div>
+    <button class="buy" onclick="buyGather()">
+      Buy
+      <span id="gatherCost">10<span>
+    </button>
+    <button id="gather" class="statusBar" onclick="gather()">
+      <span class="detail">Gather</span>
+      <span id="gatherLevel">0</span>
+      <span id="gatherEffect" class="effect">1/sec</span>
+    </button>
+  </wrapper>
+
 <!--
       <button onclick="getNutsBulk()" class="buyBulk">x10</button>
       <br>
@@ -49,6 +53,6 @@
   <div id="Settings" class="tabcontent">
     <h3>Settings</h3>
   </div>
-
+  <script src="main.js" charset="utf-8" type="text/javascript"></script>
 </body>
 </html>
