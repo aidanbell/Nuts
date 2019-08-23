@@ -1,7 +1,16 @@
+body {
+  background-color: #444639;
+
+}
+#nutsTotal {
+  font-size: 28px;
+  text-transform: uppercase;
+  color: #dcddd5;
+}
 .main {
   overflow: hidden;
   border: 1px solid #ccc;
-  background-color: #f1f1f1;
+  background-color: #525445;
 }
 
 .main button {
@@ -12,22 +21,23 @@
   cursor: pointer;
   padding: 14px 16px;
   transition: 0.2s;
+  color: #dcddd5;
 }
 
 .main button:hover {
-  background-color: #ddd;
+  background-color: #6d705c;
 }
 
 .main button:active {
-  background-color: #ddd;
+  background-color: #6d705c;
 }
 
 .tabcontent {
   display: none;
   padding: 6px 12px;
-  border: 1px solid #cccccc;
+  border: 1px solid #dcddd5;
   border-top: none;
-  background-color: #808080;
+  background-color: #898c73;
 }
 
 .buy {
@@ -50,9 +60,13 @@
 button:focus {outline-color: #808080}
 
 .upgrade {
-  width: 100%;
-  border: 1px solid black;
-  cursor: pointer;
+  width: 24%;
+  border: none;
+  border-radius: 10px;
+  background-color: #4d4d4d;
+  height: 40px;
+  color: #ccc;
+  font-size: 20px;
 }
 
 .statusBar {
