@@ -1,0 +1,23 @@
+Main Gameplay:
+
+-Big button > Get(just gets nuts)
+  This is the first way to collect nuts.
+
+Squirrel Get:
+  - Squirrels will come randomly at first
+  - chance will be effected by:
+        - total nuts gathered
+        - future upgrades
+        - total squirrels
+  -
+  - Once you get a squirrel, you unlock auto gets, which must be staffed by at
+    least one squirrel
+
+
+GETS                     Science                   Technology
+------------------------------------------------------------------------------------
+STONEAGE
+
+ Gatherer
+ Tree Shaker
+ Stilt-walker

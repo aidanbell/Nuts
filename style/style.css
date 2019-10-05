@@ -34,3 +34,25 @@ nav {
 .hidden {
   display: none;
 }
+
+button {
+  border: 1px solid black;
+  background: lightgray;
+  height: 50px;
+
+}
+
+button.up-value {
+  width: 40%;
+  text-align: left;
+}
+
+span#cost,
+span#current {
+  
+  align-self: right;
+}
+
+#get-nuts {
+  width: 80%;
+}
