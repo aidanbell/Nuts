@@ -24,7 +24,7 @@ class Button {
     this.cost = cost;
     this.value = 1;
     this.multi = 1;
-  }
+  };
 };
 
 /*----- app's state (variables) -----*/
@@ -35,6 +35,10 @@ let getButton = {
   mult: 1
 }
 
+let mainGameLoop = window.setInterval(function() {
+
+}, 1000)
+
 
 /*----- cached element references -----*/
 let TOTAL = document.querySelector('#total');
@@ -44,7 +48,7 @@ const scienceTab = document.querySelector('#science-content');
 
 /*----- functions -----*/
 const show = () => {
-  if (getValButton) return;
+  if (upGetButton) return;
 
   switch (nutsTotal) {
     case 50:
@@ -54,19 +58,24 @@ const show = () => {
 };
 
 
+
 const homeHandle = (evt) => {
   if (evt.target.id === 'get-nuts') {
-    console.log('nuts');
     getNuts()
   };
 };
 
 const scienceHandle = (evt) => {
   if (evt.target.id === 'get-val') {
-    console.log(this);
+    if (typeof upGetButton === "undefined") {
+      upGetButton = new Button('science', 'getVal', 50);
+      console.log(upGetButton);
+      return;
+    }
     if (nutsTotal < upGetButton.cost) return;
     getButton.value += upGetButton.value;
     nutsTotal -= upGetButton.cost;
+    upGetButton.value *= 2
     TOTAL.textContent = nutsTotal;
     upGetButton.cost = Math.floor(upGetButton.cost * 1.1);
   }
