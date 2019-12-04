@@ -1,41 +1,47 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
-    <title>Nuts</title>
-    <link href="style/style.css" rel="stylesheet" type="text/css" />
-    <script defer src="js/main.js"></script>
-  </head>
-  <body>
-    <header>
-      <h1><span id="total">0</span> Nuts </h1>
-    </header>
-    <nav>
-      <div class="tabs active" id="home">Nuts</div>
-      <div class="tabs" id="science">Science!</div>
-      <div class="tabs" id="third">Third</div>
-      <div class="tabs" id="fourth">Fourth</div>
-      <div class="tabs" id="fifth">Fifth</div>
-    </nav>
-    <main>
-      <div class="tab-content active" id="home-content">
-        <h2>HOME</h2>
-        <button id="get-nuts">GET</button>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Nuts</title>
+  <link href="style/style.css" rel="stylesheet" type="text/css" />
+  <script defer src="js/main.js"></script>
+</head>
+
+<body>
+  <header>
+    <h1><span id="total">0</span> Nuts </h1>
+  </header>
+  <nav>
+    <div class="tabs active" id="home">Nuts</div>
+    <div class="tabs" id="science">Science!</div>
+    <div class="tabs" id="third">Third</div>
+    <div class="tabs" id="fourth">Fourth</div>
+    <div class="tabs" id="fifth">Fifth</div>
+  </nav>
+  <main>
+    <div class="tab-content active" id="home-content">
+      <h2>HOME</h2>
+      <button id="get-nuts">GET</button>
+      <div class="workers">
+        <button type="button" class="worker-button" id="farm">FARM</button>
       </div>
-      <div class="tab-content hidden" id="science-content">
-        <h2>Science!</h2>
-        <button class="up-value" id="get-val">Increase Get Value
-          <br>Cost:<span class="cost">50</span> Current:<span class="current">1</span></button>
-      </div>
-      <div class="tab-content hidden" id="third-content">
-        <h2>Third</h2>
-      </div>
-      <div class="tab-content hidden" id="fourth-content">
-        <h2>Fourth</h2>
-      </div>
-      <div class="tab-content hidden" id="fifth-content">
-        <h2>Fifth</h2>
-      </div>
-  </body>
+    </div>
+    <div class="tab-content hidden" id="science-content">
+      <h2>Science!</h2>
+      <button class="up-value" id="get-val">Increase Get Value
+        <br>Cost:<span class="cost">50</span> Current:<span class="current">1</span></button>
+    </div>
+    <div class="tab-content hidden" id="third-content">
+      <h2>Third</h2>
+    </div>
+    <div class="tab-content hidden" id="fourth-content">
+      <h2>Fourth</h2>
+    </div>
+    <div class="tab-content hidden" id="fifth-content">
+      <h2>Fifth</h2>
+    </div>
+</body>
+
 </html>

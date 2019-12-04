@@ -14,6 +14,19 @@ Squirrel Get:
     least one squirrel
 
 
+  For each get functions, there will be these mutable variables:
+    - Value: the amount of the base end result
+    - Multi: the base multiplier. Can be effected with:
+        - +%Multi
+        - +#Multi
+    -
+
+  EXPLORE:
+    - having multiple gameloops so each function can be effected
+    - exponential growth on prices
+    -
+
+
 GETS                     Science                   Technology
 ------------------------------------------------------------------------------------
 STONEAGE

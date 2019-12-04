@@ -29,6 +29,7 @@ nav {
 
 .tab-content.active {
   background-color: lightblue;
+  display: grid;
 }
 
 .hidden {
@@ -49,7 +50,7 @@ button.up-value {
 
 span#cost,
 span#current {
-  
+
   align-self: right;
 }
 
