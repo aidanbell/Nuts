@@ -13,6 +13,8 @@ Squirrel Get:
   - Once you get a squirrel, you unlock auto gets, which must be staffed by at
     least one squirrel
 
+  - GOOD IDEA:
+    -Squirrel Stocks - Allow you to borrow nuts 
 
   For each get functions, there will be these mutable variables:
     - Value: the amount of the base end result

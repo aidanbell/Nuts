@@ -20,6 +20,10 @@ nav.addEventListener('click', foo)
 // When you instantiate a class, push it to the appropriate
 // array: timerFunctions
 
+// Game Logic:
+// Multi: Gets multiplied to the value
+// Value: Baseline what is added to the Nuts Total per time
+
 class Button {
   constructor(field, effects, cost, time = 1000) {
     this.field = field;
@@ -27,7 +31,8 @@ class Button {
     this.cost = cost;
     this.time = time;
     this.value = 1;
-    this.multi = 1;
+    this.multi = 1.1;
+    this.owned = 0;
   }
 };
 
@@ -37,16 +42,16 @@ class WorkerButton {
     this.cost = cost;
     this.value = 1;
     this.multi = 1;
-    this.running = false;
+    this.owned = 0;
   }
 
   work = () => {
-    nutsTotal += (this.value * this.multi / this.time);
+    nutsTotal += (this.value * this.multi * this.owned / this.time);
   }
 }
 
 /*----- app's state (variables) -----*/
-let nutsTotal = 0;
+let nutsTotal = 100;
 
 // For mainGameLoop
 
@@ -70,11 +75,19 @@ let TOTAL = document.querySelector('#total');
 const homeTab = document.querySelector('#home-content');
 const scienceTab = document.querySelector('#science-content');
 
+const create = (thing) => {
+  if (thing === "worker") {
+    document.createElement(button)
+  }
+}
+
 /*----- functions -----*/
 const show = () => {
   console.log("show");
-  if (nutsTotal > 50) {
+  if (nutsTotal <= 50) {
     document.querySelector('.farm-div').style.display = "flex";
+  } else if (nutsTotal >= 100) {
+    document.querySelector('#buy-farm').disabled = false;
   }
 
   switch (nutsTotal) {
@@ -86,7 +99,7 @@ const show = () => {
 
 const render = () => {
   TOTAL.textContent = Math.floor(nutsTotal);
-  document.querySelector('#debug-total').textContent = nutsTotal;
+  document.querySelector('#debug-total').textContent = Math.round(nutsTotal * 1000) / 1000;
 }
 
 
@@ -94,12 +107,18 @@ const homeHandle = (evt) => {
   if (evt.target.id === 'get-nuts') {
     getNuts()
   };
-  if (evt.target.id === 'farm') {
+  if (evt.target.id === 'buy-farm') {
     if (typeof farmButton === 'undefined') {
-      farmButton = new WorkerButton(100, 100);
-      farmButton.running = true;
+      farmButton = new WorkerButton(1000, 100);
       timerFunctions.push(farmButton);
-      console.log(timerFunctions)
+    }
+    if (nutsTotal >= farmButton.cost) {
+      nutsTotal -= farmButton.cost;
+      farmButton.cost = Math.floor(farmButton.cost * 1.13);
+      farmButton.owned += 1;
+      document.querySelector(`#${evt.target.id} > .cost`).textContent = `${farmButton.cost}`;
+      document.querySelector(`#${evt.target.id} > .owned`).textContent = `${farmButton.owned}`
+      document.querySelector('#farm-indicator').textContent = `${Math.round(((farmButton.value * farmButton.multi * farmButton.owned / farmButton.time) * 100) * 10) /10}/sec`
     }
   }
 };
@@ -107,29 +126,29 @@ const homeHandle = (evt) => {
 const scienceHandle = (evt) => {
   if (evt.target.id === 'get-val') {
     if (typeof upGetButton === "undefined") {
-      upGetButton = new Button('science', 'getVal', 50);
-      console.log(upGetButton);
-      return;
+      upGetButton = new Button('science', 'getVal', 100);
     }
-    if (nutsTotal < upGetButton.cost) return;
-    getButton.value += upGetButton.value;
+    if (nutsTotal <= upGetButton.cost) return;
     nutsTotal -= upGetButton.cost;
-    upGetButton.value *= 2
-    TOTAL.textContent = nutsTotal;
-    upGetButton.cost = Math.floor(upGetButton.cost * 1.1);
+    getButton.value += (upGetButton.value * upGetButton.multi);
+    upGetButton.owned += 1;
+    render();
+    upGetButton.cost = Math.floor(upGetButton.cost * 1.75);
+    document.querySelector(`#${evt.target.id} > .cost`).textContent = `${upGetButton.cost}`;
+    document.querySelector(`#${evt.target.id} > .current`).textContent = `${upGetButton.value * upGetButton.owned + 1}`;
   }
 }
 
 const getNuts = () => {
   nutsTotal += (getButton.value * getButton.mult);
-  TOTAL.textContent = nutsTotal;
+  render();
 };
 
 window.setInterval(function() {
   timerFunctions.forEach(button => button.work());
   show();
   render();
-}, 100)
+}, 10)
 
 /*----- event listeners -----*/
 homeTab.addEventListener('click', homeHandle);

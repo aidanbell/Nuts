@@ -27,16 +27,22 @@
       <button id="get-nuts">GET</button>
       <div class="workers">
         <div class="farm-div row hidden">
-          <button type="button" class="worker-button" id="farm">BUY FARM
-            <br>Cost:<span class="cost">50</span> Current:<span class="current">1</span></button>
-          <div class="indicator" id="farm-indicator">Current: 1 nps</div>
+          <button type="button" class="worker-button" id="buy-farm" disabled>BUY FARM
+            <br>Cost:<span class="cost">50</span> Current:<span class="owned">1</span></button>
+          <div class="indicator" id="farm-indicator">//--//</div>
         </div>
       </div>
     </div>
     <div class="tab-content hidden" id="science-content">
       <h2>Science!</h2>
-      <button class="up-value" id="get-val">Increase Get Value
-        <br>Cost:<span class="cost">50</span> Current:<span class="current">1</span></button>
+      <button type="button" class="up-value" id="get-val">Increase Get value
+        <br>Cost: <span class="cost">100</span> Current: <span class="current">1</span> Multi: <span class="multi">1</span></button>
+
+      <div class="farm-science row hidden">
+        <button type="button" class="sci-value" disabled>BUY FARM
+          <br>Cost:<span class="cost">50</span> Current:<span class="owned">1</span></button>
+        <div class="indicator" id="farm-indicator">//--//</div>
+      </div>
     </div>
     <div class="tab-content hidden" id="third-content">
       <h2>Third</h2>
