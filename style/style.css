@@ -43,6 +43,19 @@ button {
 
 }
 
+.indicator {
+  border: 1px solid black;
+  background: lightgray;
+  height: 48px;
+  flex-grow: 1;
+}
+
+.row {
+  display: none;
+  flex-direction: row;
+  margin: 5px;
+}
+
 button.up-value {
   width: 40%;
   text-align: left;

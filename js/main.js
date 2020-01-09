@@ -41,7 +41,7 @@ class WorkerButton {
   }
 
   work = () => {
-    nutsTotal += (this.value * this.multi);
+    nutsTotal += (this.value * this.multi / this.time);
   }
 }
 
@@ -72,7 +72,10 @@ const scienceTab = document.querySelector('#science-content');
 
 /*----- functions -----*/
 const show = () => {
-  if (upGetButton) return;
+  console.log("show");
+  if (nutsTotal > 50) {
+    document.querySelector('.farm-div').style.display = "flex";
+  }
 
   switch (nutsTotal) {
     case 50:
@@ -82,7 +85,8 @@ const show = () => {
 };
 
 const render = () => {
-  TOTAL.textContent = nutsTotal;
+  TOTAL.textContent = Math.floor(nutsTotal);
+  document.querySelector('#debug-total').textContent = nutsTotal;
 }
 
 
@@ -92,10 +96,11 @@ const homeHandle = (evt) => {
   };
   if (evt.target.id === 'farm') {
     if (typeof farmButton === 'undefined') {
-      farmButton = new WorkerButton(1000, 100);
+      farmButton = new WorkerButton(100, 100);
       farmButton.running = true;
+      timerFunctions.push(farmButton);
+      console.log(timerFunctions)
     }
-    timeout(farmButton);
   }
 };
 
@@ -120,14 +125,12 @@ const getNuts = () => {
   TOTAL.textContent = nutsTotal;
 };
 
-const timeout = (worker) => {
-  console.log(worker);
-  setTimeout(function() {
-    worker.work();
-    render();
-    timeout();
-  }, time)
-}
+window.setInterval(function() {
+  timerFunctions.forEach(button => button.work());
+  show();
+  render();
+}, 100)
+
 /*----- event listeners -----*/
 homeTab.addEventListener('click', homeHandle);
 scienceTab.addEventListener('click', scienceHandle);

@@ -12,6 +12,7 @@
 <body>
   <header>
     <h1><span id="total">0</span> Nuts </h1>
+    <h2><span id="debug-total">-</span></h2>
   </header>
   <nav>
     <div class="tabs active" id="home">Nuts</div>
@@ -25,7 +26,11 @@
       <h2>HOME</h2>
       <button id="get-nuts">GET</button>
       <div class="workers">
-        <button type="button" class="worker-button" id="farm">FARM</button>
+        <div class="farm-div row hidden">
+          <button type="button" class="worker-button" id="farm">BUY FARM
+            <br>Cost:<span class="cost">50</span> Current:<span class="current">1</span></button>
+          <div class="indicator" id="farm-indicator">Current: 1 nps</div>
+        </div>
       </div>
     </div>
     <div class="tab-content hidden" id="science-content">
