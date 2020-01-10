@@ -37,12 +37,13 @@ class Button {
 };
 
 class WorkerButton {
-  constructor(time, cost) {
+  constructor(time, cost, value) {
     this.time = time;
     this.cost = cost;
-    this.value = 1;
+    this.value = value;
     this.multi = 1;
     this.owned = 0;
+    this.running = false;
   }
 
   work = () => {
@@ -82,12 +83,61 @@ const create = (thing) => {
 }
 
 /*----- functions -----*/
+const priceCheck = (worker) => {
+  if (worker.cost === 'undefined') {
+    return false
+  }
+  if (nutsTotal >= worker.cost) {
+    return true
+  }
+  return false;
+}
+
+const check = (worker, nuts) => {
+  if (nutsTotal >= nuts && document.querySelector(`.${worker}-div`).classList.contains('hidden')) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 const show = () => {
   console.log("show");
-  if (nutsTotal <= 50) {
-    document.querySelector('.farm-div').style.display = "flex";
-  } else if (nutsTotal >= 100) {
-    document.querySelector('#buy-farm').disabled = false;
+  if (check('w1', 20) === true) {
+    document.querySelector('.w1-div').classList.remove("hidden");
+    w1Button = new WorkerButton(1000, 50, 1);
+    timerFunctions.push(w1Button);
+    return;
+  }
+  if (priceCheck(w1Button)) {
+    document.querySelector('#buy-w1').disabled = false;
+  }
+  if (nutsTotal < 400) return;
+  if (check('w2', 400) === true) {
+    document.querySelector('.w2-div').classList.remove('hidden');
+    w2Button = new WorkerButton(1000, 250, 10);
+    timerFunctions.push(w2Button);
+    return;
+  }
+  if (priceCheck(w2Button)) {
+    document.querySelector('#buy-w2').disabled = false;
+  }
+  if (nutsTotal < 900) return;
+  if (check('w3', 1000) === true) {
+    document.querySelector('.w3-div').classList.remove("hidden");
+    w3Button = new WorkerButton(1000, 1000, 100)
+    return;
+  }
+  if (priceCheck(w3Button)) {
+    document.querySelector('#buy-w3').disabled = false;
+  }
+  if (nutsTotal < 2000) return;
+  if (check('w4', 2000) === true) {
+    document.querySelector('.w4-div').classList.remove('hidden');
+    return;
+  }
+  if (priceCheck(w4Button)) {
+    document.querySelector('#buy-w4').disabled = false;
   }
 
   switch (nutsTotal) {
@@ -96,6 +146,7 @@ const show = () => {
       break;
   }
 };
+
 
 const render = () => {
   TOTAL.textContent = Math.floor(nutsTotal);
@@ -107,18 +158,30 @@ const homeHandle = (evt) => {
   if (evt.target.id === 'get-nuts') {
     getNuts()
   };
-  if (evt.target.id === 'buy-farm') {
-    if (typeof farmButton === 'undefined') {
-      farmButton = new WorkerButton(1000, 100);
-      timerFunctions.push(farmButton);
+  if (evt.target.id === 'buy-w1') {
+    if (nutsTotal >= w1Button.cost) {
+      nutsTotal -= w1Button.cost;
+      w1Button.cost = Math.floor(w1Button.cost * 1.23);
+      w1Button.owned += 1;
+      if (w1Button.owned % 20 === 0) {
+        w1Button.value += 1
+      }
+      document.querySelector(`#${evt.target.id} > .cost`).textContent = `${w1Button.cost}`;
+      document.querySelector(`#${evt.target.id} > .owned`).textContent = `${w1Button.owned}`
+      document.querySelector('#w1-indicator').textContent = `${Math.round(((w1Button.value * w1Button.multi * w1Button.owned / w1Button.time) * 100) * 10) /10}/sec`
     }
-    if (nutsTotal >= farmButton.cost) {
-      nutsTotal -= farmButton.cost;
-      farmButton.cost = Math.floor(farmButton.cost * 1.13);
-      farmButton.owned += 1;
-      document.querySelector(`#${evt.target.id} > .cost`).textContent = `${farmButton.cost}`;
-      document.querySelector(`#${evt.target.id} > .owned`).textContent = `${farmButton.owned}`
-      document.querySelector('#farm-indicator').textContent = `${Math.round(((farmButton.value * farmButton.multi * farmButton.owned / farmButton.time) * 100) * 10) /10}/sec`
+  }
+  if (evt.target.id === 'buy-w2') {
+    if (nutsTotal >= w2Button.cost) {
+      nutsTotal -= w2Button.cost;
+      w2Button.cost = Math.floor(w2Button.cost * 1.23)
+      w2Button.owned += 1;
+      if (w2Button.owned % 20 === 0) {
+        w2Button.value += 1
+      }
+      document.querySelector(`#${evt.target.id} > .cost`).textContent = `${w2Button.cost}`;
+      document.querySelector(`#${evt.target.id} > .owned`).textContent = `${w2Button.owned}`
+      document.querySelector('#w2-indicator').textContent = `${Math.round(((w2Button.value * w2Button.multi * w2Button.owned / w2Button.time) * 100) * 10) /10}/sec`
     }
   }
 };

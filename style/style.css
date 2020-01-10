@@ -32,9 +32,6 @@ nav {
   display: grid;
 }
 
-.hidden {
-  display: none;
-}
 
 button {
   border: 1px solid black;
@@ -51,9 +48,13 @@ button {
 }
 
 .row {
-  display: none;
+  display: flex;
   flex-direction: row;
   margin: 5px;
+}
+
+.hidden {
+  display: none;
 }
 
 button.up-value {

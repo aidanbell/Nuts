@@ -14,14 +14,23 @@ Squirrel Get:
     least one squirrel
 
   - GOOD IDEA:
-    -Squirrel Stocks - Allow you to borrow nuts 
+    -Squirrel Stocks - Allow you to borrow nuts
 
   For each get functions, there will be these mutable variables:
     - Value: the amount of the base end result
     - Multi: the base multiplier. Can be effected with:
         - +%Multi
         - +#Multi
-    -
+    - Time: the amount of time (ms) the action will take
+
+-EQUIPS/SHINY ROCKS
+    - Equips will drop randomly, or later maybe crafted?
+    - Following Possible Upgrades:
+        - w1-w4:
+          - +#val (adds to base value)
+          - +%val (% gain after base value additions are made)
+          - -%time (decreases amount of time/action)
+          - +%multi (increases multi)
 
   EXPLORE:
     - having multiple gameloops so each function can be effected
@@ -32,7 +41,26 @@ Squirrel Get:
 GETS                     Science                   Technology
 ------------------------------------------------------------------------------------
 STONEAGE
+ Gatherer                   -                           -
+ Scavenger                  -                           -
+ Rock Thrower               -                           -
+ Tree Climber               -                           -
 
- Gatherer
- Tree Shaker
- Stilt-walker
+
+BRONZE AGE
+ Farmer                     +val
+ Gathering Party            +val 
+ Tree Thumper               +val
+ Stilt Walker               +val
+
+IRON AGE
+  Crop Tender
+  Floor Combers
+  Tree Shaker
+
+
+INDUSTRIAL ERA
+ Agriculturalist
+
+
+TECHNOLOGY ERA
