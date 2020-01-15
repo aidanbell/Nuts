@@ -33,34 +33,109 @@ Squirrel Get:
           - +%multi (increases multi)
 
   EXPLORE:
-    - having multiple gameloops so each function can be effected
-    - exponential growth on prices
-    -
+    - Save Game Data
+    - How much bonus should GN give
+    - Spending GN as currency?
+
+------------------------BASIC GETS------------------------
+
+  GETS                     Science                   Technology
+  ------------------------------------------------------------------------------------
+  STONEAGE
+   Gatherer                   -                           -
+   Scavenger                  -                           -
+   Rock Thrower               -                           -
+   Tree Climber               -                           -
+
+  BRONZE AGE
+   Farmer                     +val
+   Gathering Party            +val
+   Tree Thumper               +val
+   Stilt Walker               +val
+
+  IRON AGE
+   Crop Tender
+   Floor Rakers
+   Tree Shaker
+   Tree Lifts
+
+  INDUSTRIAL AGE
+   Agriculturalist
+   Vacuum Tractor
+   Tree Nets
+   Nut Factory
+
+  INFORMATION AGE
+   Hydroponics
+   Nut Trackers
+   Nut Funneling System
+   Nut Complex
+
+  TECHNOLOGY AGE
+   AutoGardens
+   Autonomous Delivery
+   Nut Chutes
+   Nut Lab
+
+  SPACE AGE
+   Orbiting Farm
+   ____________
+   ____________
+   ____________
+
+  GALACTIC AGE
+   ____________
+   ____________
+   ____________
+   ____________
+
+------------------------CITIZENS------------------------
+  Citizens are unlocked during IRON AGE
+  Citizens are initially gather on a randomized rate (SLOWLY)
+                OR
+  Citizens come on a per/nut basis. ie, total nuts per era
 
 
-GETS                     Science                   Technology
-------------------------------------------------------------------------------------
-STONEAGE
- Gatherer                   -                           -
- Scavenger                  -                           -
- Rock Thrower               -                           -
- Tree Climber               -                           -
+------------------------NUT CITY B****------------------------
+  Enter Nut City! You can create buildings here that will change values/multis
+  of you basic gets.
+
+  Buildings are locked until BRONZE ERA
+  Buildings must be manually upgraded when moving between eras
+  Buildings will collapse
+
+  BUILDING LIST:
+  ------------------------------------------------------------------
+  Refinery                Obviously gotta come first. Allows the refining
+                            of nuts into building materials
+  House                   Allows squirrels to join into your colony
+  Town Hall               Allows allocation of squirrels to jobs/buildings
+  Research Lab            Allows squirrels to research science things
 
 
-BRONZE AGE
- Farmer                     +val
- Gathering Party            +val 
- Tree Thumper               +val
- Stilt Walker               +val
+------------------------MATERIAL CRAFTING?------------------------
 
-IRON AGE
-  Crop Tender
-  Floor Combers
-  Tree Shaker
+ Nuts can be crafted into building materials after unlocking the Refinery
 
+ MATERIAL           AGE UNLOCKED                PURPOSE
+ -----------------------------------------------------------------
+ Wood               STONE AGE 
+ Cement             BRONZE AGE
+ NutMetal           IRON AGE
+ Nut Fuel           INDUSTRIAL AGE
+ Nut Fuel           INFORMATION AGE
+ Nut Processors     TECHNOLOGY AGE
+ Rocket Parts       SPACE AGE
+ Nut Matter         GALACTIC AGE
 
-INDUSTRIAL ERA
- Agriculturalist
+------------------------SCIENCE THINGS------------------------
 
+ Age
+ -------------------------------------------------------------------------------
 
-TECHNOLOGY ERA
+ Science as a currency:
+  - Research assistants get Research Resin (RR)
+  - RR can be spent on research upgrades
+    - moving tech to new eras
+            OR
+  - Era unlocks can be gated by

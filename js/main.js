@@ -52,7 +52,12 @@ class WorkerButton {
 }
 
 /*----- app's state (variables) -----*/
-let nutsTotal = 100;
+let nutsTotal = 0;
+
+let goldNuts = {
+  total: 0,
+  multi: 0.02,
+}
 
 // For mainGameLoop
 
@@ -75,6 +80,7 @@ let TOTAL = document.querySelector('#total');
 
 const homeTab = document.querySelector('#home-content');
 const scienceTab = document.querySelector('#science-content');
+const hibernateTab = document.querySelector('#hibernate-content')
 
 const create = (thing) => {
   if (thing === "worker") {
@@ -84,9 +90,6 @@ const create = (thing) => {
 
 /*----- functions -----*/
 const priceCheck = (worker) => {
-  if (worker.cost === 'undefined') {
-    return false
-  }
   if (nutsTotal >= worker.cost) {
     return true
   }
@@ -116,11 +119,44 @@ const check = (worker, nuts) => {
   }
 }
 
+const initGame = () => {
+  nutsTotal = 0;
+
+  timerFunctions = [];
+  secretFunctions = [];
+
+  getButton = {
+    value: 1,
+    mult: 1
+  }
+  w1Button = new WorkerButton(1000, 50, 1);
+  w2Button = new WorkerButton(1000, 500, 10);
+  w3Button = new WorkerButton(1000, 2500, 100);
+  w4Button = new WorkerButton(1000, 10000, 1000);
+
+  timerFunctions = [w1Button, w2Button, w3Button, w4Button]
+
+  document.querySelectorAll('.row').forEach(n => {
+    n.classList.add("hidden")
+  });
+  document.querySelectorAll('.worker-button').forEach(n => {
+    n.disabled = true
+  });
+  document.querySelectorAll('.worker-button > .cost').forEach((n, i) => {
+    n.textContent = timerFunctions[i].cost
+  })
+  document.querySelectorAll('.worker-button > .owned').forEach((n, i) => {
+    n.textContent = timerFunctions[i].owned
+  })
+  document.querySelectorAll('.indicator').forEach((n) => {
+    n.textContent = "/--/"
+  })
+}
+
 const show = () => {
   console.log("show");
   if (check('w1', 20) === true) {
     document.querySelector('.w1-div').classList.remove("hidden");
-    w1Button = new WorkerButton(1000, 50, 1);
     timerFunctions.push(w1Button);
     return;
   }
@@ -130,7 +166,6 @@ const show = () => {
   if (nutsTotal < 400) return;
   if (check('w2', 400) === true) {
     document.querySelector('.w2-div').classList.remove('hidden');
-    w2Button = new WorkerButton(1000, 500, 10);
     timerFunctions.push(w2Button);
     return;
   }
@@ -140,7 +175,6 @@ const show = () => {
   if (nutsTotal < 1000) return;
   if (check('w3', 1000) === true) {
     document.querySelector('.w3-div').classList.remove("hidden");
-    w3Button = new WorkerButton(1000, 2500, 100)
     timerFunctions.push(w3Button)
     return;
   }
@@ -150,7 +184,6 @@ const show = () => {
   if (nutsTotal < 9000) return;
   if (check('w4', 9000) === true) {
     document.querySelector('.w4-div').classList.remove('hidden');
-    w4Button = new WorkerButton(1000, 10000, 1000)
     timerFunctions.push(w4Button)
     return;
   }
@@ -240,10 +273,21 @@ const scienceHandle = (evt) => {
   }
 }
 
+const hibernateHandle = (evt) => {
+  if (evt.target.id === 'hibernate') {
+    hibernate();
+  }
+}
+
 const getNuts = () => {
   nutsTotal += (getButton.value * getButton.mult);
   render();
 };
+
+const hibernate = () => {
+  goldNuts.total += nutsTotal / Math.pow(10, 6) * goldNuts.multi;
+  initGame();
+}
 
 window.setInterval(function() {
   timerFunctions.forEach(button => button.work());
@@ -251,6 +295,9 @@ window.setInterval(function() {
   render();
 }, 10)
 
+initGame();
+
 /*----- event listeners -----*/
 homeTab.addEventListener('click', homeHandle);
 scienceTab.addEventListener('click', scienceHandle);
+hibernateTab.addEventListener('click', hibernateHandle);
