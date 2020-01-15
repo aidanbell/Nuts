@@ -93,6 +93,21 @@ const priceCheck = (worker) => {
   return false;
 }
 
+// 1,000,000,000,000,000
+// 1*10^9  === Billion === 1,000,000,000
+// 1*10^12 === Trillion === 1,000,000,000,000
+// 1*10^15 === Quadrillion === 1,000,000,000,000,000
+
+const numFormat = (num) => {
+  let base = Math.floor(num).toString()
+  if (base.length < 4) return `${base}`;
+  if (base.length < 7) return `${(num / Math.pow(10, 3)).toFixed(2)}k`;
+  if (base.length < 10) return `${(num / Math.pow(10, 6)).toFixed(2)}m`;
+  if (base.length < 13) return `${(num / Math.pow(10, 9)).toFixed(2)}b`;
+  if (base.length < 16) return `${(num / Math.pow(10, 12)).toFixed(2)}t`;
+  if (base.length < 19) return `${(num / Math.pow(10, 15)).toFixed(2)}q`;
+}
+
 const check = (worker, nuts) => {
   if (nutsTotal >= nuts && document.querySelector(`.${worker}-div`).classList.contains('hidden')) {
     return true;
@@ -115,41 +130,38 @@ const show = () => {
   if (nutsTotal < 400) return;
   if (check('w2', 400) === true) {
     document.querySelector('.w2-div').classList.remove('hidden');
-    w2Button = new WorkerButton(1000, 250, 10);
+    w2Button = new WorkerButton(1000, 500, 10);
     timerFunctions.push(w2Button);
     return;
   }
   if (priceCheck(w2Button)) {
     document.querySelector('#buy-w2').disabled = false;
   }
-  if (nutsTotal < 900) return;
+  if (nutsTotal < 1000) return;
   if (check('w3', 1000) === true) {
     document.querySelector('.w3-div').classList.remove("hidden");
-    w3Button = new WorkerButton(1000, 1000, 100)
+    w3Button = new WorkerButton(1000, 2500, 100)
+    timerFunctions.push(w3Button)
     return;
   }
   if (priceCheck(w3Button)) {
     document.querySelector('#buy-w3').disabled = false;
   }
-  if (nutsTotal < 2000) return;
-  if (check('w4', 2000) === true) {
+  if (nutsTotal < 9000) return;
+  if (check('w4', 9000) === true) {
     document.querySelector('.w4-div').classList.remove('hidden');
+    w4Button = new WorkerButton(1000, 10000, 1000)
+    timerFunctions.push(w4Button)
     return;
   }
   if (priceCheck(w4Button)) {
     document.querySelector('#buy-w4').disabled = false;
   }
-
-  switch (nutsTotal) {
-    case 50:
-      let upGetButton = new Button('science', 'getVal', 50);
-      break;
-  }
 };
 
 
 const render = () => {
-  TOTAL.textContent = Math.floor(nutsTotal);
+  TOTAL.textContent = numFormat(nutsTotal);
   document.querySelector('#debug-total').textContent = Math.round(nutsTotal * 1000) / 1000;
 }
 
@@ -161,12 +173,12 @@ const homeHandle = (evt) => {
   if (evt.target.id === 'buy-w1') {
     if (nutsTotal >= w1Button.cost) {
       nutsTotal -= w1Button.cost;
-      w1Button.cost = Math.floor(w1Button.cost * 1.23);
+      w1Button.cost = Math.floor(w1Button.cost * 1.13);
       w1Button.owned += 1;
-      if (w1Button.owned % 20 === 0) {
-        w1Button.value += 1
+      if (w1Button.owned === 10 || w1Button.owned === 25 || w1Button.owned === 50 || w1Button.owned % 100 === 0) {
+        w1Button.value *= 2
       }
-      document.querySelector(`#${evt.target.id} > .cost`).textContent = `${w1Button.cost}`;
+      document.querySelector(`#${evt.target.id} > .cost`).textContent = `${numFormat(w1Button.cost)}`;
       document.querySelector(`#${evt.target.id} > .owned`).textContent = `${w1Button.owned}`
       document.querySelector('#w1-indicator').textContent = `${Math.round(((w1Button.value * w1Button.multi * w1Button.owned / w1Button.time) * 100) * 10) /10}/sec`
     }
@@ -174,14 +186,40 @@ const homeHandle = (evt) => {
   if (evt.target.id === 'buy-w2') {
     if (nutsTotal >= w2Button.cost) {
       nutsTotal -= w2Button.cost;
-      w2Button.cost = Math.floor(w2Button.cost * 1.23)
+      w2Button.cost = Math.floor(w2Button.cost * 1.13)
       w2Button.owned += 1;
-      if (w2Button.owned % 20 === 0) {
-        w2Button.value += 1
+      if (w2Button.owned === 10 || w2Button.owned === 25 || w2Button.owned === 50 || w2Button.owned % 100 === 0) {
+        w2Button.value *= 2
       }
-      document.querySelector(`#${evt.target.id} > .cost`).textContent = `${w2Button.cost}`;
+      document.querySelector(`#${evt.target.id} > .cost`).textContent = `${numFormat(w2Button.cost)}`;
       document.querySelector(`#${evt.target.id} > .owned`).textContent = `${w2Button.owned}`
       document.querySelector('#w2-indicator').textContent = `${Math.round(((w2Button.value * w2Button.multi * w2Button.owned / w2Button.time) * 100) * 10) /10}/sec`
+    }
+  }
+  if (evt.target.id === 'buy-w3') {
+    if (nutsTotal >= w3Button.cost) {
+      nutsTotal -= w3Button.cost;
+      w3Button.cost = Math.floor(w3Button.cost * 1.13)
+      w3Button.owned += 1;
+      if (w3Button.owned === 10 || w3Button.owned === 25 || w3Button.owned === 50 || w3Button.owned % 100 === 0) {
+        w3Button.value *= 2
+      }
+      document.querySelector(`#${evt.target.id} > .cost`).textContent = `${numFormat(w3Button.cost)}`;
+      document.querySelector(`#${evt.target.id} > .owned`).textContent = `${w3Button.owned}`
+      document.querySelector('#w3-indicator').textContent = `${Math.round(((w3Button.value * w3Button.multi * w3Button.owned / w3Button.time) * 100) * 10) /10}/sec`
+    }
+  }
+  if (evt.target.id === 'buy-w4') {
+    if (nutsTotal >= w4Button.cost) {
+      nutsTotal -= w4Button.cost;
+      w4Button.cost = Math.floor(w4Button.cost * 1.13)
+      w4Button.owned += 1;
+      if (w4Button.owned === 10 || w4Button.owned === 25 || w4Button.owned === 50 || w4Button.owned % 100 === 0) {
+        w4Button.value *= 2
+      }
+      document.querySelector(`#${evt.target.id} > .cost`).textContent = `${numFormat(w4Button.cost)}`;
+      document.querySelector(`#${evt.target.id} > .owned`).textContent = `${w4Button.owned}`
+      document.querySelector('#w4-indicator').textContent = `${Math.round(((w4Button.value * w4Button.multi * w4Button.owned / w4Button.time) * 100) * 10) /10}/sec`
     }
   }
 };
