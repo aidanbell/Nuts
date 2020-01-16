@@ -48,15 +48,17 @@ class WorkerButton {
 
   work = () => {
     nutsTotal += (this.value * this.multi * this.owned / this.time);
+    nutsRunning += (this.value * this.multi * this.owned / this.time);
   }
 }
 
 /*----- app's state (variables) -----*/
 let nutsTotal = 0;
+let nutsRunning = 0;
 
 let goldNuts = {
   total: 0,
-  multi: 0.02,
+  multi: 0.12,
 }
 
 // For mainGameLoop
@@ -129,10 +131,10 @@ const initGame = () => {
     value: 1,
     mult: 1
   }
-  w1Button = new WorkerButton(1000, 50, 1);
-  w2Button = new WorkerButton(1000, 500, 10);
-  w3Button = new WorkerButton(1000, 2500, 100);
-  w4Button = new WorkerButton(1000, 10000, 1000);
+  w1Button = new WorkerButton(1000, 40, 1);
+  w2Button = new WorkerButton(1000, 600, 5);
+  w3Button = new WorkerButton(1000, 7200, 25);
+  w4Button = new WorkerButton(1000, 86400, 100);
 
   timerFunctions = [w1Button, w2Button, w3Button, w4Button]
 
@@ -143,7 +145,7 @@ const initGame = () => {
     n.disabled = true
   });
   document.querySelectorAll('.worker-button > .cost').forEach((n, i) => {
-    n.textContent = timerFunctions[i].cost
+    n.textContent = numFormat(timerFunctions[i].cost)
   })
   document.querySelectorAll('.worker-button > .owned').forEach((n, i) => {
     n.textContent = timerFunctions[i].owned
@@ -193,6 +195,7 @@ const show = () => {
 };
 
 
+
 const render = () => {
   TOTAL.textContent = numFormat(nutsTotal);
   document.querySelector('#debug-total').textContent = Math.round(nutsTotal * 1000) / 1000;
@@ -206,7 +209,7 @@ const homeHandle = (evt) => {
   if (evt.target.id === 'buy-w1') {
     if (nutsTotal >= w1Button.cost) {
       nutsTotal -= w1Button.cost;
-      w1Button.cost = Math.floor(w1Button.cost * 1.13);
+      w1Button.cost = Math.floor(w1Button.cost * 1.12);
       w1Button.owned += 1;
       if (w1Button.owned === 10 || w1Button.owned === 25 || w1Button.owned === 50 || w1Button.owned % 100 === 0) {
         w1Button.value *= 2
@@ -219,7 +222,7 @@ const homeHandle = (evt) => {
   if (evt.target.id === 'buy-w2') {
     if (nutsTotal >= w2Button.cost) {
       nutsTotal -= w2Button.cost;
-      w2Button.cost = Math.floor(w2Button.cost * 1.13)
+      w2Button.cost = Math.floor(w2Button.cost * 1.17)
       w2Button.owned += 1;
       if (w2Button.owned === 10 || w2Button.owned === 25 || w2Button.owned === 50 || w2Button.owned % 100 === 0) {
         w2Button.value *= 2
@@ -232,7 +235,7 @@ const homeHandle = (evt) => {
   if (evt.target.id === 'buy-w3') {
     if (nutsTotal >= w3Button.cost) {
       nutsTotal -= w3Button.cost;
-      w3Button.cost = Math.floor(w3Button.cost * 1.13)
+      w3Button.cost = Math.floor(w3Button.cost * 1.16)
       w3Button.owned += 1;
       if (w3Button.owned === 10 || w3Button.owned === 25 || w3Button.owned === 50 || w3Button.owned % 100 === 0) {
         w3Button.value *= 2
@@ -245,7 +248,7 @@ const homeHandle = (evt) => {
   if (evt.target.id === 'buy-w4') {
     if (nutsTotal >= w4Button.cost) {
       nutsTotal -= w4Button.cost;
-      w4Button.cost = Math.floor(w4Button.cost * 1.13)
+      w4Button.cost = Math.floor(w4Button.cost * 1.15)
       w4Button.owned += 1;
       if (w4Button.owned === 10 || w4Button.owned === 25 || w4Button.owned === 50 || w4Button.owned % 100 === 0) {
         w4Button.value *= 2
@@ -275,6 +278,10 @@ const scienceHandle = (evt) => {
 
 const hibernateHandle = (evt) => {
   if (evt.target.id === 'hibernate') {
+    document.querySelector('#hibernate-info').classList.remove('hidden')
+    document.querySelector('#gn-preview').textContent = `${goldNutPre()} Gold Nuts.`
+  }
+  if (evt.target.id === 'hibernate-confirm') {
     hibernate();
   }
 }
@@ -284,8 +291,12 @@ const getNuts = () => {
   render();
 };
 
+const goldNutPre = () => {
+  return Math.floor(nutsTotal / Math.pow(1, 6) * goldNuts.multi);
+}
+
 const hibernate = () => {
-  goldNuts.total += nutsTotal / Math.pow(10, 6) * goldNuts.multi;
+  goldNuts.total += nutsTotal / Math.pow(1, 6) * goldNuts.multi;
   initGame();
 }
 
@@ -293,7 +304,7 @@ window.setInterval(function() {
   timerFunctions.forEach(button => button.work());
   show();
   render();
-}, 10)
+}, 20)
 
 initGame();
 

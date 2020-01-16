@@ -37,6 +37,16 @@ Squirrel Get:
     - How much bonus should GN give
     - Spending GN as currency?
 
+@@@@@@@@@@@@@@@@@@@@@@--GAME FLOW--@@@@@@@@@@@@@@@@@@@@@@@@@
+
+ STONE AGE
+    -unlock refining
+      -build first house
+        -acquire first citizen
+          -citizen gets bored
+            -build research lab
+    -unlock science
+
 ------------------------BASIC GETS------------------------
 
   GETS                     Science                   Technology
@@ -119,7 +129,7 @@ Squirrel Get:
 
  MATERIAL           AGE UNLOCKED                PURPOSE
  -----------------------------------------------------------------
- Wood               STONE AGE 
+ Wood               STONE AGE
  Cement             BRONZE AGE
  NutMetal           IRON AGE
  Nut Fuel           INDUSTRIAL AGE
@@ -129,9 +139,32 @@ Squirrel Get:
  Nut Matter         GALACTIC AGE
 
 ------------------------SCIENCE THINGS------------------------
+  Science is tiered per age (since both science and production will
+  drive the passage through ages). Citizens can RESEARCH to earn science.
+  To unlock the next tier, a certain amount of upgrades must be purchased.
 
- Age
- -------------------------------------------------------------------------------
+
+  STONE AGE
+    -T1 (10)
+      -GATHERER +val
+      -SCAVENGER +val
+      -Science gain+
+      -
+    -T2 (20)
+      -ROCK THROWER +val
+      -TREE CLIMBER +val
+      -
+      -
+    -T3 (40)
+      -
+      -
+      -
+      -
+    -T4 (80) Unlocks next Age.
+      -
+      -
+      -
+      -
 
  Science as a currency:
   - Research assistants get Research Resin (RR)
@@ -139,3 +172,5 @@ Squirrel Get:
     - moving tech to new eras
             OR
   - Era unlocks can be gated by
+  Age
+  -------------------------------------------------------------------------------
