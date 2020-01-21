@@ -39,6 +39,12 @@ Squirrel Get:
 
 @@@@@@@@@@@@@@@@@@@@@@--GAME FLOW--@@@@@@@@@@@@@@@@@@@@@@@@@
 
+Wake up from Hibernation.
+
+Gather nuts to stay alive
+
+Year timer 
+
  STONE AGE
     -unlock refining
       -build first house

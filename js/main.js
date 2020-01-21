@@ -122,7 +122,7 @@ const check = (worker, nuts) => {
 }
 
 const initGame = () => {
-  nutsTotal = 0;
+  nutsTotal = 5;
 
   timerFunctions = [];
   secretFunctions = [];
@@ -131,10 +131,10 @@ const initGame = () => {
     value: 1,
     mult: 1
   }
-  w1Button = new WorkerButton(1000, 40, 1);
-  w2Button = new WorkerButton(1000, 600, 5);
-  w3Button = new WorkerButton(1000, 7200, 25);
-  w4Button = new WorkerButton(1000, 86400, 100);
+  w1Button = new WorkerButton(1000, 4, 1);
+  w2Button = new WorkerButton(1000, 600, 50);
+  w3Button = new WorkerButton(1000, 7200, 250);
+  w4Button = new WorkerButton(1000, 86400, 1000);
 
   timerFunctions = [w1Button, w2Button, w3Button, w4Button]
 
@@ -157,9 +157,8 @@ const initGame = () => {
 
 const show = () => {
   console.log("show");
-  if (check('w1', 20) === true) {
+  if (check('w1', 0) === true) {
     document.querySelector('.w1-div').classList.remove("hidden");
-    timerFunctions.push(w1Button);
     return;
   }
   if (priceCheck(w1Button)) {
@@ -168,7 +167,6 @@ const show = () => {
   if (nutsTotal < 400) return;
   if (check('w2', 400) === true) {
     document.querySelector('.w2-div').classList.remove('hidden');
-    timerFunctions.push(w2Button);
     return;
   }
   if (priceCheck(w2Button)) {
@@ -177,7 +175,6 @@ const show = () => {
   if (nutsTotal < 1000) return;
   if (check('w3', 1000) === true) {
     document.querySelector('.w3-div').classList.remove("hidden");
-    timerFunctions.push(w3Button)
     return;
   }
   if (priceCheck(w3Button)) {
@@ -199,6 +196,7 @@ const show = () => {
 const render = () => {
   TOTAL.textContent = numFormat(nutsTotal);
   document.querySelector('#debug-total').textContent = Math.round(nutsTotal * 1000) / 1000;
+  document.querySelector('#nuts-running').textContent = Math.round(nutsRunning * 1000) / 1000;
 }
 
 
@@ -209,7 +207,7 @@ const homeHandle = (evt) => {
   if (evt.target.id === 'buy-w1') {
     if (nutsTotal >= w1Button.cost) {
       nutsTotal -= w1Button.cost;
-      w1Button.cost = Math.floor(w1Button.cost * 1.12);
+      w1Button.cost = w1Button.cost * (Math.pow(1.07, w1Button.owned))
       w1Button.owned += 1;
       if (w1Button.owned === 10 || w1Button.owned === 25 || w1Button.owned === 50 || w1Button.owned % 100 === 0) {
         w1Button.value *= 2
@@ -222,7 +220,7 @@ const homeHandle = (evt) => {
   if (evt.target.id === 'buy-w2') {
     if (nutsTotal >= w2Button.cost) {
       nutsTotal -= w2Button.cost;
-      w2Button.cost = Math.floor(w2Button.cost * 1.17)
+      w2Button.cost = w2Button.cost * Math.pow(1.07, w2Button.owned)
       w2Button.owned += 1;
       if (w2Button.owned === 10 || w2Button.owned === 25 || w2Button.owned === 50 || w2Button.owned % 100 === 0) {
         w2Button.value *= 2
@@ -288,15 +286,16 @@ const hibernateHandle = (evt) => {
 
 const getNuts = () => {
   nutsTotal += (getButton.value * getButton.mult);
+  nutsRunning += (getButton.value * getButton.mult);
   render();
 };
 
 const goldNutPre = () => {
-  return Math.floor(nutsTotal / Math.pow(1, 6) * goldNuts.multi);
+  return Math.floor(nutsRunning / Math.pow(10, 6) * goldNuts.multi);
 }
 
 const hibernate = () => {
-  goldNuts.total += nutsTotal / Math.pow(1, 6) * goldNuts.multi;
+  goldNuts.total += nutsRunning / Math.pow(10, 6) * goldNuts.multi;
   initGame();
 }
 
