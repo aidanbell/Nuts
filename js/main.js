@@ -39,6 +39,7 @@ class Button {
 class WorkerButton {
   constructor(time, cost, value) {
     this.time = time;
+    this.baseCost = cost;
     this.cost = cost;
     this.value = value;
     this.multi = 1;
@@ -47,8 +48,12 @@ class WorkerButton {
   }
 
   work = () => {
-    nutsTotal += (this.value * this.multi * this.owned / this.time);
-    nutsRunning += (this.value * this.multi * this.owned / this.time);
+    nutsTotal += ((this.value * this.multi) * this.owned / this.time);
+    nutsRunning += ((this.value * this.multi) * this.owned / this.time);
+  }
+
+  doThing = () => {
+    nutsTotal += 100
   }
 }
 
@@ -121,6 +126,11 @@ const check = (worker, nuts) => {
   }
 }
 
+
+/*-- THE REFACTOR IS LIVE --*/
+
+const checkSci = () => {}
+
 const initGame = () => {
   nutsTotal = 5;
 
@@ -132,9 +142,9 @@ const initGame = () => {
     mult: 1
   }
   w1Button = new WorkerButton(1000, 4, 1);
-  w2Button = new WorkerButton(1000, 600, 50);
-  w3Button = new WorkerButton(1000, 7200, 250);
-  w4Button = new WorkerButton(1000, 86400, 1000);
+  w2Button = new WorkerButton(1000, 60, 5);
+  w3Button = new WorkerButton(1000, 900, 10);
+  w4Button = new WorkerButton(1000, 13500, 50);
 
   timerFunctions = [w1Button, w2Button, w3Button, w4Button]
 
@@ -150,13 +160,9 @@ const initGame = () => {
   document.querySelectorAll('.worker-button > .owned').forEach((n, i) => {
     n.textContent = timerFunctions[i].owned
   })
-  document.querySelectorAll('.indicator').forEach((n) => {
-    n.textContent = "/--/"
-  })
 }
 
 const show = () => {
-  console.log("show");
   if (check('w1', 0) === true) {
     document.querySelector('.w1-div').classList.remove("hidden");
     return;
@@ -164,24 +170,24 @@ const show = () => {
   if (priceCheck(w1Button)) {
     document.querySelector('#buy-w1').disabled = false;
   }
-  if (nutsTotal < 400) return;
-  if (check('w2', 400) === true) {
+  if (nutsTotal < 60) return;
+  if (check('w2', 60) === true) {
     document.querySelector('.w2-div').classList.remove('hidden');
     return;
   }
   if (priceCheck(w2Button)) {
     document.querySelector('#buy-w2').disabled = false;
   }
-  if (nutsTotal < 1000) return;
-  if (check('w3', 1000) === true) {
+  if (nutsTotal < 800) return;
+  if (check('w3', 800) === true) {
     document.querySelector('.w3-div').classList.remove("hidden");
     return;
   }
   if (priceCheck(w3Button)) {
     document.querySelector('#buy-w3').disabled = false;
   }
-  if (nutsTotal < 9000) return;
-  if (check('w4', 9000) === true) {
+  if (nutsTotal < 1200) return;
+  if (check('w4', 1200) === true) {
     document.querySelector('.w4-div').classList.remove('hidden');
     timerFunctions.push(w4Button)
     return;
@@ -207,11 +213,12 @@ const homeHandle = (evt) => {
   if (evt.target.id === 'buy-w1') {
     if (nutsTotal >= w1Button.cost) {
       nutsTotal -= w1Button.cost;
-      w1Button.cost = w1Button.cost * (Math.pow(1.07, w1Button.owned))
+      w1Button.cost = w1Button.cost * Math.pow(1.07, w1Button.owned)
       w1Button.owned += 1;
       if (w1Button.owned === 10 || w1Button.owned === 25 || w1Button.owned === 50 || w1Button.owned % 100 === 0) {
         w1Button.value *= 2
       }
+      makeBarGo();
       document.querySelector(`#${evt.target.id} > .cost`).textContent = `${numFormat(w1Button.cost)}`;
       document.querySelector(`#${evt.target.id} > .owned`).textContent = `${w1Button.owned}`
       document.querySelector('#w1-indicator').textContent = `${Math.round(((w1Button.value * w1Button.multi * w1Button.owned / w1Button.time) * 100) * 10) /10}/sec`
@@ -233,7 +240,7 @@ const homeHandle = (evt) => {
   if (evt.target.id === 'buy-w3') {
     if (nutsTotal >= w3Button.cost) {
       nutsTotal -= w3Button.cost;
-      w3Button.cost = Math.floor(w3Button.cost * 1.16)
+      w3Button.cost = Math.floor(w3Button.cost * 1.09)
       w3Button.owned += 1;
       if (w3Button.owned === 10 || w3Button.owned === 25 || w3Button.owned === 50 || w3Button.owned % 100 === 0) {
         w3Button.value *= 2
@@ -246,7 +253,7 @@ const homeHandle = (evt) => {
   if (evt.target.id === 'buy-w4') {
     if (nutsTotal >= w4Button.cost) {
       nutsTotal -= w4Button.cost;
-      w4Button.cost = Math.floor(w4Button.cost * 1.15)
+      w4Button.cost = Math.floor(w4Button.cost * 1.11)
       w4Button.owned += 1;
       if (w4Button.owned === 10 || w4Button.owned === 25 || w4Button.owned === 50 || w4Button.owned % 100 === 0) {
         w4Button.value *= 2
@@ -282,6 +289,19 @@ const hibernateHandle = (evt) => {
   if (evt.target.id === 'hibernate-confirm') {
     hibernate();
   }
+}
+
+const makeBarGo = () => {
+  let bar = document.getElementById('w1-progress')
+  let w = bar.style.width.slice(0, -1)
+  let id = setInterval(function() {
+    if (w == 100) {
+      w = 0;
+      w1Button.doThing();
+    }
+    w++
+    bar.style.width = w + '%'
+  }, 100)
 }
 
 const getNuts = () => {

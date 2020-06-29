@@ -5,6 +5,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
   <title>Nuts</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
   <link href="style/style.css" rel="stylesheet" type="text/css" />
   <script defer src="js/main.js"></script>
 </head>
@@ -30,7 +32,12 @@
         <div class="w1-div row hidden">
           <button type="button" class="worker-button" id="buy-w1" disabled>GATHERER
             <br>Cost:<span class="cost">50</span> Current:<span class="owned">1</span></button>
-          <div class="indicator" id="w1-indicator">//--//</div>
+          <div class="indicator">
+            <div class="progress-container">
+              <div class="progress-bar" id="w1-progress" style='width: 0%; transition-duration: 100ms;'></div>
+            </div>
+            <span id="w1-indicator"></span>
+          </div>
         </div>
         <div class="w2-div row hidden">
           <button type="button" class="worker-button" id="buy-w2" disabled>SCAVENGER
@@ -72,7 +79,7 @@
       <div class="hibernate-info hidden" id="hibernate-info">
         <h3>If you hibernate, you will receive:</h3>
         <h2 id="gn-preview">0</h2>
-
+        <button></button>
       </div>
     </div>
 </body>

@@ -71,3 +71,15 @@ span#current {
 #get-nuts {
   width: 80%;
 }
+
+.progress-container {
+  height: 10px;
+  border: 1px solid black;
+  border-radius: 50%;
+}
+
+.progress-bar {
+  background-color: blueviolet;
+  height: 10px;
+  width: 100%;
+}
