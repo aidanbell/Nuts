@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Nuts</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <link href="style/style.css" rel="stylesheet" type="text/css" />
+  <script defer src="js/trial.js"></script>
+</head>
+
+<body>
+  <header>
+    <h1><span id="total">0</span> Nuts </h1>
+    <h2><span id="debug-total">-</span></h2>
+    <h3 id="nuts-running">-</h3>
+    <h4 id="clock">0:00</h4>
+  </header>
+  <nav>
+    <div class="tabs active" id="home">Nuts</div>
+    <div class="tabs" id="jobsite">Jobsites</div>
+    <div class="tabs" id="population">Population</div>
+    <div class="tabs" id="fourth">Fourth</div>
+    <div class="tabs" id="hibernate">Hibernate!</div>
+  </nav>
+  <main>
+    <div class="tab-content active" id="home-content">
+      <div class="workers">
+        <h2>Jobless:</h2>
+        <div id="jobless">
+          
+        </div>
+      </div>
+    </div>
+    <div class="tab-content hidden" id="jobsite-content">
+      <div id="job-available">
+  
+      </div>
+      <div class="flex-wrap">
+        <div id="jobsite-buy">
+
+        </div>
+        <div id="jobsite-card">
+
+
+        </div>
+      </div>
+    </div>
+    <div class="tab-content hidden" id="population-content">
+      <h2>Science!</h2>
+      <button type="button" class="up-value" id="get-val">Increase Get value
+        <br>Cost: <span class="cost">100</span> Current: <span class="current">1</span> Multi: <span class="multi">1</span></button>
+
+      <div class="farm-science row hidden">
+        <button type="button" class="sci-value" disabled>BUY FARM
+          <br>Cost:<span class="cost">50</span> Current:<span class="owned">1</span></button>
+        <div class="indicator" id="farm-indicator">//--//</div>
+      </div>
+    </div>
+    <div class="tab-content hidden" id="fourth-content">
+      <h2>Fourth</h2>
+    </div>
+    <div class="tab-content hidden" id="hibernate-content">
+      <h2>Hibernate</h2>
+      <button type="button" class="hibernate" id="hibernate">HIBERNATE</button>
+      <div class="hibernate-info hidden" id="hibernate-info">
+        <h3>If you hibernate, you will receive:</h3>
+        <h2 id="gn-preview">0</h2>
+        <button></button>
+      </div>
+    </div>
+</body>
+
+</html>

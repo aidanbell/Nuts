@@ -11,6 +11,15 @@ let foo = (evt) => {
 
 nav.addEventListener('click', foo)
 
+
+// JS for Building Tab Menu
+
+const buildNav = document.getElementById("building-buy");
+
+const buildNavHandle = (e) => {
+  
+}
+
 // should add in scripts that run on load
 //      -price checker to disable things you can't afford
 //      -things to hide/reveal tabs until checkpoints
@@ -79,7 +88,7 @@ let getButton = {
 
 // const loopFunctions = ()
 
-timerFunctions.forEach(button => button.doThing());
+// timerFunctions.forEach(button => button.doThing());
 
 
 /*----- cached element references -----*/
@@ -88,6 +97,7 @@ let TOTAL = document.querySelector('#total');
 const homeTab = document.querySelector('#home-content');
 const scienceTab = document.querySelector('#science-content');
 const hibernateTab = document.querySelector('#hibernate-content')
+const buildTab = document.querySelector('#build-content')
 
 const create = (thing) => {
   if (thing === "worker") {
@@ -206,6 +216,7 @@ const render = () => {
 }
 
 
+
 const homeHandle = (evt) => {
   if (evt.target.id === 'get-nuts') {
     getNuts()
@@ -297,7 +308,7 @@ const makeBarGo = () => {
   let id = setInterval(function() {
     if (w == 100) {
       w = 0;
-      w1Button.doThing();
+      // w1Button.doThing();
     }
     w++
     bar.style.width = w + '%'
@@ -319,11 +330,32 @@ const hibernate = () => {
   initGame();
 }
 
+let CLOCK = document.getElementById('clock')
+let timer = {
+  ms: 0,
+  s: 0,
+  m: 0,
+};
+const clock = () => {
+  CLOCK.innerHTML = `${timer.s}:${timer.ms}`
+  if (timer.ms == 99) {
+    timer.s++
+    timer.ms = 0
+  }
+  if (timer.s == 59) {
+    timer.m++
+    timer.s = 0
+  }
+  timer.ms ++
+}
+
+window.setInterval(clock, 10)
+
 window.setInterval(function() {
   timerFunctions.forEach(button => button.work());
   show();
   render();
-}, 20)
+}, 10)
 
 initGame();
 

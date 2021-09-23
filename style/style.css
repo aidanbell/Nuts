@@ -1,5 +1,6 @@
 body {
   box-sizing: border-box;
+  margin: 1em;
 }
 
 nav {
@@ -7,7 +8,6 @@ nav {
   align-items: center;
   align-content: center;
   justify-content: center;
-
 }
 
 .tabs {
@@ -29,15 +29,16 @@ nav {
 
 .tab-content.active {
   background-color: lightblue;
-  display: grid;
+  height: 80vh;
 }
 
 
 button {
   border: 1px solid black;
   background: lightgray;
-  height: 50px;
-
+  border-radius: 5px;
+  width: 100%;
+  height: 3em;
 }
 
 .indicator {
@@ -75,11 +76,67 @@ span#current {
 .progress-container {
   height: 10px;
   border: 1px solid black;
-  border-radius: 50%;
+  /* border-radius: 50%; */
 }
 
 .progress-bar {
   background-color: blueviolet;
   height: 10px;
   width: 100%;
+}
+
+.flex-wrap {
+  display: flex;
+}
+
+.jobsite-button {
+  border: 1px solid black;
+  background: lightgray;
+  height: auto;
+  padding: auto;
+}
+
+#jobless {
+  display: flex;
+}
+
+.job-square {
+  font-size: 4em;
+}
+
+.found {
+  font-size: 20px;
+  position: relative;
+  top: -2em;
+}
+
+#jobsite-buy {
+  display: flex;
+  flex-direction: column;
+  width: 30%;
+}
+
+#jobsite-card {
+  width: 70%;
+}
+
+#job-available {
+  display: flex;
+}
+
+@keyframes found-nut {
+  from {
+    opacity: 1;
+    top: -2em;
+  }
+  to {
+    opacity: 0;
+    top: -4em;
+  }
+}
+
+.found-animation {
+  animation: found-nut;
+  animation-duration: 600ms;
+
 }

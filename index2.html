@@ -16,11 +16,12 @@
     <h1><span id="total">0</span> Nuts </h1>
     <h2><span id="debug-total">-</span></h2>
     <h3 id="nuts-running">-</h3>
+    <h4 id="clock">0:00</h4>
   </header>
   <nav>
     <div class="tabs active" id="home">Nuts</div>
     <div class="tabs" id="science">Science!</div>
-    <div class="tabs" id="third">Third</div>
+    <div class="tabs" id="build">Build</div>
     <div class="tabs" id="fourth">Fourth</div>
     <div class="tabs" id="hibernate">Hibernate!</div>
   </nav>
@@ -42,7 +43,12 @@
         <div class="w2-div row hidden">
           <button type="button" class="worker-button" id="buy-w2" disabled>SCAVENGER
             <br>Cost:<span class="cost">500</span> Current:<span class="owned">1</span></button>
-          <div class="indicator" id="w2-indicator">//--//</div>
+          <div class="indicator" id="w2-indicator">
+            <div class="progress-container">
+              <div class="progress-bar" id="w1-progress" style='width: 0%; transition-duration: 100ms;'></div>
+            </div>
+            <span id="w2-indicator">//--//</span>
+          </div>
         </div>
         <div class="w3-div row hidden">
           <button type="button" class="worker-button" id="buy-w3" disabled>ROCK THROWER
@@ -67,8 +73,18 @@
         <div class="indicator" id="farm-indicator">//--//</div>
       </div>
     </div>
-    <div class="tab-content hidden" id="third-content">
-      <h2>Third</h2>
+    <div class="tab-content hidden" id="build-content">
+      <div class="flex-wrap">
+        <div id="building-buy">
+          <button class="building-button">
+            <h4>SHED</h4>
+            <p>10.00k NUTS</p>
+          </button>
+        </div>
+        <div id="building-menu">
+          <h2>Click on a building for more info!</h2>
+        </div>
+      </div>
     </div>
     <div class="tab-content hidden" id="fourth-content">
       <h2>Fourth</h2>

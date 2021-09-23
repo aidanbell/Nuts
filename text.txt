@@ -55,19 +55,19 @@ Year timer
 
 ------------------------BASIC GETS------------------------
 
-  GETS                     Science                   Technology
+  GETS                     Type                Science                Technology
   ------------------------------------------------------------------------------------
   STONEAGE
-   Gatherer                   -                           -
-   Scavenger                  -                           -
-   Rock Thrower               -                           -
-   Tree Climber               -                           -
+   Gatherer               Ground                  -                        -
+   Scavenger              Ground                  -                        -
+   Rock Thrower           Ground                  -                        -
+   Tree Climber            Air                    -                        -
 
   BRONZE AGE
-   Farmer                     +val
-   Gathering Party            +val
-   Tree Thumper               +val
-   Stilt Walker               +val
+   Farmer                 Ground                +val
+   Gathering Party        Ground                +val
+   Tree Thumper           Ground                +val
+   Stilt Walker            Air                  +val
 
   IRON AGE
    Crop Tender
