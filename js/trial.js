@@ -51,7 +51,7 @@ let POP = {
   jobless: [],
   jobSite1: []
 }
-let nutsTotal = 10;
+let nutsTotal = 0;
 let nutsRunning = 0;
 let getButton = {
   value: 1,
@@ -99,6 +99,7 @@ const homeHandle = (e) => {
 };
 
 const jobsiteHandler = (e) => {
+  console.log(e.currentTarget)
   jobsiteDisplay(jobs[parseInt(e.target.id[1])])
 }
 
@@ -131,8 +132,7 @@ const chance = (per) => {
 
 
 const jobless = () => {
-  if (TICK % 500 === 0) {
-    console.log('did?')
+  if (TICK % 80 === 0) {
     POP.jobless.forEach(s => {
       if (chance(0.2)) findNut(s);
     })
@@ -145,8 +145,10 @@ const findNut = (s) => {
   nutsRunning++;
   let nut = document.getElementById(`f-${s._id}`)
   nut.classList.replace("hidden", "found-animation");
+  nut.style.left = `${Math.floor(Math.random() * 50)}%`
   setTimeout(function() {
     nut.classList.replace("found-animation", "hidden")
+    nut.style.left = 0;
   }, 600)
 }
 
@@ -156,7 +158,8 @@ const work = () => {
 
 /*---------- JOBSITE RENDERING ----------*/
 const jbPlaceholder = document.getElementById('jobsite-card')
-const jbBuy = document.getElementById('jobsite-buy')
+const jbBuys = document.querySelectorAll('.jobsite-buy')
+const jbBtns = document.querySelectorAll('.jobsite-btn')
 
 
 // temp jobsite array until I feel like fucking with the class
@@ -184,6 +187,13 @@ let jobs = [
 ];
 // (this.value * this.multi * this.workers.length) / this.time
 
+//this needs to be added to render logic
+function renderBtns() {
+  jbBuys.forEach((div, i) => {
+    div.children[0].textContent = jobs[i].name
+    div.children[1].firstElementChild.textContent = jobs[i].cost
+  })
+} 
 
 
 /*---------- MAIN GAME LOOP ---------*/
@@ -226,7 +236,7 @@ window.setInterval(function () {
 }, 10);
 
 const initGame = () => {
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 4; i++) {
     POP.jobless.push(new Squirrel)
   }
 
@@ -234,11 +244,12 @@ const initGame = () => {
     document.getElementById('jobless').append(squirrelJobRender(s, true))
     document.getElementById("job-available").append(squirrelJobRender(s));
   })
-  let str = '';
-  jobs.forEach((j, i) => {
-    str += `<button id="j${i}" class="button">${j.name}</button>`
-  })
-  jbBuy.innerHTML = str
+  renderBtns();
+  // let str = '';
+  // jobs.forEach((j, i) => {
+  //   str += `<button id="j${i}" class="button">${j.name}</button>`
+  // })
+  // jbBuy.innerHTML = str
 }
 
 initGame();

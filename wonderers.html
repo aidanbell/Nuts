@@ -13,10 +13,16 @@
 
 <body>
   <header>
-    <h1><span id="total">0</span> Nuts </h1>
-    <h2><span id="debug-total">-</span></h2>
-    <h3 id="nuts-running">-</h3>
-    <h4 id="clock">0:00</h4>
+    <div id="stats">
+      <h1><span id="total">0</span> Nuts </h1>
+      <h2><span id="debug-total">-</span></h2>
+      <h3 id="nuts-running">-</h3>
+      <h4 id="clock">0:00</h4>
+    </div>
+    <div id="tips">
+      <h3 id="tip-title"></h3>
+      <p id="tip-body"></p>
+    </div>
   </header>
   <nav>
     <div class="tabs active" id="home">Nuts</div>
@@ -34,13 +40,28 @@
         </div>
       </div>
     </div>
+    <!-- JOBSITE CONTENT -->
     <div class="tab-content hidden" id="jobsite-content">
       <div id="job-available">
   
       </div>
       <div class="flex-wrap">
         <div id="jobsite-buy">
-
+          <div class="jobsite-buy" id="j0">
+            <span class="jobsite-name" id="jobsite-name-0"></span>
+            <button class="jobsite-btn" id="jbtn-0">
+              Buy 1
+              <span class="price" id="jobsite-price-0"></span>
+            </button>
+          </div>
+          <div class="jobsite-buy" id="jobsite-buy-1">
+            <span class="jobsite-name" id="jobsite-name-1"></span>
+            <button class="jobsite-btn" id="jbtn-1">
+              Buy 1
+              <span class="price" id="jobsite-price-1"></span>
+            </button>
+          </div>
+          
         </div>
         <div id="jobsite-card">
 
@@ -48,6 +69,7 @@
         </div>
       </div>
     </div>
+    <!-- POPULATION CONTENT -->
     <div class="tab-content hidden" id="population-content">
       <h2>Science!</h2>
       <button type="button" class="up-value" id="get-val">Increase Get value

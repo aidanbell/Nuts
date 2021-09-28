@@ -100,6 +100,10 @@ span#current {
   display: flex;
 }
 
+header {
+  display: flex;
+}
+
 .job-square {
   font-size: 4em;
 }
@@ -139,4 +143,24 @@ span#current {
   animation: found-nut;
   animation-duration: 600ms;
 
+}
+
+.jobsite-buy {
+  height: 5em;
+  background-color: azure;
+  border: 2px solid black;
+  display: flex;
+  flex-direction: row;
+}
+
+.jobsite-btn {
+  width: 40%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.jobsite-name {
+  width: 60%;
+  font-size: 300%;
 }
