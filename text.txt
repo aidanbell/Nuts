@@ -46,18 +46,24 @@ Gather nuts to stay alive
 Year timer 
 
  STONE AGE
-    -unlock refining
-      -build first house
-        -acquire first citizen
-          -citizen gets bored
-            -build research lab
-    -unlock science
+  - begin as one squirrel
+  - unlock thinkings
+    - first thinkings let you begin "Gathering"
+  -
 
-------------------------BASIC GETS------------------------
+------------------------THINKINGS-------------------------
+GET THINKINGS:         META THINKINGS:          BIG THINKINGS:
+- unlock next           - organization           - era adv, hib
+  get method            - unlocks things like    - big unlocks
+- improve on each         pop, hib, adv
+  get method
+
+
+------------------------JOBSITES------------------------
 
   GETS                     Type                Science                Technology
   ------------------------------------------------------------------------------------
-  STONEAGE
+  STONE AGE
    Gatherer               Ground                  -                        -
    Scavenger              Ground                  -                        -
    Rock Thrower           Ground                  -                        -
@@ -70,46 +76,77 @@ Year timer
    Stilt Walker            Air                  +val
 
   IRON AGE
-   Crop Tender
-   Floor Rakers
-   Tree Shaker
-   Tree Lifts
+   Crop Tender            Ground                +val
+   Floor Rakers           Ground                +val
+   Tree Shaker            Ground                +val
+   Tree Lifts             Air                   +val
 
   INDUSTRIAL AGE
-   Agriculturalist
-   Vacuum Tractor
-   Tree Nets
-   Nut Factory
+   Agriculturalist        Ground                +val/-time
+   Vacuum Tractor         Ground                +val/-time
+   Tree Nets              Air                   +val/-time
+   Nut Factory            Ground                +val/-time
 
   INFORMATION AGE
-   Hydroponics
-   Nut Trackers
-   Nut Funneling System
-   Nut Complex
+   Hydroponics            Ground                +val/-time
+   Nut Trackers           Ground                +val/-time
+   Nut Funneling System   Air                   +val/-time
+   Nut Complex            Ground                +val/-time
 
   TECHNOLOGY AGE
-   AutoGardens
-   Autonomous Delivery
-   Nut Chutes
-   Nut Lab
+   Auto Gardens           Ground                +val/-time/+multi
+   RC Nut Delivery        Ground                +val/-time/+multi
+   Nut Chutes             Air                   +val/-time/+multi
+   Nut Lab                Ground                +val/-time/+multi
 
   SPACE AGE
-   Orbiting Farm
-   ____________
-   ____________
-   ____________
-
+   Orbiting Farm          Space                 +val/-time/+multi
+   Nut Drones             Air                   +val/-time/+multi
+   Nut Routing            Ground                +val/-time/+multi
+   Nut Synthesizer        Ground                +val/-time/+multi
+  
   GALACTIC AGE
-   ____________
-   ____________
-   ____________
-   ____________
+   HoloFarms              Space                +val/-time/+multi
+   TeleNuts               Space                +val/-time/+multi
+   Nut Wormholes          Space                +val/-time/+multi
+   The Nut                ?????                +val/-time/+multi
 
-------------------------CITIZENS------------------------
-  Citizens are unlocked during IRON AGE
-  Citizens are initially gather on a randomized rate (SLOWLY)
-                OR
-  Citizens come on a per/nut basis. ie, total nuts per era
+
+------------------------TOWN TAB--------------------------
+This tab will have various "buildings" that will contribute to the Jobsites
+and/or the wellbeing of the group
+
+CONSTANT BUILDINGS:
+- House: Increases population capacity
+  - STONE AGE: Hollo
+  - BRONZE AGE:
+  - IRON AGE:
+  - INDUSTRIAL AGE:
+  - INFORMATION AGE:
+  - TECHNOLOGY AGE:
+  - SPACE AGE:
+  - GALACTIC AGE:
+- Storage: Increases nuts storage
+
+AMMENITIES:
+- 
+-
+
+PROJECTS:
+- Higher cap on jobsites maybe?
+
+------------------------POPULATION------------------------
+4 Squirrels will join via story checkpoints. This will get the player ready
+and filling different roles. Having 5 total squirrels will trigger Thinking for
+the [TOWN TAB]. This will allow 
+After an initial 5 squirrels join you (one for each job and you for research), 
+a story message will play saying "no more squirrels in the area, we're going to 
+need our best thinkers to find a way to grow the colony"
+Population tab won't be unlocked until after the first advance
+
+RECRUIT:
+An Era based method of attracting new squirrels to your group:
+IRON AGE: 10%/5min
 
 
 ------------------------NUT CITY B****------------------------

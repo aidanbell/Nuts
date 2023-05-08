@@ -8,6 +8,8 @@
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
   <link href="style/style.css" rel="stylesheet" type="text/css" />
+  <script defer src="js/reports.js"></script>
+  <script defer src="js/build.js"></script>
   <script defer src="js/trial.js"></script>
 </head>
 
@@ -19,17 +21,18 @@
       <h3 id="nuts-running">-</h3>
       <h4 id="clock">0:00</h4>
     </div>
-    <div id="tips">
-      <h3 id="tip-title"></h3>
-      <p id="tip-body"></p>
+    <div id="reports">
+      <p id="report-body"></p>
+      <p id="report-small"></p>
     </div>
   </header>
   <nav>
     <div class="tabs active" id="home">Nuts</div>
-    <div class="tabs" id="jobsite">Jobsites</div>
-    <div class="tabs" id="population">Population</div>
-    <div class="tabs" id="fourth">Fourth</div>
-    <div class="tabs" id="hibernate">Hibernate!</div>
+    <div class="tabs locked" id="thinkings"></div>
+    <div class="tabs locked" id="jobsite"></div>
+    <div class="tabs locked" id="town"></div>
+    <div class="tabs locked" id="population"></div>
+    <div class="tabs locked" id="hibernate"></div>
   </nav>
   <main>
     <div class="tab-content active" id="home-content">
@@ -45,29 +48,13 @@
       <div id="job-available">
   
       </div>
-      <div class="flex-wrap">
-        <div id="jobsite-buy">
-          <div class="jobsite-buy" id="j0">
-            <span class="jobsite-name" id="jobsite-name-0"></span>
-            <button class="jobsite-btn" id="jbtn-0">
-              Buy 1
-              <span class="price" id="jobsite-price-0"></span>
-            </button>
-          </div>
-          <div class="jobsite-buy" id="jobsite-buy-1">
-            <span class="jobsite-name" id="jobsite-name-1"></span>
-            <button class="jobsite-btn" id="jbtn-1">
-              Buy 1
-              <span class="price" id="jobsite-price-1"></span>
-            </button>
-          </div>
-          
-        </div>
-        <div id="jobsite-card">
+      <div class="jobs" id="jobs-container">
 
-
-        </div>
       </div>
+    </div>
+    <!-- TOWN TAB -->
+    <div class="tab-content hidden" id="town-content">
+      <h2>Fourth</h2>
     </div>
     <!-- POPULATION CONTENT -->
     <div class="tab-content hidden" id="population-content">
@@ -81,9 +68,7 @@
         <div class="indicator" id="farm-indicator">//--//</div>
       </div>
     </div>
-    <div class="tab-content hidden" id="fourth-content">
-      <h2>Fourth</h2>
-    </div>
+    <!-- HIBERNATE TAB -->
     <div class="tab-content hidden" id="hibernate-content">
       <h2>Hibernate</h2>
       <button type="button" class="hibernate" id="hibernate">HIBERNATE</button>
@@ -93,6 +78,12 @@
         <button></button>
       </div>
     </div>
+    <!-- THINKINGS CONTENT -->
+    <div class="tab-content hidden" id="thinkings-content">
+      <h2>Thinkings:</h2>
+
+    </div>
+  </main>
 </body>
 
 </html>

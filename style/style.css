@@ -1,6 +1,16 @@
+:root {
+  --umber: #634F44;
+  --dark-green: #424221;
+  --green: #657046;
+  --raisin: #2D232C;
+  --khaki: #DEA28C;
+}
+
 body {
   box-sizing: border-box;
   margin: 1em;
+  background: var(--raisin);
+  color: white;
 }
 
 nav {
@@ -18,17 +28,17 @@ nav {
   width: 20em;
 }
 
-.tabs:hover {
+.unlocked:hover {
   border-color: white;
   background-color: lightgray;
 }
 
 .tabs.active {
-  background-color: gray;
+  background-color: var(--green);
 }
 
 .tab-content.active {
-  background-color: lightblue;
+  background-color: var(--green);
   height: 80vh;
 }
 
@@ -58,42 +68,23 @@ button {
   display: none;
 }
 
-button.up-value {
-  width: 40%;
-  text-align: left;
-}
-
-span#cost,
-span#current {
-
-  align-self: right;
-}
-
-#get-nuts {
-  width: 80%;
-}
-
-.progress-container {
-  height: 10px;
-  border: 1px solid black;
-  /* border-radius: 50%; */
-}
-
-.progress-bar {
-  background-color: blueviolet;
-  height: 10px;
-  width: 100%;
-}
 
 .flex-wrap {
   display: flex;
 }
 
-.jobsite-button {
-  border: 1px solid black;
-  background: lightgray;
-  height: auto;
-  padding: auto;
+#reports {
+  width: 60%;
+  display: flex;
+  flex-direction: column;
+}
+
+#report-small {
+  align-self: end;
+}
+
+#stats {
+  width: 40%;
 }
 
 #jobless {
@@ -114,14 +105,51 @@ header {
   top: -2em;
 }
 
-#jobsite-buy {
+.jobs {
   display: flex;
   flex-direction: column;
-  width: 30%;
 }
 
-#jobsite-card {
-  width: 70%;
+.jobsite {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 5em;
+}
+
+
+.jobsite-buy {
+  background-color: azure;
+  border: 2px solid black;
+  display: flex;
+  flex-direction: row;
+  width: 60%;
+}
+
+.jobsite-btn {
+  width: 40%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.jobsite-jobs {
+  width: 50%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+.jobsite-remove {
+  width: 10%;
+  font-size: 4em;
+  display: flex;
+  align-items: center;
+}
+
+.jobsite-name {
+  width: 60%;
+  font-size: 300%;
 }
 
 #job-available {
@@ -139,28 +167,22 @@ header {
   }
 }
 
+
 .found-animation {
   animation: found-nut;
   animation-duration: 600ms;
-
 }
 
-.jobsite-buy {
-  height: 5em;
-  background-color: azure;
-  border: 2px solid black;
-  display: flex;
-  flex-direction: row;
+.mirror {
+  transform: scaleX(-1);
 }
 
-.jobsite-btn {
-  width: 40%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+.fade-out {
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s 200ms, opacity 200ms linear;
 }
 
-.jobsite-name {
-  width: 60%;
-  font-size: 300%;
+.locked {
+  background-color: var(--dark-green);
 }

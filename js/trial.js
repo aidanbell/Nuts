@@ -4,6 +4,8 @@
 const nav = document.querySelector("nav");
 
 let foo = (evt) => {
+  if (evt.target.classList.contains('locked')) return;
+  console.log(evt.target)
   document.querySelector(".tab-content.active").classList.replace("active", "hidden");
   document
     .querySelector(`#${evt.target.id}-content`)
@@ -15,19 +17,22 @@ let foo = (evt) => {
 nav.addEventListener("click", foo);
 
 class JobSite {
-  constructor(time, cost, value) {
+  constructor(name, time, cost, value) {
+    this.name = name;
     this.time = time;
     this.baseCost = cost;
     this.cost = cost;
     this.value = value;
     this.multi = 1;
     this.owned = 0;
+    this.workers = [];
+    this.capacity = 0;
     this.running = false;
   }
 
   work = () => {
-    nutsTotal += (this.value * this.multi * this.owned) / this.time;
-    nutsRunning += (this.value * this.multi * this.owned) / this.time;
+    nutsTotal += (this.value * this.multi * this.workers.length);
+    nutsRunning += (this.value * this.multi * this.workers.length);
   };
 
   doThing = () => {
@@ -40,8 +45,10 @@ class Squirrel {
   constructor() {
     this._id = ++Squirrel.id
     this.employed = false;
-    this.jobSite = null;
+    this.job = null;
     this.total = 0;
+    this.born = TICK;
+    this.workRate = 2
   }
 }
 
@@ -49,7 +56,10 @@ class Squirrel {
 /*------ APP'S STATE --------*/
 let POP = {
   jobless: [],
-  jobSite1: []
+  jobs: {
+    gatherer: [],
+    scavenger: [],
+  }
 }
 let nutsTotal = 0;
 let nutsRunning = 0;
@@ -63,12 +73,11 @@ let goldNuts = {
   multi: 0.12,
 };
 
+const jobs = [
+  new JobSite("Gatherer", 1000, 10, 1),
+  new JobSite("Scavenger", 5000, 100, 10),
+];
 
-/*---------- GET NUTS BUTTON ----------*/
-const getNuts = () => {
-  nutsTotal += getButton.value * getButton.mult;
-  nutsRunning += getButton.value * getButton.mult;
-};
 
 /*---------- CACHED ELEMENTS ----------*/
 
@@ -108,12 +117,25 @@ function jobsiteDisplay(job) {
                              <h3>${job.workers.length}/${job.capacity}</h3>`;
 }
 
+
+/*---------- HOME ----------*/
+function addNewSquirrel() {
+  let s = new Squirrel();
+  POP.jobless.push(s);
+  document.getElementById('jobless').append(squirrelJobRender(s, true))
+}
+
 /*---------- JOBS ----------*/
 const squirrelJobRender = (squirrel, nut = false) => {
   let div = document.createElement('div')
   div.id = `s-${squirrel._id}`
   div.className = 'job-square'
-  div.innerHTML = "🐿️";
+  if (!squirrel.job) {
+    div.innerHTML = "🐿️";
+  }
+  if (squirrel.job == 'Gatherer') {
+    div.innerHTML = "🌲";
+  }
   if (nut) {
     let found = document.createElement('div')
     found.classList.add('hidden', 'found')
@@ -132,11 +154,20 @@ const chance = (per) => {
 
 
 const jobless = () => {
-  if (TICK % 80 === 0) {
+  if (TICK % 120 === 0) {
     POP.jobless.forEach(s => {
       if (chance(0.2)) findNut(s);
+      if (chance(0.1)) twitcher(s)
     })
   }
+}
+
+function workers() {
+  jobs.forEach(job => {
+    if (TICK % job.time === 0) {
+      job.work();
+    }
+  })
 }
 
 const findNut = (s) => {
@@ -152,48 +183,94 @@ const findNut = (s) => {
   }, 600)
 }
 
+function twitcher(s) {
+  document.getElementById(`s-${s._id}`).classList.toggle('mirror')
+}
+
 const work = () => {
   jobless();
+  workers();
 }
 
 /*---------- JOBSITE RENDERING ----------*/
-const jbPlaceholder = document.getElementById('jobsite-card')
-const jbBuys = document.querySelectorAll('.jobsite-buy')
+const jobsContainer = document.getElementById("jobs-container");
 const jbBtns = document.querySelectorAll('.jobsite-btn')
-
-
-// temp jobsite array until I feel like fucking with the class
-let jobs = [
-  {
-    name: "Gatherer",
-    capacity: 0,
-    workers: [],
-    time: 1000,
-    multi: 1,
-    level: 0,
-    cost: 20,
-    value: 1,
-  },
-  {
-    name: "Scavenger",
-    capacity: 0,
-    workers: [],
-    time: 1000,
-    multi: 1,
-    level: 0,
-    cost: 20,
-    value: 1,
-  },
-];
 // (this.value * this.multi * this.workers.length) / this.time
 
 //this needs to be added to render logic
 function renderBtns() {
-  jbBuys.forEach((div, i) => {
-    div.children[0].textContent = jobs[i].name
-    div.children[1].firstElementChild.textContent = jobs[i].cost
+  jobs.forEach((job, idx) => {
+    jobsContainer.append(buildJobsite(job, idx))
   })
-} 
+}
+
+
+function renderJobsites() {
+  // Render Jobless
+  document.getElementById('job-available').innerHTML = "";
+  POP.jobless.forEach(s => {
+    document.getElementById('jobless').append(squirrelJobRender(s, true))
+    document.getElementById("job-available").append(squirrelJobRender(s));
+  })
+  // Render Jobs
+  jobs.forEach((job, idx) => {
+    document.getElementById(`jobsite-jobs-${idx}`).innerHTML = "";
+    job.workers.forEach(s => {
+      document.getElementById(`jobsite-jobs-${idx}`).append(squirrelJobRender(s));
+    })
+  })
+}
+
+
+/*---------- JOBSITE LOGIC ---------*/
+
+function handleBuy(idx) {
+  let job = jobs[idx]
+  if (!POP.jobless.length) return;
+  if (nutsTotal < job.cost) return;
+  nutsTotal -= job.cost;
+  job.cost = Math.floor(job.cost * 1.2);
+  job.capacity++;
+  let squirrel = POP.jobless.pop();
+  squirrel.job = job.name;
+  job.workers.push(squirrel);
+  // let div = document.getElementById(`jobsite-${idx}`)
+  // div.append(squirrelJobRender(squirrel))
+  renderJobsites();
+}
+
+function handleRemove(idx) {
+  test();
+}
+
+/*---------- CHECKS ---------*/
+let THRESHOLD = 0;
+
+function checks() {
+  storyCheck();
+}
+
+function storyCheck() {
+  if (nutsTotal >= 10 && reportIdx === 2) {
+    playNextReport();
+    addNewSquirrel();
+    THRESHOLD++;
+  }
+  if (nutsTotal >= 25 && reportIdx === 3) {
+    playNextReport();
+    unlocker()
+    THRESHOLD++;
+  }
+}
+
+function unlocker() {
+  switch(THRESHOLD) {
+    case 1:
+      let tab = document.getElementById('thinkings')
+      tab.classList.replace('locked', 'unlocked')
+      tab.textContent = 'Thinkings'
+  }
+}
 
 
 /*---------- MAIN GAME LOOP ---------*/
@@ -203,6 +280,7 @@ const render = () => {
   Math.round(nutsTotal * 1000) / 1000;
   document.querySelector("#nuts-running").textContent =
   Math.round(nutsRunning * 1000) / 1000;
+
 };
 
 let CLOCK = document.getElementById("clock");
@@ -228,33 +306,32 @@ const clock = () => {
   timer.ms++;
 };
 
-window.setInterval(clock, 10);
+// window.setInterval(clock, 10);
 
-window.setInterval(function () {
-  work();
-  render();
-}, 10);
 
 const initGame = () => {
-  for (let i = 0; i < 4; i++) {
+  // for (let i = 0; i < 4; i++) {
+    //   POP.jobless.push(new Squirrel)
+    // }
     POP.jobless.push(new Squirrel)
-  }
+    
+    POP.jobless.forEach(s => {
+      document.getElementById('jobless').append(squirrelJobRender(s, true))
+      document.getElementById("job-available").append(squirrelJobRender(s));
+    })
+    renderBtns();
 
-  POP.jobless.forEach(s => {
-    document.getElementById('jobless').append(squirrelJobRender(s, true))
-    document.getElementById("job-available").append(squirrelJobRender(s));
-  })
-  renderBtns();
-  // let str = '';
-  // jobs.forEach((j, i) => {
-  //   str += `<button id="j${i}" class="button">${j.name}</button>`
-  // })
-  // jbBuy.innerHTML = str
+    window.setInterval(function () {
+      clock();
+      work();
+      render();
+      checks()
+    }, 10);
 }
 
-initGame();
+// initGame();
 // 🐿️
 // 🥜
 
 homeTab.addEventListener("click", homeHandle);
-jobsiteTab.addEventListener("click", jobsiteHandler)
+// jobsiteTab.addEventListener("click", jobsiteHandler)
