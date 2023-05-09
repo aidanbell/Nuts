@@ -19,7 +19,8 @@ let reports = [
   "You wake up in a small clearing. The world is quiet. You're all alone. You'll have to begin to gather nuts for the months ahead.",
   "You stand up, stretch your little squirrel arms, and start lazily searching the clearing for nuts",
   "You hear a rustle in the bushes. A compatriot. Two heads are better than one. They get to work checking the clearing with you.",
-  "A clunk on the head rouses you from your work, and knocks you on your tail. Amongst the stars spinning around your ears, you see visions of structure, organization, machines, and a better life. You have been blessed with the gift of head-pictures."
+  "A clunk on the head rouses you from your work, and knocks you on your tail. Amongst the stars spinning around your ears, you see visions of structure, organization, machines, and a better life. You have been blessed with the gift of Thoughts.",
+  "You leave your new friend to wander around the clearing, and you set yourself to Thinking."
 ]
 let reportIdx = 0
 

@@ -1,3 +1,6 @@
+/* ----------- CACHED ELEMENTS ----------- */
+const thinkingsContainer = document.getElementById("thinkings-container");
+
 let CHECK_THRESHOLD = 0;
 
 class Thinking {
@@ -12,14 +15,16 @@ class Thinking {
 
 }
 const thinkings = [
-  new Thinking("Think", 2, "think", "Increases thoughts per minute"),
+  new Thinking("Think...", 2, "think", "Dedicate a squirrel to thinking."),
   new Thinking("Focus", 5, "think", "Increases thoughts per minute. Unlocks the notion of professions."),
   new Thinking("Ponder", 10, "think", "Increases thoughts per minute. Unlocks the division of thoughts.")
 ]
 
 class BigThinking extends Thinking {
+  static id = 0;
   constructor(name, cost, type, effect) {
     super(name, cost, type);
+    this._id = `${type[1]}-${BigThinking.id++}`
     this.effect = effect;
     this.unlocked = false;
   }
@@ -28,8 +33,10 @@ class BigThinking extends Thinking {
 const bigThinkings = []
 
 class MetaThinking extends Thinking {
+  static id = 0;
   constructor(name, cost, type, effect) {
     super(name, cost, type);
+    this._id = `${type[1]}-${MetaThinking.id++}`;
     this.effect = effect;
     this.unlocked = false;
   }
@@ -37,8 +44,10 @@ class MetaThinking extends Thinking {
 }
 
 class GetThinking extends Thinking {
+  static id = 0;
   constructor(name, cost, type, effect, value) {
     super(name, cost, type);
+    this._id = `${type[1]}-${GetThinking.id++}`;
     this.effect = effect;
     this.value = value;
     this.owned = 0;
@@ -56,7 +65,8 @@ function checkThinkings() {
   switch (CHECK_THRESHOLD) {
     case 0:
       thinkings[0].hidden = false;
-      buildThinking(thinkings[0])
+      thinkingsContainer.append(buildThinking(thinkings[0]))
+      CHECK_THRESHOLD++;
     case 1:
       thinkings[1].hidden = false;
       buildThinking(thinkings[1])
@@ -64,7 +74,6 @@ function checkThinkings() {
       thinkings[2].hidden = false;
       buildThinking(thinkings[2])
   }
-  CHECK_THRESHOLD++;
 
 }
 

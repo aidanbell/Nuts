@@ -67,8 +67,12 @@ let POP = {
 }
 let nutsTotal = 0;
 let nutsRunning = 0;
-let thoughts = 0;
+let thoughtStats = {
+  speed: 1000,
+  multi: 1,
+};
 let thoughtsRunning = 0;
+let thoughtsTotal = 0;
 let getButton = {
   value: 1,
   mult: 1,
@@ -125,6 +129,24 @@ function addNewSquirrel() {
   let s = new Squirrel();
   POP.jobless.push(s);
   document.getElementById('jobless').append(squirrelJobRender(s, true))
+}
+
+/*---------- THINKING ----------*/
+function assignThinker() {
+  let s = POP.jobless.shift();
+  s.job = "Thinker";
+  s.employed = true;
+  POP.thinkers.push(s);
+  document.getElementById("thinkers").append(squirrelJobRender(s));
+}
+
+function thinkers() {
+  if (TICK % thoughtStats.speed === 0) {
+    POP.thinkers.forEach((s) => {
+      thoughtsTotal += s.workRate;
+      thoughtsRunning += s.workRate;
+    });
+  }
 }
 
 /*---------- JOBS ----------*/
@@ -205,14 +227,7 @@ function twitcher(s) {
 const work = () => {
   jobless();
   workers();
-}
-
-function assignThinker() {
-  let s = POP.jobless.shift();
-  s.job = 'Thinker';
-  s.employed = true;
-  POP.thinkers.push(s);
-  document.getElementById('thinkers').append(squirrelJobRender(s))
+  thinkers();
 }
 
 function removeSquirrel(s) {
@@ -288,7 +303,8 @@ function storyCheck() {
   if (nutsTotal >= 25 && reportIdx === 3) {
     playNextReport();
     unlocker()
-    thoughts += 10
+    thoughtsTotal += 10
+    thoughtsRunning += 10
     document.querySelector('.thoughts-display').classList.remove('hidden')
     THRESHOLD++;
   }
@@ -311,7 +327,7 @@ const render = () => {
   Math.round(nutsTotal * 1000) / 1000;
   document.querySelector("#nuts-running").textContent =
   Math.round(nutsRunning * 1000) / 1000;
-  document.querySelector('#thoughts-total').textContent = thoughts;
+  document.querySelector('#thoughts-total').textContent = thoughtsTotal;
 };
 
 let CLOCK = document.getElementById("clock");

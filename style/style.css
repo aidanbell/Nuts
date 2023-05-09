@@ -115,9 +115,50 @@ header {
   display: flex;
 }
 
-.job-square {
-  font-size: 4em;
+/* ------------------ THINKINGS ------------------ */
+.thinking {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: baseline;
+  background-color: #7a845f;
+  height: 4em;
+  width: 50%;
+  border: 2px solid var(--raisin);
+  border-radius: 10px;
 }
+
+.thinking-cost {
+  border: 2px solid gray;
+  border-radius: 10px;
+  text-align: center;
+  margin: 2px;
+}
+
+.thinking-effect {
+  display: none;
+}
+
+.thinking:hover .thinking-effect {
+  display: block;
+}
+
+.thinking:hover .thinking-name {
+  display: none;
+}
+
+.thinking-cost:hover {
+  cursor: pointer;
+  background-color: #7a845f;
+  border: 2px solid var(--dark-green)
+}
+
+.cost {
+  font-size: 1.5em;
+  margin-left: 0.5em;
+}
+
+/* ------------------ ICONS ------------------ */
 
 .found {
   font-size: 20px;
@@ -129,6 +170,13 @@ header {
   font-size: 4em;
   height: 100px;
   width: 100px;
+  text-align: center;
+}
+
+.icon-sm {
+  font-size: 2em;
+  height: 50px;
+  width: 50px;
   text-align: center;
 }
 
@@ -176,6 +224,8 @@ header {
   height: 50px;
   width: 50px;
 }
+
+/* ------------------ JOBS AND JOBSITES ------------------ */
 
 .jobs {
   display: flex;

@@ -37,13 +37,39 @@ function buildJobsite(job, idx) {
   return jobsiteDiv;
 }
 
-function buildThinking(s) {
-  const thinkDiv = document.createElement("div");
-  thinkDiv.classList.add("thinking");
-  thinkDiv.id = `thinking-${s._id}`;
-  const thinkImg = document.createElement("img");
-  thinkImg.src = "img/think.png";
-  thinkImg.classList.add("think-img");
-  thinkDiv.appendChild(thinkImg);
-  return thinkDiv;
+function buildThinking(think) {
+  const thinkingDiv = document.createElement("div");
+  thinkingDiv.classList.add("thinking");
+
+  const iconDiv = document.createElement("div");
+  iconDiv.classList.add("icon-sm", "thinking-icon");
+  iconDiv.innerText = "💭";
+  thinkingDiv.appendChild(iconDiv);
+
+  const nameHeader = document.createElement("h3");
+  nameHeader.classList.add("thinking-name");
+  nameHeader.innerText = think.name;
+  thinkingDiv.appendChild(nameHeader);
+
+  const effectParagraph = document.createElement("p");
+  effectParagraph.classList.add("thinking-effect");
+  effectParagraph.innerText = think.effect;
+  thinkingDiv.appendChild(effectParagraph);
+
+  const costDiv = document.createElement("div");
+  costDiv.classList.add("thinking-cost");
+  thinkingDiv.appendChild(costDiv);
+
+  const costSpan = document.createElement("span");
+  costSpan.classList.add("cost");
+  costSpan.id = `${think._id}-cost`;
+  costSpan.innerText = think.cost;
+  costDiv.appendChild(costSpan);
+
+  const lightbulbSpan = document.createElement("span");
+  lightbulbSpan.classList.add("icon-sm");
+  lightbulbSpan.innerText = "💡";
+  costDiv.appendChild(lightbulbSpan);
+
+  return thinkingDiv
 }
