@@ -8,6 +8,7 @@
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
   <link href="style/style.css" rel="stylesheet" type="text/css" />
+  <script defer src="js/thinkings.js"></script>
   <script defer src="js/reports.js"></script>
   <script defer src="js/build.js"></script>
   <script defer src="js/trial.js"></script>
@@ -16,10 +17,15 @@
 <body>
   <header>
     <div id="stats">
-      <h1><span id="total">0</span> Nuts </h1>
-      <h2><span id="debug-total">-</span></h2>
-      <h3 id="nuts-running">-</h3>
-      <h4 id="clock">0:00</h4>
+      <div id="stats-nuts">
+        <h1><span id="total">0</span> Nuts </h1>
+        <h2><span id="debug-total">-</span></h2>
+        <h3 id="nuts-running">-</h3>
+      </div>
+      <div id="stats-other">
+        <h3 class="thoughts-display hidden"><span id="thoughts-total"></span> Thoughts </h3>
+        <h4 id="clock">0:00</h4>
+      </div>
     </div>
     <div id="reports">
       <p id="report-body"></p>
@@ -81,7 +87,18 @@
     <!-- THINKINGS CONTENT -->
     <div class="tab-content hidden" id="thinkings-content">
       <h2>Thinkings:</h2>
-
+      <div class="container">
+        <div id="thinkers"></div>
+        <div class="icon add-squirrel-icon">
+          ➕
+          <div class="overlay-icon">🐿️</div>
+        </div>
+      </div>
+      <div class="container">
+        <div class="thinkings-wrap"></div>
+        <div class="thinkings-wrap"></div>
+        <div class="thinkings-wrap"></div>
+      </div>
     </div>
   </main>
 </body>

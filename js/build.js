@@ -36,3 +36,14 @@ function buildJobsite(job, idx) {
   jobsiteDiv.appendChild(removeDiv);
   return jobsiteDiv;
 }
+
+function buildThinking(s) {
+  const thinkDiv = document.createElement("div");
+  thinkDiv.classList.add("thinking");
+  thinkDiv.id = `thinking-${s._id}`;
+  const thinkImg = document.createElement("img");
+  thinkImg.src = "img/think.png";
+  thinkImg.classList.add("think-img");
+  thinkDiv.appendChild(thinkImg);
+  return thinkDiv;
+}

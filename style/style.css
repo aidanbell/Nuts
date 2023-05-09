@@ -8,9 +8,26 @@
 
 body {
   box-sizing: border-box;
-  margin: 1em;
+  padding: 1em;
   background: var(--raisin);
   color: white;
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+  height: 100vh;
+}
+
+.container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+  width: 100%;
+  border: 2px solid gray
+}
+
+.thinkings-wrap {
+  display: flex;
+  flex-direction: column;
 }
 
 nav {
@@ -23,7 +40,7 @@ nav {
 .tabs {
   border: 2px solid gray;
   font-size: 20px;
-  height: 40px;
+  height: 2em;
   text-align: center;
   width: 20em;
 }
@@ -84,7 +101,10 @@ button {
 }
 
 #stats {
-  width: 40%;
+  display: flex;
+  width: 50%;
+  justify-content: space-between;
+  padding: 1em;
 }
 
 #jobless {
@@ -103,6 +123,58 @@ header {
   font-size: 20px;
   position: relative;
   top: -2em;
+}
+
+.icon {
+  font-size: 4em;
+  height: 100px;
+  width: 100px;
+  text-align: center;
+}
+
+.hat-icon {
+  position: relative;
+  font-size: 0.5em;
+  top: -3.2em;
+  left: -0.4em; 
+}
+
+.add-squirrel-icon {
+  font-size: 4em;
+  margin-left: 1em;
+  height: 100px;
+  width: 100px;
+  text-align: center;
+}
+
+.add-squirrel:hover {
+  cursor: pointer;
+  background-color: #7a845f;
+  border-radius: 10%;
+  border: 2px solid var(--dark-green)
+}
+
+.overlay-icon {
+  font-size: 0.5em;
+  position: relative;
+  top: -1.7em;
+  left: 0.5em;
+}
+
+.remove-icon {
+  font-size: 0.5em;
+  position: relative;
+  top: -2.9em;
+  left: 0.7em;
+}
+
+.job-icon {
+  font-size: 0.5em;
+  position: relative;
+  top: -50px;
+  left: 0;
+  height: 50px;
+  width: 50px;
 }
 
 .jobs {
@@ -185,4 +257,9 @@ header {
 
 .locked {
   background-color: var(--dark-green);
+}
+
+#clock {
+  margin-top: 60%;
+  text-align: right;
 }
