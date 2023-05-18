@@ -39,11 +39,16 @@ function buildJobsite(job, idx) {
 
 function buildThinking(think) {
   const thinkingDiv = document.createElement("div");
-  thinkingDiv.classList.add("thinking");
+  thinkingDiv.id = think._id;
+  thinkingDiv.classList.add("thinking", "disabled");
 
   const iconDiv = document.createElement("div");
   iconDiv.classList.add("icon-sm", "thinking-icon");
-  iconDiv.innerText = "💭";
+  if (think.type === "unlocker") {
+    iconDiv.innerText = "🔓";
+  } else {
+    iconDiv.innerText = "💭";
+  }
   thinkingDiv.appendChild(iconDiv);
 
   const nameHeader = document.createElement("h3");
@@ -70,6 +75,6 @@ function buildThinking(think) {
   lightbulbSpan.classList.add("icon-sm");
   lightbulbSpan.innerText = "💡";
   costDiv.appendChild(lightbulbSpan);
-
+  thinkingDiv.addEventListener("click", () => handleBuyThinking(think));
   return thinkingDiv
 }

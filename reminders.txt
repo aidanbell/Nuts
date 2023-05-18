@@ -1,0 +1,15 @@
+STATE:
+POP = {               NUTS;           SQUIRREL={      JOBSITE={     THINKING={
+  jobless:[],           nutsTotal       _id             name          name
+  thinkers:[],          nutsRunning     employed        time          cost
+  jobs: {                               job             baseCost      type 
+    gatherer:[],      jobs=[]           total           cost          effect
+    scavenger:[]                        born            value         owned
+  }                                     workRate        multi         hidden
+}                                                       owned           BIG/METATHINKING:
+                                                        workers           _id
+                                                        capacity          effect
+                                                        running           unlocked
+                                                                        GETTHINKING:
+                                                                          _id
+                                                                          value

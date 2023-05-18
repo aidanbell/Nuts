@@ -107,6 +107,10 @@ button {
   padding: 1em;
 }
 
+#stats-other {
+  width: 50%;
+}
+
 #jobless {
   display: flex;
 }
@@ -126,6 +130,7 @@ header {
   width: 50%;
   border: 2px solid var(--raisin);
   border-radius: 10px;
+  cursor: pointer;
 }
 
 .thinking-cost {
@@ -151,6 +156,13 @@ header {
   cursor: pointer;
   background-color: #7a845f;
   border: 2px solid var(--dark-green)
+}
+
+.thinking.disabled {
+  background-color: gray;
+  color: #5b5b5b;
+  border: 2px solid gray;
+  cursor: not-allowed;
 }
 
 .cost {
