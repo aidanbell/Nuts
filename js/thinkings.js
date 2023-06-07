@@ -159,7 +159,9 @@ function buyResolver(thinking) {
     return;
   }
   if (thinking._id === "u-1") {
-    document.querySelector(".profession-container").classList.remove("hidden");
+    let tab = document.getElementById("jobsites");
+    tab.classList.remove("locked");
+    tab.textContent = "Jobsites";
     return;
   }
 }

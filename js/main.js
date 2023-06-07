@@ -2,9 +2,10 @@
 /*----------  ----------*/
 
 const nav = document.querySelector("nav");
-
+let activeTab = "home";
 let foo = (evt) => {
   if (evt.target.classList.contains('locked')) return;
+  activeTab = evt.target.id;
   renderJobsites()
   document.querySelector(".tab-content.active").classList.replace("active", "hidden");
   document
@@ -131,6 +132,14 @@ function addNewSquirrel() {
   document.getElementById('jobless').append(squirrelJobRender(s, true))
 }
 
+/*---------- THINKING RENDERING ----------*/
+function renderThinkers() {
+  document.getElementById("thinkers").innerHTML = "";
+  POP.thinkers.forEach((s) => {
+    document.getElementById("thinkers").append(squirrelJobRender(s));
+  });
+}
+
 /*---------- THINKING ----------*/
 function assignThinker() {
   let s = POP.jobless.shift();
@@ -233,9 +242,13 @@ const work = () => {
 }
 
 function removeSquirrel(s) {
+  s.employed = false;
+  s.job = null;
   POP.thinkers = POP.thinkers.filter(squ => squ._id !== s._id)
   POP.jobs.gatherer = POP.jobs.gatherer.filter(squ => squ._id !== s._id)
-  POP.jobless.push(s)
+  POP.jobless.push(s);
+  renderThinkers();
+  renderJobsites();
 }
 
 /*---------- JOBSITE RENDERING ----------*/
@@ -357,6 +370,10 @@ const render = () => {
   document.querySelector("#nuts-running").textContent =
   Math.round(nutsRunning * 1000) / 1000;
   document.querySelector('#thoughts-total').textContent = thoughtsTotal;
+
+  if (activeTab === "thinkings") {
+
+  }
 };
 
 let CLOCK = document.getElementById("clock");

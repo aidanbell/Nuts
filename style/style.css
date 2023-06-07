@@ -226,6 +226,7 @@ header {
   position: relative;
   top: -2.9em;
   left: 0.7em;
+  cursor: pointer;
 }
 
 .job-icon {
