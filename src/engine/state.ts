@@ -562,14 +562,104 @@ export const loadSaveData = (data: Partial<GameState>) => {
 // ============================================================================
 
 export const researchIdea = (ideaId: string) => {
-  const ideas = appState.ideas.ideas;
-  const idea = ideas[ideaId];
+  const idea = appState.ideas.ideas[ideaId];
 
-  if (idea && !idea.researched) {
-    setAppState("ideas", "ideas", ideaId, "researched", true);
-    setAppState("ideas", "ideas", ideaId, "researchedAt", Date.now());
-    setAppState("ideas", "researchedIdeas", (prev) => [...prev, ideaId]);
-    setAppState("ideas", "researchedCount", (prev) => prev + 1);
+  if (!idea || idea.researched) return;
+
+  setAppState("ideas", "ideas", ideaId, "researched", true);
+  setAppState("ideas", "ideas", ideaId, "researchedAt", Date.now());
+  setAppState("ideas", "researchedIdeas", (prev) => [...prev, ideaId]);
+  setAppState("ideas", "researchedCount", (prev) => prev + 1);
+
+  // Apply research effects that mutate game state (ported from Redux extraReducers)
+  const effects = idea.effects;
+
+  if (effects.upgradeJobsite) {
+    const { jobsiteId, property, amount } = effects.upgradeJobsite;
+
+    if (jobsiteId === "jobless") {
+      const jobless = appState.game.jobSites.jobless;
+      if (property === "multi") {
+        setAppState("game", "jobSites", "jobless", "multi", jobless.multi + amount);
+      } else if (property === "value") {
+        setAppState("game", "jobSites", "jobless", "value", jobless.value + amount);
+      } else if (property === "time") {
+        setAppState("game", "jobSites", "jobless", "time", jobless.time - amount);
+      } else if (property === "chance") {
+        setAppState("game", "jobSites", "jobless", "chance", jobless.chance + amount);
+      }
+    } else if (appState.game.jobSites.production[jobsiteId]) {
+      if (property === "multi") {
+        setAppState(
+          "game",
+          "jobSites",
+          "production",
+          jobsiteId,
+          "multi",
+          (prev) => prev + amount,
+        );
+      }
+    } else if (appState.game.jobSites.refinement[jobsiteId]) {
+      if (property === "multi") {
+        setAppState(
+          "game",
+          "jobSites",
+          "refinement",
+          jobsiteId,
+          "multi",
+          (prev) => prev + amount,
+        );
+      }
+    }
+  }
+
+  if (effects.globalEfficiency) {
+    const efficiencyBoost = effects.globalEfficiency;
+    setAppState(
+      "game",
+      "jobSites",
+      "jobless",
+      "multi",
+      (prev) => prev + efficiencyBoost,
+    );
+    Object.keys(appState.game.jobSites.production).forEach((id) => {
+      setAppState(
+        "game",
+        "jobSites",
+        "production",
+        id,
+        "multi",
+        (prev) => prev + efficiencyBoost,
+      );
+    });
+    Object.keys(appState.game.jobSites.refinement).forEach((id) => {
+      setAppState(
+        "game",
+        "jobSites",
+        "refinement",
+        id,
+        "multi",
+        (prev) => prev + efficiencyBoost,
+      );
+    });
+  }
+
+  if (effects.increaseGatherMulti) {
+    setAppState(
+      "game",
+      "getButton",
+      "mult",
+      (prev) => prev + effects.increaseGatherMulti!,
+    );
+  }
+
+  if (effects.increaseGetButton) {
+    setAppState(
+      "game",
+      "getButton",
+      "value",
+      (prev) => prev + effects.increaseGetButton!,
+    );
   }
 };
 
@@ -669,11 +759,10 @@ export const completeCheckpoint = (checkpointId: string) => {
       checkpointId,
     ]);
 
-    // Calculate story progress
+    // Calculate story progress after this checkpoint is counted
     const totalCheckpoints = Object.keys(story.checkpoints).length;
-    const progress = Math.floor(
-      (story.completedCheckpoints.length / totalCheckpoints) * 100,
-    );
+    const completedCount = story.completedCheckpoints.length + 1;
+    const progress = Math.floor((completedCount / totalCheckpoints) * 100);
     setAppState("story", "storyProgress", progress);
   }
 };
@@ -789,11 +878,10 @@ export const makeChoice = (checkpointId: string, choiceId: string) => {
       checkpointId,
     ]);
 
-    // Calculate story progress
+    // Calculate story progress after this checkpoint is counted
     const totalCheckpoints = Object.keys(story.checkpoints).length;
-    const progress = Math.floor(
-      (story.completedCheckpoints.length / totalCheckpoints) * 100,
-    );
+    const completedCount = story.completedCheckpoints.length + 1;
+    const progress = Math.floor((completedCount / totalCheckpoints) * 100);
     setAppState("story", "storyProgress", progress);
   }
 
@@ -854,11 +942,23 @@ export const loadCheckpointState = (data: {
 
 export type LogLevel = "info" | "success" | "warning" | "error";
 
-export const addLog = (message: string, level: LogLevel = "info") => {
+export const addLog = (
+  messageOrPayload: string | { message: string; level?: LogLevel },
+  level: LogLevel = "info",
+) => {
+  const message =
+    typeof messageOrPayload === "string"
+      ? messageOrPayload
+      : messageOrPayload.message;
+  const resolvedLevel =
+    typeof messageOrPayload === "string"
+      ? level
+      : (messageOrPayload.level ?? "info");
+
   const newLog = {
     id: `${Date.now()}-${Math.random()}`,
     message,
-    level,
+    level: resolvedLevel,
     timestamp: Date.now(),
   };
 

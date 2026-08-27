@@ -1,80 +1,71 @@
-import React, { memo } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import type { RootState } from "../../store";
+import { type Component, Show, For } from "solid-js";
+import { appState, setEra } from "../../engine/state";
 import SquirrelDisplay from "../SquirrelDisplay";
-import { setEra } from "../../store/storySlice";
 
-const HomeTab: React.FC = () => {
-  const dispatch = useDispatch();
-  const joblessSquirrels = useSelector(
-    (state: RootState) => state.game.population.jobless,
-  );
-  const currentEra = useSelector((state: RootState) => state.story.currentEra);
-  const unlockedTabs = useSelector(
-    (state: RootState) => state.game.unlockedTabs,
-  );
-  const nutsTotal = useSelector((state: RootState) => state.game.nutsTotal);
+const HomeTab: Component = () => {
+  const joblessSquirrels = () => appState.game.population.jobless;
+  const currentEra = () => appState.story.currentEra;
+  const unlockedTabs = () => appState.game.unlockedTabs;
+  const nutsTotal = () => appState.game.nutsTotal;
 
   const handleAdvanceEra = () => {
-    if (currentEra === "PREHISTORY") {
-      dispatch(setEra("WOOD_AGE"));
+    if (currentEra() === "PREHISTORY") {
+      setEra("WOOD_AGE");
     }
   };
 
-  const canAdvanceToWoodAge =
-    unlockedTabs.includes("eras") && currentEra === "PREHISTORY";
+  const canAdvanceToWoodAge = () =>
+    unlockedTabs().includes("eras") && currentEra() === "PREHISTORY";
 
   return (
-    <div className="tab-panel space-y-6" id="home-content">
-      {unlockedTabs.includes("eras") && (
-        <section className="space-y-3">
-          <h2 className="section-title">Current Era</h2>
-          <p className="font-display text-lg font-semibold">
-            {currentEra?.replace(/_/g, " ") || "PREHISTORY"}
+    <div class="tab-panel space-y-6" id="home-content">
+      <Show when={unlockedTabs().includes("eras")}>
+        <section class="space-y-3">
+          <h2 class="section-title">Current Era</h2>
+          <p class="font-display text-lg font-semibold">
+            {currentEra()?.replace(/_/g, " ") || "PREHISTORY"}
           </p>
 
-          {canAdvanceToWoodAge && (
-            <div className="panel border-leaf/30 bg-leaf/10">
-              <h3 className="font-display text-lg font-bold">
+          <Show when={canAdvanceToWoodAge()}>
+            <div class="panel border-leaf/30 bg-leaf/10">
+              <h3 class="font-display text-lg font-bold">
                 🌳 The Wood Age Awaits
               </h3>
-              <p className="muted mt-2">
+              <p class="muted mt-2">
                 Your squirrels have discovered refined materials! Choose when
-                you&apos;re ready to advance.
+                you're ready to advance.
               </p>
-              <p className="muted mt-2">
+              <p class="muted mt-2">
                 <strong>Tip:</strong> Gather more nuts before advancing. Current
-                nuts: {nutsTotal.toLocaleString()}
+                nuts: {nutsTotal().toLocaleString()}
               </p>
               <button
                 type="button"
-                className="btn btn-success btn-lg mt-4"
+                class="btn btn-success btn-lg mt-4"
                 onClick={handleAdvanceEra}
               >
                 Advance to Wood Age →
               </button>
             </div>
-          )}
+          </Show>
         </section>
-      )}
+      </Show>
 
       <section>
-        <h2 className="section-title">Population</h2>
-        <p className="muted mt-1">
-          {joblessSquirrels.length} jobless squirrels
+        <h2 class="section-title">Population</h2>
+        <p class="muted mt-1">
+          {joblessSquirrels().length} jobless squirrels
         </p>
-        <div className="mt-3 flex flex-wrap justify-center gap-2" id="jobless">
-          {joblessSquirrels.map((squirrelId) => (
-            <SquirrelDisplay
-              key={squirrelId}
-              squirrelId={squirrelId}
-              showNutFinding
-            />
-          ))}
+        <div class="mt-3 flex flex-wrap justify-center gap-2" id="jobless">
+          <For each={joblessSquirrels()}>
+            {(squirrelId) => (
+              <SquirrelDisplay squirrelId={squirrelId} showNutFinding />
+            )}
+          </For>
         </div>
       </section>
     </div>
   );
 };
 
-export default memo(HomeTab);
+export default HomeTab;

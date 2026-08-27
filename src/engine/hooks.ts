@@ -1,258 +1,70 @@
 /**
  * SolidJS Hooks for Game Logic
- * These replace the React hooks (useGameLoop, useGoldenNut, etc.)
- * with SolidJS equivalents using createEffect, createSignal, etc.
+ * Replaces React hooks with Solid equivalents using the engine store.
  */
 
 import { createEffect, createSignal, onCleanup, createMemo } from "solid-js";
 import {
   appState,
-  setAppState,
   addNuts,
   spendNuts,
-  addResource,
   spendResource,
-  squirrelFoundNut,
-  createSquirrel,
-  unlockJobsites,
-  buyJobSiteCapacity,
-  assignSquirrelToJobSite,
-  removeSquirrelFromJobSite,
-  batchUpdate,
-  incrementTick,
-  updateTimer,
-  setGameSpeed,
-  pauseGame,
-  resumeGame,
-  setActiveTab,
-  unlockTab,
-  unlockTabs,
-  hibernate,
-  loadSaveData,
-  updateTimestamp,
   researchIdea,
-  showIdea,
-  showIdeas,
   updateIdeaVisibility,
-  resetIdeas,
-  loadIdeasState,
   completeCheckpoint,
-  showStory,
-  dismissStory,
-  queueStory,
   queueStories,
-  setEra,
-  setPendingChoice,
-  makeChoice,
-  resetCheckpoints,
-  loadCheckpointState,
   addLog,
-  clearLogs,
+  loadSaveData,
 } from "./state";
-import type { GameState, Squirrel, JobSite, Population } from "../types/game";
+import { createGameLoop } from "./gameLoop";
+import { processEffects } from "./effectProcessor";
+import { saveGame, loadGame } from "./saveSystem";
+import type { GameState } from "../types/game";
+import type { Idea } from "../types/ideas";
 import type {
-  StoryState,
   StoryCheckpoint,
   CheckpointCondition,
 } from "../types/story";
-import { processEffects } from "../utils/effectProcessor";
 
 // ============================================================================
-// useGameLoop - SolidJS Version
+// useGameLoop
 // ============================================================================
 
 /**
- * Random chance helper
- */
-const chance = (probability: number): boolean => {
-  return Math.random() < probability;
-};
-
-/**
- * SolidJS game loop hook
- * Replaces React useGameLoop with createEffect
- *
- * Note: In SolidJS, we use createEffect which automatically tracks dependencies.
- * However, for game loops, we use requestAnimationFrame directly since
- * createEffect doesn't provide the timestamp parameter.
+ * Starts the two-tiered game loop. Cleanup is registered via onCleanup.
  */
 export function useSolidGameLoop() {
-  // Track last refinement cycle time for each worker at each jobsite
-  const lastRefinementCycle = new Map<string, Map<number, number>>();
-  // Track last jobless attempt time for each squirrel
-  const lastJoblessAttempt = new Map<number, number>();
-
-  createEffect(() => {
-    const game = appState.game;
-    let lastLogicUpdate = 0;
-    let lastRenderUpdate = 0;
-    let gameLoopRef: number | null = null;
-
-    // Get current state values that we need
-    const gameSpeed = game.gameSpeed;
-    const isPaused = game.isPaused;
-
-    const gameLoop = (timestamp: number) => {
-      const currentGame = appState.game;
-
-      if (currentGame.isPaused) {
-        gameLoopRef = requestAnimationFrame(gameLoop);
-        return;
-      }
-
-      const deltaTime = timestamp - lastLogicUpdate;
-
-      // Logic updates at ~10 FPS (every 100ms)
-      if (timestamp - lastLogicUpdate >= 100) {
-        const { production, refinement } = currentGame.jobSites;
-
-        Object.values(game.jobSites.production).forEach((jobSite) => {
-          const baseRate = jobSite.baseProduction * jobSite.multi;
-          const squirrelRate =
-            jobSite.squirrelBonus * jobSite.multi * jobSite.workers.length;
-          const totalRate = baseRate + squirrelRate; // nuts per second
-          const totalProduction =
-            (totalRate * deltaTime * currentGame.gameSpeed) / 1000;
-
-          if (totalProduction > 0) {
-            totalNuts += totalProduction;
-          }
-        });
-
-        // Process refinement jobsites
-        Object.values(game.jobSites.refinement).forEach((jobSite) => {
-          if (
-            jobSite.workers.length === 0 ||
-            !jobSite.consumes ||
-            !jobSite.produces
-          )
-            return;
-
-          // Initialize tracking for this jobsite if needed
-          if (!lastRefinementCycle.has(jobSite.id)) {
-            lastRefinementCycle.set(jobSite.id, new Map());
-          }
-
-          const siteCycles = lastRefinementCycle.get(jobSite.id)!;
-          const { resource: consumeType, amount: consumeAmount } =
-            jobSite.consumes;
-          const { resource: produceType, amount: produceAmount } =
-            jobSite.produces;
-
-          // Process each worker individually with their own cycle timer
-          jobSite.workers.forEach((workerId) => {
-            const lastCycle = siteCycles.get(workerId) ?? 0;
-
-            // Check if enough time has passed for this worker to complete a cycle
-            if (timestamp - lastCycle >= jobSite.time) {
-              // Check if we have enough resources for this cycle
-              const availableResource =
-                consumeType === "nuts"
-                  ? currentGame.nutsTotal
-                  : currentGame.resources[
-                      consumeType as keyof typeof currentGame.resources
-                    ];
-
-              if (availableResource >= consumeAmount) {
-                // Consume input resource
-                if (consumeType === "nuts") {
-                  spendNuts(consumeAmount);
-                } else {
-                  spendResource(
-                    consumeType as keyof typeof currentGame.resources,
-                    consumeAmount,
-                  );
-                }
-
-                // Produce output resource
-                addResource(produceType, produceAmount);
-
-                // Update the last cycle time for this worker
-                siteCycles.set(workerId, timestamp);
-              }
-            }
-          });
-        });
-
-        // Apply all nuts at once for performance
-        if (totalNuts > 0) {
-          addNuts(totalNuts);
-        }
-
-        // Process jobless squirrels - RNG-BASED FORAGING
-        const { time, chance: foragingChance } = currentGame.jobSites.jobless;
-        currentGame.population.jobless.forEach((squirrelId) => {
-          const lastAttempt = lastJoblessAttempt.get(squirrelId) ?? 0;
-          if (timestamp - lastAttempt >= time) {
-            // Random chance to find nuts (value & multi applied in squirrelFoundNut)
-            if (chance(foragingChance)) {
-              squirrelFoundNut(squirrelId);
-            }
-            lastJoblessAttempt.set(squirrelId, timestamp);
-          }
-        });
-
-        // Update game state
-        incrementTick();
-        updateTimer();
-        updateTimestamp();
-
-        lastLogicUpdate = timestamp;
-      }
-
-      // Render updates at ~60 FPS (every 16ms)
-      if (timestamp - lastRenderUpdate >= 16) {
-        lastRenderUpdate = timestamp;
-      }
-
-      gameLoopRef = requestAnimationFrame(gameLoop);
-    };
-
-    // Start the loop
-    gameLoopRef = requestAnimationFrame(gameLoop);
-
-    // Cleanup on effect disposal
-    onCleanup(() => {
-      if (gameLoopRef) {
-        cancelAnimationFrame(gameLoopRef);
-      }
-    });
-  });
+  const cleanup = createGameLoop();
+  onCleanup(cleanup);
 }
 
 // ============================================================================
-// useAutoSave - SolidJS Version
+// useAutoSave
 // ============================================================================
 
-/**
- * SolidJS auto-save hook
- * Replaces the React useAutoSave in App.tsx
- */
 export function useSolidAutoSave() {
+  // Load once on mount
   createEffect(() => {
-    const game = appState.game;
-
-    // Load game on mount
     const savedData = loadGame();
     if (savedData) {
       loadSaveData(savedData);
     }
+  });
 
-    // Auto-save every 30 seconds
+  createEffect(() => {
     const autoSaveEnabled =
       localStorage.getItem("debug_autosave_enabled") !== "false";
 
     if (!autoSaveEnabled) return;
 
     const interval = setInterval(() => {
-      saveGame(game);
+      saveGame();
       console.log("Auto-saved game state");
     }, 30000);
 
-    // Save on beforeunload
     const handleBeforeUnload = () => {
-      if (autoSaveEnabled) {
-        saveGame(game);
+      if (localStorage.getItem("debug_autosave_enabled") !== "false") {
+        saveGame();
       }
     };
 
@@ -266,16 +78,13 @@ export function useSolidAutoSave() {
 }
 
 // ============================================================================
-// useStoryCheckpoints - SolidJS Version
+// useStoryCheckpoints
 // ============================================================================
 
-/**
- * Check if a condition is met
- */
 function checkCondition(condition: CheckpointCondition): boolean {
   const game = appState.game;
   const story = appState.story;
-  const ideas = appState.ideas; // Reference for type access
+  const ideas = appState.ideas;
   const { type, value, operator = ">=" } = condition;
   let currentValue: number | string = 0;
 
@@ -283,18 +92,13 @@ function checkCondition(condition: CheckpointCondition): boolean {
     case "nuts_collected":
       currentValue = game.nutsTotal;
       break;
-
     case "time_elapsed":
-      // Convert timer to milliseconds
       currentValue = game.timer.m * 60000 + game.timer.s * 1000 + game.timer.ms;
       break;
-
     case "squirrels_count":
       currentValue = Object.keys(game.squirrels).length;
       break;
-
     case "jobsites_purchased": {
-      // Count total level across all jobsites (production and refinement)
       const productionLevel = Object.values(game.jobSites.production).reduce(
         (total, jobsite) => total + jobsite.level,
         0,
@@ -309,18 +113,13 @@ function checkCondition(condition: CheckpointCondition): boolean {
     case "era_reached":
       currentValue = story.currentEra || "";
       break;
-
     case "building_built":
-      // TODO: Implement building tracking when building system is complete
       return false;
-
     case "idea_researched":
       return ideas.ideas[value as string]?.researched || false;
-
     case "hibernations_completed":
       currentValue = game.goldNuts?.total || 0;
       break;
-
     case "resource_count": {
       const resourceType = condition.resource;
       if (resourceType && game.resources && resourceType in game.resources) {
@@ -331,17 +130,14 @@ function checkCondition(condition: CheckpointCondition): boolean {
       }
       break;
     }
-
     default:
       return false;
   }
 
-  // Handle string comparisons (for era_reached)
   if (typeof value === "string" && typeof currentValue === "string") {
     return operator === "==" ? currentValue === value : false;
   }
 
-  // Handle numeric comparisons
   if (typeof value === "number" && typeof currentValue === "number") {
     switch (operator) {
       case ">=":
@@ -362,16 +158,11 @@ function checkCondition(condition: CheckpointCondition): boolean {
   return false;
 }
 
-/**
- * Check if checkpoint should trigger
- */
 function shouldTriggerCheckpoint(checkpoint: StoryCheckpoint): boolean {
-  // Don't retrigger completed one-time checkpoints
   if (checkpoint.completed && checkpoint.oneTime) {
     return false;
   }
 
-  // Check requirements (AND logic - all must be true)
   if (checkpoint.requirements) {
     const allRequirementsMet = checkpoint.requirements.every((req) =>
       checkCondition(req),
@@ -381,7 +172,6 @@ function shouldTriggerCheckpoint(checkpoint: StoryCheckpoint): boolean {
     }
   }
 
-  // Check triggers (OR logic - any one triggers)
   if (checkpoint.triggers) {
     return checkpoint.triggers.some((trigger) => checkCondition(trigger));
   }
@@ -389,18 +179,11 @@ function shouldTriggerCheckpoint(checkpoint: StoryCheckpoint): boolean {
   return false;
 }
 
-/**
- * Process all checkpoints
- */
 function processCheckpoints() {
-  const story = appState.story;
-
-  // Get uncompleted checkpoints sorted by priority
   const checkpointsToCheck = Object.values(appState.story.checkpoints)
     .filter((cp) => !cp.completed || cp.repeatable)
     .sort((a, b) => b.priority - a.priority);
 
-  // Collect all triggered checkpoints
   const triggeredCheckpoints: StoryCheckpoint[] = [];
 
   for (const checkpoint of checkpointsToCheck) {
@@ -409,46 +192,31 @@ function processCheckpoints() {
     }
   }
 
-  // Process all triggered checkpoints
-  if (triggeredCheckpoints.length > 0) {
-    const checkpointIds: string[] = [];
+  if (triggeredCheckpoints.length === 0) return;
 
-    for (const checkpoint of triggeredCheckpoints) {
-      addLog(`Story checkpoint: ${checkpoint.name}`, "success");
+  const checkpointIds: string[] = [];
 
-      // Mark as completed
-      completeCheckpoint(checkpoint.id);
+  for (const checkpoint of triggeredCheckpoints) {
+    addLog(`Story checkpoint: ${checkpoint.name}`, "success");
+    completeCheckpoint(checkpoint.id);
+    processEffects(checkpoint.effects, {
+      sourceName: checkpoint.name,
+      sourceType: "checkpoint",
+      checkpointId: checkpoint.id,
+    });
 
-      // Apply effects using centralized processor
-      processEffects(checkpoint.effects, {
-        sourceName: checkpoint.name,
-        sourceType: "checkpoint",
-        checkpointId: checkpoint.id,
-      });
-
-      // Add to queue if it has a story to show
-      if (checkpoint.effects.showStory && checkpoint.story) {
-        checkpointIds.push(checkpoint.id);
-      }
+    if (checkpoint.effects.showStory && checkpoint.story) {
+      checkpointIds.push(checkpoint.id);
     }
+  }
 
-    // Queue all stories at once (in priority order)
-    if (checkpointIds.length > 0) {
-      queueStories(checkpointIds);
-    }
+  if (checkpointIds.length > 0) {
+    queueStories(checkpointIds);
   }
 }
 
-/**
- * SolidJS story checkpoints hook
- * Checks for and triggers story checkpoints based on game state
- */
 export function useSolidStoryCheckpoints() {
   createEffect(() => {
-    const game = appState.game;
-    const story = appState.story;
-
-    // Check for checkpoints every second
     const interval = setInterval(() => {
       processCheckpoints();
     }, 1000);
@@ -456,42 +224,29 @@ export function useSolidStoryCheckpoints() {
     onCleanup(() => clearInterval(interval));
   });
 
-  // Also check immediately when game state changes significantly
   createEffect(() => {
-    const game = appState.game;
-    const story = appState.story;
-
-    // Track specific values that might trigger checkpoints
-    const squirrelCount = Object.keys(game.squirrels).length;
-    const nutwoodCount = game.resources?.nutwood || 0;
-
-    // Check when these values change
+    // Track values that commonly trigger checkpoints
+    void appState.game.nutsTotal;
+    void Object.keys(appState.game.squirrels).length;
+    void appState.game.resources?.nutwood;
+    void appState.story.currentEra;
     processCheckpoints();
   });
 }
 
 // ============================================================================
-// useIdeas - SolidJS Version
+// useIdeas
 // ============================================================================
 
-/**
- * SolidJS ideas hook
- * Manages ideas/research system
- */
 export function useSolidIdeas() {
-  // Update idea visibility based on game state
   createEffect(() => {
-    const game = appState.game;
-    const story = appState.story;
-
     updateIdeaVisibility({
-      nutsCollected: game.nutsTotal,
-      squirrelsCount: Object.keys(game.squirrels).length,
-      currentEra: story.currentEra || "WOOD_AGE",
+      nutsCollected: appState.game.nutsTotal,
+      squirrelsCount: Object.keys(appState.game.squirrels).length,
+      currentEra: appState.story.currentEra || "WOOD_AGE",
     });
   });
 
-  // Check if player can afford an idea
   const canAfford = (idea: Idea): boolean => {
     if (idea.researched) return false;
 
@@ -508,15 +263,10 @@ export function useSolidIdeas() {
     );
   };
 
-  // Research an idea
   const research = (ideaId: string) => {
-    const ideas = appState.ideas; // Reference for type access
     const idea = appState.ideas.ideas[ideaId];
     if (!idea || idea.researched || !canAfford(idea)) return;
 
-    const game = appState.game;
-
-    // Deduct costs
     const nutCost = idea.cost.nuts || 0;
     const woodCost = idea.cost.nutwood || 0;
     const stoneCost = idea.cost.stone || 0;
@@ -526,11 +276,9 @@ export function useSolidIdeas() {
     if (stoneCost > 0) spendResource("stone", stoneCost);
     if (bronzeCost > 0) spendResource("bronze", bronzeCost);
 
-    // Mark as researched
     researchIdea(ideaId);
     addLog(`Researched: ${idea.name}`, "success");
 
-    // Apply dispatch-requiring effects using centralized processor
     processEffects(idea.effects, {
       sourceName: idea.name,
       sourceType: "idea",
@@ -538,68 +286,55 @@ export function useSolidIdeas() {
     });
   };
 
-  // Get visible ideas
-  const visibleIdeas = createMemo(() => {
-    return Object.values(appState.ideas.ideas).filter((idea) => idea.visible);
-  });
+  const visibleIdeas = createMemo(() =>
+    Object.values(appState.ideas.ideas).filter((idea) => idea.visible),
+  );
 
-  // Get researched ideas
-  const researchedIdeas = createMemo(() => {
-    return Object.values(appState.ideas.ideas).filter(
-      (idea) => idea.researched,
-    );
-  });
+  const researchedIdeas = createMemo(() =>
+    Object.values(appState.ideas.ideas).filter((idea) => idea.researched),
+  );
 
-  // Get affordable ideas
-  const affordableIdeas = createMemo(() => {
-    return visibleIdeas().filter((idea) => !idea.researched && canAfford(idea));
-  });
+  const affordableIdeas = createMemo(() =>
+    visibleIdeas().filter((idea) => !idea.researched && canAfford(idea)),
+  );
 
   return {
-    ideas: Object.values(appState.ideas.ideas),
+    ideas: () => Object.values(appState.ideas.ideas),
     visibleIdeas,
     researchedIdeas,
     affordableIdeas,
-    researchedCount: appState.ideas.researchedCount,
+    researchedCount: () => appState.ideas.researchedCount,
     canAfford,
     research,
   };
 }
 
 // ============================================================================
-// useGoldenNut - SolidJS Version
+// useGoldenNut
 // ============================================================================
 
-/**
- * Expected nuts/sec for one jobless squirrel
- */
 const joblessNutsPerSecond = (jobless: GameState["jobSites"]["jobless"]) => {
   const attemptsPerSec = 1000 / jobless.time;
   return attemptsPerSec * jobless.chance * jobless.value * jobless.multi;
 };
 
-/**
- * Burst reward: ~15s of all jobless production, scaled up slightly with count
- */
 export const calculateGoldenNutReward = (
   joblessSite: GameState["jobSites"]["jobless"],
   joblessCount: number,
 ): number => {
   const perSquirrel = joblessNutsPerSecond(joblessSite);
   const burst = perSquirrel * Math.max(1, joblessCount) * 15;
-  // Slight bonus for keeping more jobless squirrels around
   const countBonus = 1 + Math.log2(1 + Math.max(0, joblessCount - 1)) * 0.15;
   return Math.max(5, Math.round(burst * countBonus));
 };
 
 export interface GoldenNutState {
   id: number;
-  x: number; // percent of viewport width
-  y: number; // percent of viewport height
+  x: number;
+  y: number;
   reward: number;
   spawnedAt: number;
   expiresAt: number;
-  /** CSS lifetime for the current appearance (updated after pause) */
   durationMs: number;
 }
 
@@ -609,7 +344,7 @@ const FIRST_SPAWN_MIN_MS = 8_000;
 const FIRST_SPAWN_MAX_MS = 15_000;
 const LIFETIME_MS = 13_000;
 const FADE_MS = 2_000;
-const MARGIN_PERCENT = 8; // keep away from edges
+const MARGIN_PERCENT = 8;
 
 const randomBetween = (min: number, max: number) =>
   min + Math.random() * (max - min);
@@ -619,17 +354,17 @@ const randomPosition = () => ({
   y: randomBetween(MARGIN_PERCENT, 100 - MARGIN_PERCENT),
 });
 
-/**
- * SolidJS golden nut hook
- */
 export function useSolidGoldenNut() {
-  const game = appState.game;
   const [goldenNut, setGoldenNut] = createSignal<GoldenNutState | null>(null);
   const nextSpawnAtRef = {
     current: Date.now() + randomBetween(FIRST_SPAWN_MIN_MS, FIRST_SPAWN_MAX_MS),
   };
   const idRef = { current: 0 };
-  const hasJobless = createMemo(() => game.population.jobless.length > 0);
+  const pauseStartedAtRef = { current: null as number | null };
+
+  const hasJobless = createMemo(
+    () => appState.game.population.jobless.length > 0,
+  );
 
   const scheduleNextSpawn = (fromTime: number = Date.now()) => {
     nextSpawnAtRef.current =
@@ -637,13 +372,14 @@ export function useSolidGoldenNut() {
   };
 
   const spawnGoldenNut = () => {
-    if (game.population.jobless.length === 0) return;
+    const joblessIds = appState.game.population.jobless;
+    if (joblessIds.length === 0) return;
 
     const now = Date.now();
     const { x, y } = randomPosition();
     const reward = calculateGoldenNutReward(
-      game.jobSites.jobless,
-      game.population.jobless.length,
+      appState.game.jobSites.jobless,
+      joblessIds.length,
     );
 
     idRef.current += 1;
@@ -668,14 +404,13 @@ export function useSolidGoldenNut() {
     if (!gn) return;
 
     addNuts(gn.reward);
-    addLog({
-      message: `Lucky find! Grabbed a glowing nut for ${gn.reward} nuts.`,
-      level: "success",
-    });
+    addLog(
+      `Lucky find! Grabbed a glowing nut for ${gn.reward} nuts.`,
+      "success",
+    );
     clearGoldenNut();
   };
 
-  // Despawn if player no longer has any jobless squirrels
   createEffect(() => {
     if (!hasJobless() && goldenNut()) {
       setGoldenNut(null);
@@ -683,16 +418,14 @@ export function useSolidGoldenNut() {
     }
   });
 
-  // Spawn / expire loop
   createEffect(() => {
-    const isPaused = game.isPaused;
-    const gn = goldenNut();
-    const hasJoblessVal = hasJobless();
+    const isPaused = appState.game.isPaused;
 
     const tick = () => {
-      if (isPaused) return;
+      if (appState.game.isPaused) return;
 
       const now = Date.now();
+      const gn = goldenNut();
 
       if (gn && now >= gn.expiresAt) {
         setGoldenNut(null);
@@ -700,19 +433,22 @@ export function useSolidGoldenNut() {
         return;
       }
 
-      if (!gn && hasJoblessVal && now >= nextSpawnAtRef.current) {
+      if (
+        !gn &&
+        appState.game.population.jobless.length > 0 &&
+        now >= nextSpawnAtRef.current
+      ) {
         spawnGoldenNut();
       }
     };
 
+    void isPaused;
     const interval = window.setInterval(tick, 250);
     onCleanup(() => window.clearInterval(interval));
   });
 
-  // While paused, push spawn/expiry timers forward so pause doesn't eat the wait
-  const pauseStartedAtRef = { current: null as number | null };
   createEffect(() => {
-    const isPaused = game.isPaused;
+    const isPaused = appState.game.isPaused;
 
     if (isPaused) {
       pauseStartedAtRef.current = Date.now();
@@ -741,57 +477,3 @@ export function useSolidGoldenNut() {
     fadeMs: FADE_MS,
   };
 }
-
-// ============================================================================
-// Re-exports from state for convenience
-// ============================================================================
-
-export {
-  appState,
-  setAppState,
-  addNuts,
-  spendNuts,
-  addResource,
-  spendResource,
-  squirrelFoundNut,
-  createSquirrel,
-  unlockJobsites,
-  buyJobSiteCapacity,
-  assignSquirrelToJobSite,
-  removeSquirrelFromJobSite,
-  batchUpdate,
-  incrementTick,
-  updateTimer,
-  setGameSpeed,
-  pauseGame,
-  resumeGame,
-  setActiveTab,
-  unlockTab,
-  unlockTabs,
-  hibernate,
-  loadSaveData,
-  updateTimestamp,
-  researchIdea,
-  showIdea,
-  showIdeas,
-  updateIdeaVisibility,
-  resetIdeas,
-  loadIdeasState,
-  completeCheckpoint,
-  showStory,
-  dismissStory,
-  queueStory,
-  queueStories,
-  setEra,
-  setPendingChoice,
-  makeChoice,
-  resetCheckpoints,
-  loadCheckpointState,
-  addLog,
-  clearLogs,
-};
-
-// Re-export types
-export type { GameState, Squirrel, JobSite, Population };
-export type { IdeasState, Idea };
-export type { StoryState, StoryCheckpoint, CheckpointCondition };

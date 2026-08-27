@@ -14,9 +14,11 @@ import { appState } from "./state";
 import {
   incrementTick,
   updateTimer,
+  updateTimestamp,
   squirrelFoundNut,
   addNuts,
   addResource,
+  spendNuts,
   spendResource,
 } from "./state";
 import type { GameState } from "../types/game";
@@ -81,6 +83,7 @@ export function startGameLoop() {
       // Update game state counters
       incrementTick();
       updateTimer();
+      updateTimestamp();
 
       lastLogicUpdate = timestamp;
     }
@@ -169,11 +172,7 @@ function processJobSites(
         if (availableResource >= consumeAmount) {
           // Consume input resource
           if (consumeType === "nuts") {
-            // Note: nuts are handled separately since they're not in the resources object
-            spendResource(
-              "nuts" as unknown as keyof typeof game.resources,
-              consumeAmount,
-            );
+            spendNuts(consumeAmount);
           } else {
             spendResource(
               consumeType as keyof typeof game.resources,

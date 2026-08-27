@@ -296,33 +296,33 @@ export default defineConfig({
 
 ### **Phase 1: Setup &amp; Foundation (1-2 days)**
 
-- [ ] Initialize new **Vite + SolidJS + TypeScript** project.
-- [ ] Set up **Tailwind CSS v4** (follow [Tailwind v4 docs](https://tailwindcss.com/docs/installation)).
-- [ ] Configure **ESLint + Prettier** for SolidJS.
-- [ ] Port **types** (`types/game.ts`) from current project.
-- [ ] Create **`gameState` store** in SolidJS (`createStore`).
+- [x] Initialize new **Vite + SolidJS + TypeScript** project.
+- [x] Set up **Tailwind CSS v4** (follow [Tailwind v4 docs](https://tailwindcss.com/docs/installation)).
+- [x] Configure **ESLint + Prettier** for SolidJS.
+- [x] Port **types** (`types/game.ts`) from current project.
+- [x] Create **`gameState` store** in SolidJS (`createStore`).
 
 ### **Phase 2: Core Game Loop (2-3 days)**
 
-- [ ] Implement **two-tiered game loop** (`engine/gameLoop.ts`).
-- [ ] Port **jobless squirrels logic** to new loop.
-- [ ] Port **production jobsites logic** to new loop.
-- [ ] Port **refinement jobsites logic** to new loop.
-- [ ] Add **batch updates** for `nutsTotal` and other high-frequency values.
+- [x] Implement **two-tiered game loop** (`engine/gameLoop.ts`).
+- [x] Port **jobless squirrels logic** to new loop.
+- [x] Port **production jobsites logic** to new loop.
+- [x] Port **refinement jobsites logic** to new loop.
+- [x] Add **batch updates** for `nutsTotal` and other high-frequency values.
 
 ### **Phase 3: State Migration (2-3 days)**
 
-- [ ] Replace Redux with **SolidJS `createStore`** for global state.
-- [ ] Migrate **all reducers** to direct state mutations.
-- [ ] Replace `useSelector`/`useDispatch` with **SolidJS signals/stores**.
+- [x] Replace Redux with **SolidJS `createStore`** for global state.
+- [x] Migrate **all reducers** to direct state mutations.
+- [x] Replace `useSelector`/`useDispatch` with **SolidJS signals/stores**.
 - [ ] Test **determinism** (same actions → same state).
 
 ### **Phase 4: UI Migration (3-5 days)**
 
-- [ ] Port **`App.tsx`** to SolidJS.
-- [ ] Convert **React components** to SolidJS (1:1 mapping for most).
+- [x] Port **`App.tsx`** to SolidJS.
+- [x] Convert **React components** to SolidJS (1:1 mapping for most).
 - [ ] Add **animations** for counters (e.g., `nutsTotal` easing).
-- [ ] Implement **Tailwind CSS** for styling.
+- [x] Implement **Tailwind CSS** for styling.
 
 ### **Phase 5: Performance Optimizations (2-3 days)**
 
@@ -450,18 +450,18 @@ function updateGameState(timestamp: number) {
 
 ## **🎯 Next Steps**
 
-1. **Approve this plan** (or suggest changes).
-2. **Set up the new project** (Vite + SolidJS + Tailwind).
-3. **Start with Phase 1** (foundation).
-4. **Daily standups** (optional) to sync on progress/blockers.
+1. **Phase 3 complete** — Redux removed; Solid `createStore` is the live state path.
+2. **Finish Phase 4 polish** — counter easing animations, UI cleanup.
+3. **Phase 5** — profile hot paths, Maps for lookups, optional Workers.
+4. **Phase 6** — stress tests, memory checks, error boundaries.
+5. **Determinism check** still open on Phase 3 (seeded RNG for jobless foraging).
 
 ---
 
 ## **💬 Questions for You**
 
 - Should we **prioritize any specific feature** (e.g., save/load, Web Workers)?
-- Do you want to **keep any React components** temporarily during migration?
-- Should we **add a feature freeze** during the refactor?
+- Should we **add a feature freeze** during the remaining phases?
 - Any **non-negotiable UI/UX** elements (e.g., specific animations)?
 
 ---

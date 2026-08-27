@@ -5,7 +5,7 @@
  * Uses the same cookie-based storage but works with the SolidJS store
  */
 
-import { appState, setAppState, loadSaveData } from "./state";
+import { appState, loadSaveData } from "./state";
 import type { SaveData } from "../types/game";
 
 const SAVE_COOKIE_NAME = "nuts_game_save";

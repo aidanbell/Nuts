@@ -1,9 +1,6 @@
 /**
  * SolidJS Effect Processor
- * Centralized effect processing for game effects from ideas and checkpoints
- *
- * This replaces the React effectProcessor with a SolidJS-compatible version
- * that works directly with the SolidJS store.
+ * Centralized effect processing for game effects from ideas and checkpoints.
  */
 
 import {
@@ -16,26 +13,42 @@ import {
   setEra,
   addLog,
 } from "./state";
-import type {
-  GameEffect,
-  EffectProcessorOptions,
-} from "../utils/effectProcessor";
 
 /**
- * Unified effect structure that can be used by both story checkpoints and ideas
- * This is imported from the utils for compatibility
+ * Unified effect structure used by story checkpoints and ideas.
  */
-export type { GameEffect, EffectProcessorOptions };
+export interface GameEffect {
+  unlockSquirrels?: number;
+  unlockJobsites?: string[];
+  unlockBuildings?: string[];
+  unlockTabs?: string[];
+  nutReward?: number;
+  pauseGame?: boolean;
+  showStory?: boolean;
+  setEra?: string;
+  upgradeJobsite?: {
+    jobsiteId: string;
+    property: string;
+    amount: number;
+  };
+  globalEfficiency?: number;
+  increaseGatherMulti?: number;
+  reduceJobsiteCost?: number;
+  unlockFeature?: string;
+  increaseGetButton?: number;
+  unlockSquirrelCapacity?: number;
+  unlockRefinement?: string[];
+}
+
+export interface EffectProcessorOptions {
+  sourceName?: string;
+  sourceType?: "idea" | "checkpoint" | "other";
+  checkpointId?: string;
+  suppressLogs?: boolean;
+}
 
 /**
- * Centralized effect processor for game effects
- * Can be used by both story checkpoints and ideas systems
- *
- * Unlike the React version which required dispatch, this version calls
- * the SolidJS store actions directly.
- *
- * @param effects - The effects to apply
- * @param options - Additional options for processing
+ * Apply game effects directly against the Solid store.
  */
 export const processEffects = (
   effects: GameEffect,
@@ -43,102 +56,80 @@ export const processEffects = (
 ): void => {
   const { sourceName, checkpointId, suppressLogs = false } = options;
 
-  // Unlock squirrels
   if (effects.unlockSquirrels) {
     for (let i = 0; i < effects.unlockSquirrels; i++) {
       createSquirrel();
     }
     if (!suppressLogs && sourceName) {
-      addLog({
-        message: `🐿️ ${effects.unlockSquirrels} squirrel(s) joined! (${sourceName})`,
-        level: "success",
-      });
+      addLog(
+        `🐿️ ${effects.unlockSquirrels} squirrel(s) joined! (${sourceName})`,
+        "success",
+      );
     }
   }
 
-  // Unlock jobsites
   if (effects.unlockJobsites && effects.unlockJobsites.length > 0) {
     unlockJobsites(effects.unlockJobsites);
     if (!suppressLogs) {
-      addLog({
-        message: `🏗️ Unlocked jobsites: ${effects.unlockJobsites.join(", ")}`,
-        level: "success",
-      });
+      addLog(
+        `🏗️ Unlocked jobsites: ${effects.unlockJobsites.join(", ")}`,
+        "success",
+      );
     }
   }
 
-  // Unlock buildings
   if (effects.unlockBuildings && effects.unlockBuildings.length > 0) {
-    // TODO: Implement building unlocking when building system is complete
     if (!suppressLogs) {
-      addLog({
-        message: `🏭 Unlocked buildings: ${effects.unlockBuildings.join(", ")}`,
-        level: "info",
-      });
+      addLog(
+        `🏭 Unlocked buildings: ${effects.unlockBuildings.join(", ")}`,
+        "info",
+      );
     }
   }
 
-  // Unlock tabs
   if (effects.unlockTabs && effects.unlockTabs.length > 0) {
     unlockTabs(effects.unlockTabs);
     if (!suppressLogs) {
-      addLog({
-        message: `📊 Unlocked tabs: ${effects.unlockTabs.join(", ")}`,
-        level: "info",
-      });
+      addLog(`📊 Unlocked tabs: ${effects.unlockTabs.join(", ")}`, "info");
     }
   }
 
-  // Award nut reward
   if (effects.nutReward) {
     addNuts(effects.nutReward);
     if (!suppressLogs) {
-      addLog({
-        message: `+${effects.nutReward} nuts${sourceName ? ` (${sourceName})` : ""}`,
-        level: "success",
-      });
+      addLog(
+        `+${effects.nutReward} nuts${sourceName ? ` (${sourceName})` : ""}`,
+        "success",
+      );
     }
   }
 
-  // Unlock feature (tab)
   if (effects.unlockFeature) {
     unlockTabs([effects.unlockFeature]);
     if (!suppressLogs) {
-      addLog({
-        message: `📊 Unlocked: ${effects.unlockFeature}`,
-        level: "info",
-      });
+      addLog(`📊 Unlocked: ${effects.unlockFeature}`, "info");
     }
   }
 
-  // Set era
   if (effects.setEra) {
     setEra(effects.setEra);
     if (!suppressLogs) {
-      addLog({
-        message: `🌍 Entered ${effects.setEra}!`,
-        level: "success",
-      });
+      addLog(`🌍 Entered ${effects.setEra}!`, "success");
     }
   }
 
-  // Pause game if needed
   if (effects.pauseGame) {
     pauseGame();
   }
 
-  // Show story modal if configured (for checkpoints)
   if (effects.showStory && checkpointId) {
     showStory(checkpointId);
   }
 };
 
-/**
- * Helper to log effect application for debugging
- */
 export const logEffects = (effects: GameEffect, source: string): void => {
   const appliedEffects = Object.entries(effects)
-    .filter(([_, value]) => value !== undefined && value !== null)
+    .filter(([, value]) => value !== undefined && value !== null)
     .map(([key, value]) => {
       if (Array.isArray(value)) {
         return `${key}: [${value.join(", ")}]`;

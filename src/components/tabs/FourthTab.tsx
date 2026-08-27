@@ -1,15 +1,15 @@
-import React from "react";
+import type { Component } from "solid-js";
 
-const FourthTab: React.FC = () => {
+const FourthTab: Component = () => {
   return (
     <div
-      className="tab-panel flex min-h-[50vh] items-center justify-center"
+      class="tab-panel flex min-h-[50vh] items-center justify-center"
       id="fourth-content"
     >
-      <div className="panel max-w-md text-center">
-        <div className="text-5xl">🚧</div>
-        <h2 className="section-title mt-3">Coming Soon</h2>
-        <p className="muted mt-2">This tab is under construction.</p>
+      <div class="panel max-w-md text-center">
+        <div class="text-5xl">🚧</div>
+        <h2 class="section-title mt-3">Coming Soon</h2>
+        <p class="muted mt-2">This tab is under construction.</p>
       </div>
     </div>
   );
