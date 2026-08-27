@@ -315,13 +315,13 @@ export default defineConfig({
 - [x] Replace Redux with **SolidJS `createStore`** for global state.
 - [x] Migrate **all reducers** to direct state mutations.
 - [x] Replace `useSelector`/`useDispatch` with **SolidJS signals/stores**.
-- [ ] Test **determinism** (same actions → same state).
+- [x] ~~Test determinism (seeded RNG)~~ — skipped; `Math.random()` is fine for single-player flavor RNG.
 
 ### **Phase 4: UI Migration (3-5 days)**
 
 - [x] Port **`App.tsx`** to SolidJS.
 - [x] Convert **React components** to SolidJS (1:1 mapping for most).
-- [ ] Add **animations** for counters (e.g., `nutsTotal` easing).
+- [x] Add **animations** for counters (e.g., `nutsTotal` easing).
 - [x] Implement **Tailwind CSS** for styling.
 
 ### **Phase 5: Performance Optimizations (2-3 days)**
@@ -357,9 +357,9 @@ export default defineConfig({
 
 ### **1. Deterministic Logic**
 
-- **No `Math.random()` in pure logic** (seed RNG for reproducibility).
+- **Flavor RNG** (`Math.random()` for foraging / golden nuts) is intentional — no seeded RNG.
 - **Pure functions** for calculations (e.g., `calculateNutsPerSecond`).
-- **Immutable inputs** for critical paths (e.g., `jobSites` lookups).
+- **Centralized store mutations** for critical paths (e.g., `jobSites` lookups).
 
 ### **2. Error Handling**
 
@@ -450,19 +450,16 @@ function updateGameState(timestamp: number) {
 
 ## **🎯 Next Steps**
 
-1. **Phase 3 complete** — Redux removed; Solid `createStore` is the live state path.
-2. **Finish Phase 4 polish** — counter easing animations, UI cleanup.
-3. **Phase 5** — profile hot paths, Maps for lookups, optional Workers.
-4. **Phase 6** — stress tests, memory checks, error boundaries.
-5. **Determinism check** still open on Phase 3 (seeded RNG for jobless foraging).
+1. **Phases 1–4 complete** — Solid engine + UI live; counter easing shipped.
+2. **Phase 5** — profile hot paths, Maps for lookups, optional Workers / UI throttling.
+3. **Phase 6** — stress tests, memory checks, error boundaries (save/load already exists).
 
 ---
 
 ## **💬 Questions for You**
 
-- Should we **prioritize any specific feature** (e.g., save/load, Web Workers)?
+- Should we **prioritize any specific feature** (e.g., Web Workers, save format upgrades)?
 - Should we **add a feature freeze** during the remaining phases?
-- Any **non-negotiable UI/UX** elements (e.g., specific animations)?
 
 ---
 

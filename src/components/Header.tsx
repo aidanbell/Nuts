@@ -1,5 +1,12 @@
-import { type Component, Show } from "solid-js";
+import {
+  type Component,
+  Show,
+  createEffect,
+  createSignal,
+  onCleanup,
+} from "solid-js";
 import { appState } from "../engine/state";
+import { useAnimatedNumber } from "../hooks/useAnimatedNumber";
 import GameConsole from "./GameConsole";
 import { formatNumber, formatTime } from "../utils/formatters";
 
@@ -8,6 +15,21 @@ const Header: Component = () => {
   const nutsAllTime = () => appState.game.nutsAllTime;
   const timer = () => appState.game.timer;
   const resources = () => appState.game.resources;
+
+  const animatedNuts = useAnimatedNumber(nutsTotal);
+  const [bump, setBump] = createSignal(false);
+  let lastActual = nutsTotal();
+
+  // Subtle scale bump on meaningful real grants (not every lerp frame)
+  createEffect(() => {
+    const actual = nutsTotal();
+    if (actual > lastActual + 1) {
+      setBump(true);
+      const timeout = window.setTimeout(() => setBump(false), 200);
+      onCleanup(() => clearTimeout(timeout));
+    }
+    lastActual = actual;
+  });
 
   const hasResources = () => {
     const r = resources();
@@ -22,8 +44,12 @@ const Header: Component = () => {
       <div class="card flex-1 p-4 md:p-5" id="stats">
         <h1 class="font-display text-2xl font-bold tracking-tight md:text-3xl">
           <span class="mr-2">🥜</span>
-          <span class="text-amber" id="total">
-            {formatNumber(nutsTotal())}
+          <span
+            class="inline-block text-amber transition-transform duration-150"
+            classList={{ "scale-105": bump() }}
+            id="total"
+          >
+            {formatNumber(animatedNuts())}
           </span>{" "}
           Nuts
         </h1>
