@@ -3,20 +3,20 @@
  * Replaces Redux store - single source of truth for all game state
  */
 
-import { createStore, type SetStoreFunction } from 'solid-js/store';
+import { createStore, type SetStoreFunction } from "solid-js/store";
 import type {
   GameState,
   JobSite,
   JoblessJobSite,
   Population,
   Squirrel,
-} from '../types/game';
-import type { IdeasState } from '../types/ideas';
-import type { StoryState } from '../types/story';
-import type { GameLogState } from '../types/gameLog';
-import { ideas } from '../data/ideas';
-import { storyCheckpoints } from '../data/storyCheckpoints';
-import { productionJobsites, refinementJobsites } from '../data/jobsites';
+} from "../types/game";
+import type { IdeasState } from "../types/ideas";
+import type { StoryState } from "../types/story";
+import type { GameLogState } from "../types/gameLog";
+import { ideas } from "../data/ideas";
+import { storyCheckpoints } from "../data/storyCheckpoints";
+import { productionJobsites, refinementJobsites } from "../data/jobsites";
 
 // ============================================================================
 // Initial State
@@ -62,7 +62,7 @@ const initialGameState: GameState = {
       multi: 1,
       level: 0,
       cost: 0,
-      method: 'ground',
+      method: "ground",
     },
     production: {},
     refinement: {},
@@ -81,8 +81,8 @@ const initialGameState: GameState = {
   lastUpdate: Date.now(),
 
   // UI state
-  activeTab: 'home',
-  unlockedTabs: ['home'],
+  activeTab: "home",
+  unlockedTabs: ["home"],
 
   // Timer
   timer: {
@@ -104,7 +104,7 @@ const initialStoryState: StoryState = {
   activeStory: null,
   storyQueue: [],
   completedCheckpoints: [],
-  currentEra: 'PREHISTORY',
+  currentEra: "PREHISTORY",
   storyProgress: 0,
   eraBonuses: {},
   pendingChoice: null,
@@ -158,27 +158,27 @@ export const gameLogState = () => appState.gameLog;
 
 // Core resource actions
 export const addNuts = (amount: number) => {
-  setAppState('game', 'nutsTotal', (prev) => prev + amount);
-  setAppState('game', 'nutsAllTime', (prev) => prev + amount);
+  setAppState("game", "nutsTotal", (prev) => prev + amount);
+  setAppState("game", "nutsAllTime", (prev) => prev + amount);
 };
 
 export const spendNuts = (amount: number) => {
-  setAppState('game', 'nutsTotal', (prev) => prev - amount);
+  setAppState("game", "nutsTotal", (prev) => prev - amount);
 };
 
 // Resource actions
 export const addResource = (
-  resource: keyof GameState['resources'],
-  amount: number
+  resource: keyof GameState["resources"],
+  amount: number,
 ) => {
-  setAppState('game', 'resources', resource, (prev) => prev + amount);
+  setAppState("game", "resources", resource, (prev) => prev + amount);
 };
 
 export const spendResource = (
-  resource: keyof GameState['resources'],
-  amount: number
+  resource: keyof GameState["resources"],
+  amount: number,
 ) => {
-  setAppState('game', 'resources', resource, (prev) => prev - amount);
+  setAppState("game", "resources", resource, (prev) => prev - amount);
 };
 
 // Squirrel actions
@@ -186,14 +186,14 @@ export const createSquirrel = () => {
   const game = appState.game;
   const id = game.nextSquirrelId;
 
-  setAppState('game', 'squirrels', id, {
+  setAppState("game", "squirrels", id, {
     _id: id,
     employed: false,
     jobSite: null,
     total: 0,
   });
-  setAppState('game', 'population', 'jobless', (prev) => [...prev, id]);
-  setAppState('game', 'nextSquirrelId', id + 1);
+  setAppState("game", "population", "jobless", (prev) => [...prev, id]);
+  setAppState("game", "nextSquirrelId", id + 1);
 };
 
 export const squirrelFoundNut = (squirrelId: number) => {
@@ -203,7 +203,13 @@ export const squirrelFoundNut = (squirrelId: number) => {
 
   if (squirrel && jobSite) {
     const amount = Math.max(0, jobSite.value * jobSite.multi);
-    setAppState('game', 'squirrels', squirrelId, 'total', (prev) => prev + amount);
+    setAppState(
+      "game",
+      "squirrels",
+      squirrelId,
+      "total",
+      (prev) => prev + amount,
+    );
     addNuts(amount);
   }
 };
@@ -213,8 +219,8 @@ export const unlockJobsites = (jobsiteIds: string[]) => {
   const game = appState.game;
 
   // Unlock jobsites tab if not already unlocked
-  if (!game.unlockedTabs.includes('jobsites')) {
-    setAppState('game', 'unlockedTabs', (prev) => [...prev, 'jobsites']);
+  if (!game.unlockedTabs.includes("jobsites")) {
+    setAppState("game", "unlockedTabs", (prev) => [...prev, "jobsites"]);
   }
 
   jobsiteIds.forEach((id) => {
@@ -244,10 +250,10 @@ export const unlockJobsites = (jobsiteIds: string[]) => {
       };
 
       // Add to the appropriate category
-      if (newJobsite.type === 'production') {
-        setAppState('game', 'jobSites', 'production', id, newJobsite);
-      } else if (newJobsite.type === 'refinement') {
-        setAppState('game', 'jobSites', 'refinement', id, newJobsite);
+      if (newJobsite.type === "production") {
+        setAppState("game", "jobSites", "production", id, newJobsite);
+      } else if (newJobsite.type === "refinement") {
+        setAppState("game", "jobSites", "refinement", id, newJobsite);
       }
     }
   });
@@ -255,101 +261,132 @@ export const unlockJobsites = (jobsiteIds: string[]) => {
 
 export const buyJobSiteCapacity = (jobSiteId: string) => {
   const game = appState.game;
-  const jobSite = game.jobSites.production[jobSiteId] || game.jobSites.refinement[jobSiteId];
+  const jobSite =
+    game.jobSites.production[jobSiteId] || game.jobSites.refinement[jobSiteId];
 
   if (jobSite && game.nutsTotal >= jobSite.cost) {
     spendNuts(jobSite.cost);
 
-    setAppState('game', 'jobSites', jobSite.type, jobSiteId, 'level', (prev) => prev + 1);
+    setAppState(
+      "game",
+      "jobSites",
+      jobSite.type,
+      jobSiteId,
+      "level",
+      (prev) => prev + 1,
+    );
 
     // Every 5 levels, increase max squirrels by 1
     const newLevel = jobSite.level + 1;
     if (newLevel % 5 === 0) {
       setAppState(
-        'game',
-        'jobSites',
+        "game",
+        "jobSites",
         jobSite.type,
         jobSiteId,
-        'maxSquirrels',
-        (prev) => prev + 1
+        "maxSquirrels",
+        (prev) => prev + 1,
       );
     }
 
     // Every level, slightly increase production (5% boost to both base and bonus)
     setAppState(
-      'game',
-      'jobSites',
+      "game",
+      "jobSites",
       jobSite.type,
       jobSiteId,
-      'baseProduction',
-      (prev) => prev * 1.05
+      "baseProduction",
+      (prev) => prev * 1.05,
     );
     setAppState(
-      'game',
-      'jobSites',
+      "game",
+      "jobSites",
       jobSite.type,
       jobSiteId,
-      'squirrelBonus',
-      (prev) => prev * 1.05
+      "squirrelBonus",
+      (prev) => prev * 1.05,
     );
 
     // Calculate next cost using exponential growth formula
-    const newCost = Math.floor(jobSite.baseCost * Math.pow(jobSite.costGrowthRate, newLevel));
-    setAppState('game', 'jobSites', jobSite.type, jobSiteId, 'cost', newCost);
+    const newCost = Math.floor(
+      jobSite.baseCost * Math.pow(jobSite.costGrowthRate, newLevel),
+    );
+    setAppState("game", "jobSites", jobSite.type, jobSiteId, "cost", newCost);
   }
 };
 
-export const assignSquirrelToJobSite = (squirrelId: number, jobSiteId: string) => {
+export const assignSquirrelToJobSite = (
+  squirrelId: number,
+  jobSiteId: string,
+) => {
   const game = appState.game;
   const squirrel = game.squirrels[squirrelId];
-  const jobSite = game.jobSites.production[jobSiteId] || game.jobSites.refinement[jobSiteId];
+  const jobSite =
+    game.jobSites.production[jobSiteId] || game.jobSites.refinement[jobSiteId];
 
   if (squirrel && jobSite && jobSite.workers.length < jobSite.maxSquirrels) {
     // Remove from jobless
-    setAppState('game', 'population', 'jobless', (prev) =>
-      prev.filter((id) => id !== squirrelId)
+    setAppState("game", "population", "jobless", (prev) =>
+      prev.filter((id) => id !== squirrelId),
     );
 
     // Add to jobsite workers
-    setAppState('game', 'jobSites', jobSite.type, jobSiteId, 'workers', (prev) =>
-      [...prev, squirrelId]
+    setAppState(
+      "game",
+      "jobSites",
+      jobSite.type,
+      jobSiteId,
+      "workers",
+      (prev) => [...prev, squirrelId],
     );
-    setAppState('game', 'squirrels', squirrelId, 'employed', true);
-    setAppState('game', 'squirrels', squirrelId, 'jobSite', jobSiteId);
+    setAppState("game", "squirrels", squirrelId, "employed", true);
+    setAppState("game", "squirrels", squirrelId, "jobSite", jobSiteId);
 
     // Initialize population array for this jobsite if needed
     if (!game.population[jobSiteId]) {
-      setAppState('game', 'population', jobSiteId, []);
+      setAppState("game", "population", jobSiteId, []);
     }
-    setAppState('game', 'population', jobSiteId, (prev: number[] = []) => [
+    setAppState("game", "population", jobSiteId, (prev: number[] = []) => [
       ...prev,
       squirrelId,
     ]);
   }
 };
 
-export const removeSquirrelFromJobSite = (squirrelId: number, jobSiteId: string) => {
+export const removeSquirrelFromJobSite = (
+  squirrelId: number,
+  jobSiteId: string,
+) => {
   const game = appState.game;
   const squirrel = game.squirrels[squirrelId];
-  const jobSite = game.jobSites.production[jobSiteId] || game.jobSites.refinement[jobSiteId];
+  const jobSite =
+    game.jobSites.production[jobSiteId] || game.jobSites.refinement[jobSiteId];
 
   if (squirrel && jobSite) {
     // Remove from jobsite workers
-    setAppState('game', 'jobSites', jobSite.type, jobSiteId, 'workers', (prev) =>
-      prev.filter((id) => id !== squirrelId)
+    setAppState(
+      "game",
+      "jobSites",
+      jobSite.type,
+      jobSiteId,
+      "workers",
+      (prev) => prev.filter((id) => id !== squirrelId),
     );
 
     // Remove from population
     if (game.population[jobSiteId]) {
-      setAppState('game', 'population', jobSiteId, (prev) =>
-        prev.filter((id) => id !== squirrelId)
+      setAppState("game", "population", jobSiteId, (prev) =>
+        prev.filter((id) => id !== squirrelId),
       );
     }
 
     // Add back to jobless
-    setAppState('game', 'population', 'jobless', (prev) => [...prev, squirrelId]);
-    setAppState('game', 'squirrels', squirrelId, 'employed', false);
-    setAppState('game', 'squirrels', squirrelId, 'jobSite', null);
+    setAppState("game", "population", "jobless", (prev) => [
+      ...prev,
+      squirrelId,
+    ]);
+    setAppState("game", "squirrels", squirrelId, "employed", false);
+    setAppState("game", "squirrels", squirrelId, "jobSite", null);
   }
 };
 
@@ -365,11 +402,13 @@ export const craftRefinement = (refinementId: string) => {
 
   // Check if we have enough resources
   const availableResource =
-    consumeType === 'nuts' ? game.nutsTotal : game.resources[consumeType as keyof typeof game.resources];
+    consumeType === "nuts"
+      ? game.nutsTotal
+      : game.resources[consumeType as keyof typeof game.resources];
 
   if (availableResource >= consumeAmount) {
     // Consume input resource
-    if (consumeType === 'nuts') {
+    if (consumeType === "nuts") {
       spendNuts(consumeAmount);
     } else {
       spendResource(consumeType as keyof typeof game.resources, consumeAmount);
@@ -382,7 +421,7 @@ export const craftRefinement = (refinementId: string) => {
 
 // Batch update for performance
 export interface GameUpdate {
-  type: 'ADD_NUTS' | 'UPDATE_SQUIRREL' | 'UPDATE_JOBSITE';
+  type: "ADD_NUTS" | "UPDATE_SQUIRREL" | "UPDATE_JOBSITE";
   data: {
     amount?: number;
     id?: number | string;
@@ -394,29 +433,35 @@ export interface GameUpdate {
 export const batchUpdate = (updates: GameUpdate[]) => {
   updates.forEach((update) => {
     switch (update.type) {
-      case 'ADD_NUTS':
+      case "ADD_NUTS":
         if (update.data.amount !== undefined) {
           addNuts(update.data.amount);
         }
         break;
-      case 'UPDATE_SQUIRREL':
+      case "UPDATE_SQUIRREL":
         if (update.data.id !== undefined && update.data.changes) {
-          setAppState('game', 'squirrels', update.data.id as number, (prev) => ({
-            ...prev,
-            ...update.data.changes,
-          }));
+          setAppState(
+            "game",
+            "squirrels",
+            update.data.id as number,
+            (prev) => ({
+              ...prev,
+              ...update.data.changes,
+            }),
+          );
         }
         break;
-      case 'UPDATE_JOBSITE':
+      case "UPDATE_JOBSITE":
         if (update.data.id !== undefined) {
-          const js = appState.game.jobSites.production[update.data.id as string];
+          const js =
+            appState.game.jobSites.production[update.data.id as string];
           if (js) {
             setAppState(
-              'game',
-              'jobSites',
-              'production',
+              "game",
+              "jobSites",
+              "production",
               update.data.id as string,
-              (prev) => ({ ...prev, ...update.data.changes })
+              (prev) => ({ ...prev, ...update.data.changes }),
             );
           }
         }
@@ -427,11 +472,11 @@ export const batchUpdate = (updates: GameUpdate[]) => {
 
 // Game control actions
 export const incrementTick = () => {
-  setAppState('game', 'tick', (prev) => prev + 1);
+  setAppState("game", "tick", (prev) => prev + 1);
 };
 
 export const updateTimer = () => {
-  setAppState('game', 'timer', (prev) => {
+  setAppState("game", "timer", (prev) => {
     const newMs = prev.ms + 1;
     const newS = newMs >= 100 ? prev.s + 1 : prev.s;
     const newM = newS >= 60 ? prev.m + 1 : prev.m;
@@ -442,23 +487,23 @@ export const updateTimer = () => {
 };
 
 export const setGameSpeed = (speed: number) => {
-  setAppState('game', 'gameSpeed', speed);
+  setAppState("game", "gameSpeed", speed);
 };
 
 export const pauseGame = () => {
-  setAppState('game', 'isPaused', true);
+  setAppState("game", "isPaused", true);
 };
 
 export const resumeGame = () => {
-  setAppState('game', 'isPaused', false);
+  setAppState("game", "isPaused", false);
 };
 
 export const setActiveTab = (tab: string) => {
-  setAppState('game', 'activeTab', tab);
+  setAppState("game", "activeTab", tab);
 };
 
 export const unlockTab = (tab: string) => {
-  setAppState('game', 'unlockedTabs', (prev) => {
+  setAppState("game", "unlockedTabs", (prev) => {
     if (!prev.includes(tab)) {
       return [...prev, tab];
     }
@@ -467,7 +512,7 @@ export const unlockTab = (tab: string) => {
 };
 
 export const unlockTabs = (tabs: string[]) => {
-  setAppState('game', 'unlockedTabs', (prev) => {
+  setAppState("game", "unlockedTabs", (prev) => {
     const newTabs = [...prev];
     tabs.forEach((tab) => {
       if (!newTabs.includes(tab)) {
@@ -482,14 +527,14 @@ export const unlockTabs = (tabs: string[]) => {
 export const hibernate = () => {
   const game = appState.game;
   const goldenNutsEarned = Math.floor(
-    game.nutsAllTime / Math.pow(10, 6) * game.goldNuts.multi
+    (game.nutsAllTime / Math.pow(10, 6)) * game.goldNuts.multi,
   );
 
   // Update gold nuts
-  setAppState('game', 'goldNuts', 'total', (prev) => prev + goldenNutsEarned);
+  setAppState("game", "goldNuts", "total", (prev) => prev + goldenNutsEarned);
 
   // Reset game state
-  setAppState('game', (prev) => ({
+  setAppState("game", (prev) => ({
     ...prev,
     nutsTotal: 0,
     nutsAllTime: 0,
@@ -504,12 +549,12 @@ export const hibernate = () => {
 
 // Update timestamp
 export const updateTimestamp = () => {
-  setAppState('game', 'lastUpdate', Date.now());
+  setAppState("game", "lastUpdate", Date.now());
 };
 
 // Load save data
 export const loadSaveData = (data: Partial<GameState>) => {
-  setAppState('game', (prev) => ({ ...prev, ...data }));
+  setAppState("game", (prev) => ({ ...prev, ...data }));
 };
 
 // ============================================================================
@@ -521,20 +566,20 @@ export const researchIdea = (ideaId: string) => {
   const idea = ideas[ideaId];
 
   if (idea && !idea.researched) {
-    setAppState('ideas', 'ideas', ideaId, 'researched', true);
-    setAppState('ideas', 'ideas', ideaId, 'researchedAt', Date.now());
-    setAppState('ideas', 'researchedIdeas', (prev) => [...prev, ideaId]);
-    setAppState('ideas', 'researchedCount', (prev) => prev + 1);
+    setAppState("ideas", "ideas", ideaId, "researched", true);
+    setAppState("ideas", "ideas", ideaId, "researchedAt", Date.now());
+    setAppState("ideas", "researchedIdeas", (prev) => [...prev, ideaId]);
+    setAppState("ideas", "researchedCount", (prev) => prev + 1);
   }
 };
 
 export const showIdea = (ideaId: string) => {
-  setAppState('ideas', 'ideas', ideaId, 'visible', true);
+  setAppState("ideas", "ideas", ideaId, "visible", true);
 };
 
 export const showIdeas = (ideaIds: string[]) => {
   ideaIds.forEach((ideaId) => {
-    setAppState('ideas', 'ideas', ideaId, 'visible', true);
+    setAppState("ideas", "ideas", ideaId, "visible", true);
   });
 };
 
@@ -552,7 +597,7 @@ export const updateIdeaVisibility = (params: {
 
     const reqs = idea.requirements;
     if (!reqs) {
-      setAppState('ideas', 'ideas', ideaId, 'visible', true);
+      setAppState("ideas", "ideas", ideaId, "visible", true);
       return;
     }
 
@@ -569,7 +614,7 @@ export const updateIdeaVisibility = (params: {
     }
     if (reqs.ideasResearched) {
       const allResearched = reqs.ideasResearched.every(
-        (reqId) => appState.ideas.ideas[reqId]?.researched
+        (reqId) => appState.ideas.ideas[reqId]?.researched,
       );
       if (!allResearched) {
         meetsRequirements = false;
@@ -577,7 +622,7 @@ export const updateIdeaVisibility = (params: {
     }
 
     if (meetsRequirements) {
-      setAppState('ideas', 'ideas', ideaId, 'visible', true);
+      setAppState("ideas", "ideas", ideaId, "visible", true);
     }
   });
 };
@@ -585,15 +630,21 @@ export const updateIdeaVisibility = (params: {
 export const resetIdeas = () => {
   const ideasList = appState.ideas.ideas;
   Object.keys(ideasList).forEach((ideaId) => {
-    setAppState('ideas', 'ideas', ideaId, 'researched', false);
-    setAppState('ideas', 'ideas', ideaId, 'researchedAt', undefined);
-    setAppState('ideas', 'ideas', ideaId, 'visible', !ideasList[ideaId].requirements);
+    setAppState("ideas", "ideas", ideaId, "researched", false);
+    setAppState("ideas", "ideas", ideaId, "researchedAt", undefined);
+    setAppState(
+      "ideas",
+      "ideas",
+      ideaId,
+      "visible",
+      !ideasList[ideaId].requirements,
+    );
   });
-  setAppState('ideas', 'researchedCount', 0);
+  setAppState("ideas", "researchedCount", 0);
 };
 
 export const loadIdeasState = (data: Partial<IdeasState>) => {
-  setAppState('ideas', (prev) => ({ ...prev, ...data }));
+  setAppState("ideas", (prev) => ({ ...prev, ...data }));
 };
 
 // ============================================================================
@@ -605,33 +656,42 @@ export const completeCheckpoint = (checkpointId: string) => {
   const checkpoint = story.checkpoints[checkpointId];
 
   if (checkpoint && !checkpoint.completed) {
-    setAppState('story', 'checkpoints', checkpointId, 'completed', true);
-    setAppState('story', 'checkpoints', checkpointId, 'completedAt', Date.now());
-    setAppState('story', 'completedCheckpoints', (prev) => [...prev, checkpointId]);
+    setAppState("story", "checkpoints", checkpointId, "completed", true);
+    setAppState(
+      "story",
+      "checkpoints",
+      checkpointId,
+      "completedAt",
+      Date.now(),
+    );
+    setAppState("story", "completedCheckpoints", (prev) => [
+      ...prev,
+      checkpointId,
+    ]);
 
     // Calculate story progress
     const totalCheckpoints = Object.keys(story.checkpoints).length;
     const progress = Math.floor(
-      (story.completedCheckpoints.length / totalCheckpoints) * 100
+      (story.completedCheckpoints.length / totalCheckpoints) * 100,
     );
-    setAppState('story', 'storyProgress', progress);
+    setAppState("story", "storyProgress", progress);
   }
 };
 
 export const showStory = (checkpointId: string) => {
-  setAppState('story', 'activeStory', checkpointId);
+  setAppState("story", "activeStory", checkpointId);
 };
 
 export const dismissStory = () => {
   const story = appState.story;
-  setAppState('story', 'activeStory', null);
+  setAppState("story", "activeStory", null);
 
   // Show next story in queue if available
   if (story.storyQueue.length > 0) {
     const nextStoryId = story.storyQueue[0];
-    setAppState('story', 'storyQueue', (prev) => prev.slice(1));
+    setAppState("story", "storyQueue", (prev) => prev.slice(1));
     if (nextStoryId) {
-      setAppState('story', 'activeStory', nextStoryId);
+      setAppState("story", "activeStory", nextStoryId);
     }
   }
 };
@@ -640,16 +700,19 @@ export const queueStory = (checkpointId: string) => {
   const story = appState.story;
 
   // Don't queue if already in queue or currently active
-  if (story.activeStory === checkpointId || story.storyQueue.includes(checkpointId)) {
+  if (
+    story.activeStory === checkpointId ||
+    story.storyQueue.includes(checkpointId)
+  ) {
     return;
   }
 
   // If no active story, show immediately
   if (!story.activeStory) {
-    setAppState('story', 'activeStory', checkpointId);
+    setAppState("story", "activeStory", checkpointId);
   } else {
     // Otherwise add to queue
-    setAppState('story', 'storyQueue', (prev) => [...prev, checkpointId]);
+    setAppState("story", "storyQueue", (prev) => [...prev, checkpointId]);
   }
 };
 
@@ -658,28 +721,31 @@ export const queueStories = (checkpointIds: string[]) => {
 
   // Filter out any that are already active or queued
   const newStories = checkpointIds.filter(
-    (id) => id !== story.activeStory && !story.storyQueue.includes(id)
+    (id) => id !== story.activeStory && !story.storyQueue.includes(id),
   );
 
   if (newStories.length === 0) return;
 
   // If no active story, show the first one
   if (!story.activeStory) {
-    setAppState('story', 'activeStory', newStories[0]);
+    setAppState("story", "activeStory", newStories[0]);
     // Add the rest to queue
-    setAppState('story', 'storyQueue', (prev) => [...prev, ...newStories.slice(1)]);
+    setAppState("story", "storyQueue", (prev) => [
+      ...prev,
+      ...newStories.slice(1),
+    ]);
   } else {
     // Add all to queue
-    setAppState('story', 'storyQueue', (prev) => [...prev, ...newStories]);
+    setAppState("story", "storyQueue", (prev) => [...prev, ...newStories]);
   }
 };
 
 export const setEra = (era: string) => {
-  setAppState('story', 'currentEra', era);
+  setAppState("story", "currentEra", era);
 };
 
 export const setPendingChoice = (checkpointId: string | null) => {
-  setAppState('story', 'pendingChoice', checkpointId);
+  setAppState("story", "pendingChoice", checkpointId);
 };
 
 export const makeChoice = (checkpointId: string, choiceId: string) => {
@@ -693,40 +759,54 @@ export const makeChoice = (checkpointId: string, choiceId: string) => {
 
   // Apply choice effects
   if (choice.effects.setEra) {
-    setAppState('story', 'currentEra', choice.effects.setEra);
+    setAppState("story", "currentEra", choice.effects.setEra);
   }
 
   if (choice.effects.grantBonus) {
     const { type, value, target } = choice.effects.grantBonus;
-    if (type === 'era_multiplier' && target) {
-      setAppState('story', 'eraBonuses', target, (prev: number = 1) => prev * value);
+    if (type === "era_multiplier" && target) {
+      setAppState(
+        "story",
+        "eraBonuses",
+        target,
+        (prev: number = 1) => prev * value,
+      );
     }
   }
 
   // Mark checkpoint as complete
   if (!checkpoint.completed && checkpoint.oneTime) {
-    setAppState('story', 'checkpoints', checkpointId, 'completed', true);
-    setAppState('story', 'checkpoints', checkpointId, 'completedAt', Date.now());
-    setAppState('story', 'completedCheckpoints', (prev) => [...prev, checkpointId]);
+    setAppState("story", "checkpoints", checkpointId, "completed", true);
+    setAppState(
+      "story",
+      "checkpoints",
+      checkpointId,
+      "completedAt",
+      Date.now(),
+    );
+    setAppState("story", "completedCheckpoints", (prev) => [
+      ...prev,
+      checkpointId,
+    ]);
 
     // Calculate story progress
     const totalCheckpoints = Object.keys(story.checkpoints).length;
     const progress = Math.floor(
-      (story.completedCheckpoints.length / totalCheckpoints) * 100
+      (story.completedCheckpoints.length / totalCheckpoints) * 100,
     );
-    setAppState('story', 'storyProgress', progress);
+    setAppState("story", "storyProgress", progress);
   }
 
   // Clear pending choice
-  setAppState('story', 'pendingChoice', null);
-  setAppState('story', 'activeStory', null);
+  setAppState("story", "pendingChoice", null);
+  setAppState("story", "activeStory", null);
 
   // Show next story in queue if available
   if (story.storyQueue.length > 0) {
     const nextStoryId = story.storyQueue[0];
-    setAppState('story', 'storyQueue', (prev) => prev.slice(1));
+    setAppState("story", "storyQueue", (prev) => prev.slice(1));
     if (nextStoryId) {
-      setAppState('story', 'activeStory', nextStoryId);
+      setAppState("story", "activeStory", nextStoryId);
     }
   }
 };
@@ -734,47 +814,47 @@ export const makeChoice = (checkpointId: string, choiceId: string) => {
 export const resetCheckpoints = () => {
   const checkpoints = appState.story.checkpoints;
   Object.keys(checkpoints).forEach((checkpointId) => {
-    setAppState('story', 'checkpoints', checkpointId, 'completed', false);
-    setAppState('story', 'checkpoints', checkpointId, 'completedAt', undefined);
+    setAppState("story", "checkpoints", checkpointId, "completed", false);
+    setAppState("story", "checkpoints", checkpointId, "completedAt", undefined);
   });
-  setAppState('story', 'completedCheckpoints', []);
-  setAppState('story', 'storyProgress', 0);
-  setAppState('story', 'activeStory', null);
-  setAppState('story', 'storyQueue', []);
-  setAppState('story', 'currentEra', 'PREHISTORY');
-  setAppState('story', 'eraBonuses', {});
-  setAppState('story', 'pendingChoice', null);
+  setAppState("story", "completedCheckpoints", []);
+  setAppState("story", "storyProgress", 0);
+  setAppState("story", "activeStory", null);
+  setAppState("story", "storyQueue", []);
+  setAppState("story", "currentEra", "PREHISTORY");
+  setAppState("story", "eraBonuses", {});
+  setAppState("story", "pendingChoice", null);
 };
 
 export const loadCheckpointState = (data: {
   completedCheckpoints: string[];
   currentEra: string;
 }) => {
-  setAppState('story', 'completedCheckpoints', data.completedCheckpoints);
-  setAppState('story', 'currentEra', data.currentEra);
+  setAppState("story", "completedCheckpoints", data.completedCheckpoints);
+  setAppState("story", "currentEra", data.currentEra);
 
   // Mark checkpoints as completed
   data.completedCheckpoints.forEach((checkpointId) => {
     if (appState.story.checkpoints[checkpointId]) {
-      setAppState('story', 'checkpoints', checkpointId, 'completed', true);
+      setAppState("story", "checkpoints", checkpointId, "completed", true);
     }
   });
 
   // Calculate progress
   const totalCheckpoints = Object.keys(appState.story.checkpoints).length;
   const progress = Math.floor(
-    (data.completedCheckpoints.length / totalCheckpoints) * 100
+    (data.completedCheckpoints.length / totalCheckpoints) * 100,
   );
-  setAppState('story', 'storyProgress', progress);
+  setAppState("story", "storyProgress", progress);
 };
 
 // ============================================================================
 // Game Log Actions
 // ============================================================================
 
-export type LogLevel = 'info' | 'success' | 'warning' | 'error';
+export type LogLevel = "info" | "success" | "warning" | "error";
 
-export const addLog = (message: string, level: LogLevel = 'info') => {
+export const addLog = (message: string, level: LogLevel = "info") => {
   const newLog = {
     id: `${Date.now()}-${Math.random()}`,
     message,
@@ -782,17 +862,17 @@ export const addLog = (message: string, level: LogLevel = 'info') => {
     timestamp: Date.now(),
   };
 
-  setAppState('gameLog', 'logs', (prev) => [...prev, newLog]);
+  setAppState("gameLog", "logs", (prev) => [...prev, newLog]);
 
   // Keep only the last maxLogs entries
   const maxLogs = appState.gameLog.maxLogs;
   if (appState.gameLog.logs.length > maxLogs) {
-    setAppState('gameLog', 'logs', (prev) => prev.slice(-maxLogs));
+    setAppState("gameLog", "logs", (prev) => prev.slice(-maxLogs));
   }
 };
 
 export const clearLogs = () => {
-  setAppState('gameLog', 'logs', []);
+  setAppState("gameLog", "logs", []);
 };
 
 // ============================================================================

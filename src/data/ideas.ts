@@ -1,4 +1,4 @@
-import type { Idea } from '../types/ideas';
+import type { Idea } from "../types/ideas";
 
 /**
  * Ideas represent the research/tech tree of the game.
@@ -141,7 +141,7 @@ export const ideas: Record<string, Idea> = {
     requirements: {
       era: "WOOD_AGE",
     },
-    cost: { 
+    cost: {
       nuts: 750,
       nutwood: 5,
     },
@@ -506,20 +506,20 @@ export const ideas: Record<string, Idea> = {
 
 // Helper functions
 export const getIdeasByEra = (era: string): Idea[] => {
-  return Object.values(ideas).filter(idea => idea.era === era);
+  return Object.values(ideas).filter((idea) => idea.era === era);
 };
 
 export const getVisibleIdeas = (): Idea[] => {
-  return Object.values(ideas).filter(idea => idea.visible);
+  return Object.values(ideas).filter((idea) => idea.visible);
 };
 
 export const getResearchedIdeas = (): Idea[] => {
-  return Object.values(ideas).filter(idea => idea.researched);
+  return Object.values(ideas).filter((idea) => idea.researched);
 };
 
 export const getAffordableIdeas = (nutsTotal: number): Idea[] => {
   return Object.values(ideas).filter(
-    idea => idea.visible && !idea.researched && (idea.cost.nuts || 0) <= nutsTotal
+    (idea) =>
+      idea.visible && !idea.researched && (idea.cost.nuts || 0) <= nutsTotal,
   );
 };
-

@@ -1,15 +1,19 @@
-import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState } from '../../store';
-import { craftRefinement } from '../../store/gameSlice';
-import { refinementJobsites } from '../../data/jobsites';
-import { formatNumber } from '../../utils/formatters';
+import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "../../store";
+import { craftRefinement } from "../../store/gameSlice";
+import { refinementJobsites } from "../../data/jobsites";
+import { formatNumber } from "../../utils/formatters";
 
 const RefinementTab: React.FC = () => {
   const dispatch = useDispatch();
-  const { nutsTotal, resources } = useSelector((state: RootState) => state.game);
+  const { nutsTotal, resources } = useSelector(
+    (state: RootState) => state.game,
+  );
 
-  const nutwoodRefinement = refinementJobsites.find((js) => js.id === 'nutwoodRefinement');
+  const nutwoodRefinement = refinementJobsites.find(
+    (js) => js.id === "nutwoodRefinement",
+  );
 
   if (!nutwoodRefinement?.consumes || !nutwoodRefinement.produces) {
     return (
@@ -22,10 +26,14 @@ const RefinementTab: React.FC = () => {
     );
   }
 
-  const { resource: consumeType, amount: consumeAmount } = nutwoodRefinement.consumes;
-  const { resource: produceType, amount: produceAmount } = nutwoodRefinement.produces;
+  const { resource: consumeType, amount: consumeAmount } =
+    nutwoodRefinement.consumes;
+  const { resource: produceType, amount: produceAmount } =
+    nutwoodRefinement.produces;
   const availableResource =
-    consumeType === 'nuts' ? nutsTotal : resources[consumeType as keyof typeof resources];
+    consumeType === "nuts"
+      ? nutsTotal
+      : resources[consumeType as keyof typeof resources];
   const hasEnoughResources = availableResource >= consumeAmount;
 
   return (
@@ -33,8 +41,8 @@ const RefinementTab: React.FC = () => {
       <div>
         <h2 className="section-title">🏭 Manual Refinement</h2>
         <p className="muted mt-1">
-          Refine raw materials into useful resources. Later you&apos;ll unlock automated
-          refineries.
+          Refine raw materials into useful resources. Later you&apos;ll unlock
+          automated refineries.
         </p>
       </div>
 
@@ -44,13 +52,13 @@ const RefinementTab: React.FC = () => {
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <div
             className={[
-              'flex items-center gap-2 rounded-lg border px-3 py-2 text-sm',
+              "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm",
               hasEnoughResources
-                ? 'border-moss/20 bg-white/80'
-                : 'border-danger/40 bg-danger/10 text-danger',
-            ].join(' ')}
+                ? "border-moss/20 bg-white/80"
+                : "border-danger/40 bg-danger/10 text-danger",
+            ].join(" ")}
           >
-            {consumeType === 'nuts' ? '🥜' : '❓'}
+            {consumeType === "nuts" ? "🥜" : "❓"}
             <strong>{consumeAmount}</strong> {consumeType}
             <span className="text-xs text-muted">
               ({formatNumber(availableResource)} available)
@@ -65,7 +73,9 @@ const RefinementTab: React.FC = () => {
         <button
           type="button"
           className="btn btn-primary btn-lg mt-4"
-          onClick={() => dispatch(craftRefinement({ refinementId: 'nutwoodRefinement' }))}
+          onClick={() =>
+            dispatch(craftRefinement({ refinementId: "nutwoodRefinement" }))
+          }
           disabled={!hasEnoughResources}
         >
           Craft NutWood
@@ -73,7 +83,8 @@ const RefinementTab: React.FC = () => {
 
         {!hasEnoughResources && (
           <p className="mt-3 text-sm text-danger">
-            ⚠️ Not enough {consumeType}! Need {consumeAmount - availableResource} more.
+            ⚠️ Not enough {consumeType}! Need{" "}
+            {consumeAmount - availableResource} more.
           </p>
         )}
       </div>

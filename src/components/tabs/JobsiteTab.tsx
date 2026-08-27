@@ -1,13 +1,13 @@
-import React, { useState, memo, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState } from '../../store';
+import React, { useState, memo, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "../../store";
 import {
   buyJobSiteCapacity,
   assignSquirrelToJobSite,
   removeSquirrelFromJobSite,
-} from '../../store/gameSlice';
-import { formatNumber, formatProductionRate } from '../../utils/formatters';
-import SquirrelDisplay from '../SquirrelDisplay';
+} from "../../store/gameSlice";
+import { formatNumber, formatProductionRate } from "../../utils/formatters";
+import SquirrelDisplay from "../SquirrelDisplay";
 
 interface JobSiteCardProps {
   jobSiteId: string;
@@ -20,26 +20,31 @@ const JobSiteCardComponent: React.FC<JobSiteCardProps> = memo(
     const dispatch = useDispatch();
     const jobSites = useSelector((state: RootState) => state.game.jobSites);
     const nuts = useSelector((state: RootState) => state.game.nutsTotal);
-    const jobless = useSelector((state: RootState) => state.game.population.jobless);
+    const jobless = useSelector(
+      (state: RootState) => state.game.population.jobless,
+    );
 
-    const jobSite = jobSites.production[jobSiteId] || jobSites.refinement[jobSiteId];
+    const jobSite =
+      jobSites.production[jobSiteId] || jobSites.refinement[jobSiteId];
 
     const handleBuy = useCallback(
       (e: React.MouseEvent) => {
         e.stopPropagation();
         dispatch(buyJobSiteCapacity(jobSiteId));
       },
-      [dispatch, jobSiteId]
+      [dispatch, jobSiteId],
     );
 
     const handleAddWorker = useCallback(
       (e: React.MouseEvent) => {
         e.stopPropagation();
         if (jobless.length > 0) {
-          dispatch(assignSquirrelToJobSite({ squirrelId: jobless[0], jobSiteId }));
+          dispatch(
+            assignSquirrelToJobSite({ squirrelId: jobless[0], jobSiteId }),
+          );
         }
       },
-      [dispatch, jobSiteId, jobless]
+      [dispatch, jobSiteId, jobless],
     );
 
     const handleRemoveWorker = useCallback(
@@ -47,20 +52,26 @@ const JobSiteCardComponent: React.FC<JobSiteCardProps> = memo(
         e.stopPropagation();
         if (jobSite?.workers && jobSite.workers.length > 0) {
           dispatch(
-            removeSquirrelFromJobSite({ squirrelId: jobSite.workers[0], jobSiteId })
+            removeSquirrelFromJobSite({
+              squirrelId: jobSite.workers[0],
+              jobSiteId,
+            }),
           );
         }
       },
-      [dispatch, jobSiteId, jobSite?.workers]
+      [dispatch, jobSiteId, jobSite?.workers],
     );
 
     if (!jobSite) return null;
 
     const canAfford = nuts >= jobSite.cost;
-    const canAddWorker = jobSite.workers.length < jobSite.maxSquirrels && jobless.length > 0;
+    const canAddWorker =
+      jobSite.workers.length < jobSite.maxSquirrels && jobless.length > 0;
     const canRemoveWorker = jobSite.workers.length > 0;
     const totalRate =
-      (jobSite.baseProduction + jobSite.squirrelBonus * jobSite.workers.length) * jobSite.multi;
+      (jobSite.baseProduction +
+        jobSite.squirrelBonus * jobSite.workers.length) *
+      jobSite.multi;
 
     return (
       <div
@@ -68,24 +79,26 @@ const JobSiteCardComponent: React.FC<JobSiteCardProps> = memo(
         tabIndex={0}
         onClick={onToggle}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') onToggle();
+          if (e.key === "Enter" || e.key === " ") onToggle();
         }}
         className={[
-          'cursor-pointer rounded-xl border-2 p-4 transition hover:-translate-y-0.5',
+          "cursor-pointer rounded-xl border-2 p-4 transition hover:-translate-y-0.5",
           isExpanded
-            ? 'border-moss bg-sage/40'
-            : 'border-moss/15 bg-white/70 hover:border-moss/40',
-        ].join(' ')}
+            ? "border-moss bg-sage/40"
+            : "border-moss/15 bg-white/70 hover:border-moss/40",
+        ].join(" ")}
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span
-              className={`inline-block transition ${isExpanded ? 'rotate-180' : ''}`}
+              className={`inline-block transition ${isExpanded ? "rotate-180" : ""}`}
               aria-hidden
             >
               ▼
             </span>
-            <span className="font-display text-lg font-semibold">{jobSite.name}</span>
+            <span className="font-display text-lg font-semibold">
+              {jobSite.name}
+            </span>
           </div>
           <div className="flex gap-3 text-sm font-semibold">
             <span>
@@ -106,11 +119,15 @@ const JobSiteCardComponent: React.FC<JobSiteCardProps> = memo(
               </div>
               <div>
                 <p className="muted">Base</p>
-                <p>{formatProductionRate(jobSite.baseProduction * jobSite.multi)}</p>
+                <p>
+                  {formatProductionRate(jobSite.baseProduction * jobSite.multi)}
+                </p>
               </div>
               <div>
                 <p className="muted">Per Squirrel</p>
-                <p>+{formatProductionRate(jobSite.squirrelBonus * jobSite.multi)}</p>
+                <p>
+                  +{formatProductionRate(jobSite.squirrelBonus * jobSite.multi)}
+                </p>
               </div>
             </div>
 
@@ -136,23 +153,25 @@ const JobSiteCardComponent: React.FC<JobSiteCardProps> = memo(
               <div className="text-right">
                 <button
                   type="button"
-                  className={`btn btn-sm ${canAfford ? 'btn-primary' : 'btn-secondary'}`}
+                  className={`btn btn-sm ${canAfford ? "btn-primary" : "btn-secondary"}`}
                   onClick={handleBuy}
                   disabled={!canAfford}
                 >
                   Upgrade
                 </button>
-                <p className="mt-1 text-sm font-semibold">🥜 {formatNumber(jobSite.cost)}</p>
+                <p className="mt-1 text-sm font-semibold">
+                  🥜 {formatNumber(jobSite.cost)}
+                </p>
               </div>
             </div>
           </div>
         )}
       </div>
     );
-  }
+  },
 );
 
-JobSiteCardComponent.displayName = 'JobSiteCardComponent';
+JobSiteCardComponent.displayName = "JobSiteCardComponent";
 
 const JobsiteTab: React.FC = () => {
   const [expandedJobSite, setExpandedJobSite] = useState<string | null>(null);
@@ -170,7 +189,11 @@ const JobsiteTab: React.FC = () => {
         <h2 className="section-title">👷 Available Workers</h2>
         <div className="mt-3 flex flex-wrap justify-center gap-2">
           {population.jobless.map((squirrelId) => (
-            <SquirrelDisplay key={squirrelId} squirrelId={squirrelId} showNutFinding={false} />
+            <SquirrelDisplay
+              key={squirrelId}
+              squirrelId={squirrelId}
+              showNutFinding={false}
+            />
           ))}
         </div>
       </section>
@@ -183,7 +206,9 @@ const JobsiteTab: React.FC = () => {
             jobSiteId={jobSite.id}
             isExpanded={expandedJobSite === jobSite.id}
             onToggle={() =>
-              setExpandedJobSite(expandedJobSite === jobSite.id ? null : jobSite.id)
+              setExpandedJobSite(
+                expandedJobSite === jobSite.id ? null : jobSite.id,
+              )
             }
           />
         ))}

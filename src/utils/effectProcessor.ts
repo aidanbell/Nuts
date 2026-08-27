@@ -1,7 +1,13 @@
-import type { Dispatch } from '@reduxjs/toolkit';
-import { createSquirrel, pauseGame, unlockTabs, addNuts, unlockJobsites } from '../store/gameSlice';
-import { addLog } from '../store/gameLogSlice';
-import { showStory, setEra } from '../store/storySlice';
+import type { Dispatch } from "@reduxjs/toolkit";
+import {
+  createSquirrel,
+  pauseGame,
+  unlockTabs,
+  addNuts,
+  unlockJobsites,
+} from "../store/gameSlice";
+import { addLog } from "../store/gameLogSlice";
+import { showStory, setEra } from "../store/storySlice";
 
 /**
  * Unified effect structure that can be used by both story checkpoints and ideas
@@ -30,8 +36,8 @@ export interface GameEffect {
 }
 
 export interface EffectProcessorOptions {
-  sourceName?: string;  // Name of the source (idea name, checkpoint name, etc.)
-  sourceType?: 'idea' | 'checkpoint' | 'other';
+  sourceName?: string; // Name of the source (idea name, checkpoint name, etc.)
+  sourceType?: "idea" | "checkpoint" | "other";
   checkpointId?: string; // For story checkpoints that need to show story
   suppressLogs?: boolean; // Whether to suppress automatic log messages
 }
@@ -39,7 +45,7 @@ export interface EffectProcessorOptions {
 /**
  * Centralized effect processor for game effects
  * Can be used by both story checkpoints and ideas systems
- * 
+ *
  * @param effects - The effects to apply
  * @param dispatch - Redux dispatch function
  * @param options - Additional options for processing
@@ -47,7 +53,7 @@ export interface EffectProcessorOptions {
 export const processEffects = (
   effects: GameEffect,
   dispatch: Dispatch,
-  options: EffectProcessorOptions = {}
+  options: EffectProcessorOptions = {},
 ): void => {
   const { sourceName, checkpointId, suppressLogs = false } = options;
 
@@ -57,10 +63,12 @@ export const processEffects = (
       dispatch(createSquirrel());
     }
     if (!suppressLogs && sourceName) {
-      dispatch(addLog({ 
-        message: `🐿️ ${effects.unlockSquirrels} squirrel(s) joined! (${sourceName})`, 
-        level: 'success' 
-      }));
+      dispatch(
+        addLog({
+          message: `🐿️ ${effects.unlockSquirrels} squirrel(s) joined! (${sourceName})`,
+          level: "success",
+        }),
+      );
     }
   }
 
@@ -68,10 +76,12 @@ export const processEffects = (
   if (effects.unlockJobsites && effects.unlockJobsites.length > 0) {
     dispatch(unlockJobsites(effects.unlockJobsites));
     if (!suppressLogs) {
-      dispatch(addLog({ 
-        message: `🏭 Unlocked jobsites: ${effects.unlockJobsites.join(', ')}`, 
-        level: 'success' 
-      }));
+      dispatch(
+        addLog({
+          message: `🏭 Unlocked jobsites: ${effects.unlockJobsites.join(", ")}`,
+          level: "success",
+        }),
+      );
     }
   }
 
@@ -79,10 +89,12 @@ export const processEffects = (
   if (effects.unlockBuildings && effects.unlockBuildings.length > 0) {
     // TODO: Implement building unlocking when building system is complete
     if (!suppressLogs) {
-      dispatch(addLog({ 
-        message: `🏗️ Unlocked buildings: ${effects.unlockBuildings.join(', ')}`, 
-        level: 'info' 
-      }));
+      dispatch(
+        addLog({
+          message: `🏗️ Unlocked buildings: ${effects.unlockBuildings.join(", ")}`,
+          level: "info",
+        }),
+      );
     }
   }
 
@@ -90,10 +102,12 @@ export const processEffects = (
   if (effects.unlockTabs && effects.unlockTabs.length > 0) {
     dispatch(unlockTabs(effects.unlockTabs));
     if (!suppressLogs) {
-      dispatch(addLog({ 
-        message: `📂 Unlocked tabs: ${effects.unlockTabs.join(', ')}`, 
-        level: 'info' 
-      }));
+      dispatch(
+        addLog({
+          message: `📂 Unlocked tabs: ${effects.unlockTabs.join(", ")}`,
+          level: "info",
+        }),
+      );
     }
   }
 
@@ -101,10 +115,12 @@ export const processEffects = (
   if (effects.nutReward) {
     dispatch(addNuts(effects.nutReward));
     if (!suppressLogs) {
-      dispatch(addLog({ 
-        message: `+${effects.nutReward} nuts${sourceName ? ` (${sourceName})` : ''}`, 
-        level: 'success' 
-      }));
+      dispatch(
+        addLog({
+          message: `+${effects.nutReward} nuts${sourceName ? ` (${sourceName})` : ""}`,
+          level: "success",
+        }),
+      );
     }
   }
 
@@ -112,10 +128,12 @@ export const processEffects = (
   if (effects.unlockFeature) {
     dispatch(unlockTabs([effects.unlockFeature]));
     if (!suppressLogs) {
-      dispatch(addLog({ 
-        message: `📂 Unlocked: ${effects.unlockFeature}`, 
-        level: 'info' 
-      }));
+      dispatch(
+        addLog({
+          message: `📂 Unlocked: ${effects.unlockFeature}`,
+          level: "info",
+        }),
+      );
     }
   }
 
@@ -123,10 +141,12 @@ export const processEffects = (
   if (effects.setEra) {
     dispatch(setEra(effects.setEra));
     if (!suppressLogs) {
-      dispatch(addLog({ 
-        message: `🌟 Entered ${effects.setEra}!`, 
-        level: 'success' 
-      }));
+      dispatch(
+        addLog({
+          message: `🌟 Entered ${effects.setEra}!`,
+          level: "success",
+        }),
+      );
     }
   }
 
@@ -149,13 +169,12 @@ export const logEffects = (effects: GameEffect, source: string): void => {
     .filter(([_, value]) => value !== undefined && value !== null)
     .map(([key, value]) => {
       if (Array.isArray(value)) {
-        return `${key}: [${value.join(', ')}]`;
+        return `${key}: [${value.join(", ")}]`;
       }
       return `${key}: ${value}`;
     });
-  
+
   if (appliedEffects.length > 0) {
-    console.log(`[Effects] Applied from ${source}:`, appliedEffects.join(', '));
+    console.log(`[Effects] Applied from ${source}:`, appliedEffects.join(", "));
   }
 };
-

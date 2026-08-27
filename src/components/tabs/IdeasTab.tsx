@@ -1,41 +1,44 @@
-import React, { memo, useState } from 'react';
-import { useIdeas } from '../../hooks/useIdeas';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../store';
-import type { Idea } from '../../types/ideas';
-import { formatNumber } from '../../utils/formatters';
+import React, { memo, useState } from "react";
+import { useIdeas } from "../../hooks/useIdeas";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../store";
+import type { Idea } from "../../types/ideas";
+import { formatNumber } from "../../utils/formatters";
 
 const categoryStyle: Record<string, string> = {
-  production: 'bg-leaf/20 text-moss',
-  efficiency: 'bg-amber/15 text-amber',
-  capacity: 'bg-amber-light/25 text-bark',
-  automation: 'bg-moss/15 text-moss',
-  meta: 'bg-danger/15 text-danger',
+  production: "bg-leaf/20 text-moss",
+  efficiency: "bg-amber/15 text-amber",
+  capacity: "bg-amber-light/25 text-bark",
+  automation: "bg-moss/15 text-moss",
+  meta: "bg-danger/15 text-danger",
 };
 
 const categoryIcon: Record<string, string> = {
-  production: '🏭',
-  efficiency: '⚡',
-  capacity: '👥',
-  automation: '🤖',
-  meta: '✨',
+  production: "🏭",
+  efficiency: "⚡",
+  capacity: "👥",
+  automation: "🤖",
+  meta: "✨",
 };
 
 const getEffectDescription = (idea: Idea): string[] => {
   const effects: string[] = [];
   const e = idea.effects;
 
-  if (e.unlockJobsites) effects.push(`Unlocks: ${e.unlockJobsites.join(', ')}`);
-  if (e.unlockBuildings) effects.push(`Unlocks: ${e.unlockBuildings.join(', ')}`);
+  if (e.unlockJobsites) effects.push(`Unlocks: ${e.unlockJobsites.join(", ")}`);
+  if (e.unlockBuildings)
+    effects.push(`Unlocks: ${e.unlockBuildings.join(", ")}`);
   if (e.globalEfficiency)
-    effects.push(`+${(e.globalEfficiency * 100).toFixed(0)}% Global Efficiency`);
+    effects.push(
+      `+${(e.globalEfficiency * 100).toFixed(0)}% Global Efficiency`,
+    );
   if (e.unlockSquirrelCapacity)
     effects.push(`+${e.unlockSquirrelCapacity} Squirrel Capacity`);
   if (e.reduceJobsiteCost)
     effects.push(`-${(e.reduceJobsiteCost * 100).toFixed(0)}% Jobsite Costs`);
   if (e.upgradeJobsite) {
     effects.push(
-      `+${e.upgradeJobsite.amount} ${e.upgradeJobsite.property} ${e.upgradeJobsite.jobsiteId}`
+      `+${e.upgradeJobsite.amount} ${e.upgradeJobsite.property} ${e.upgradeJobsite.jobsiteId}`,
     );
   }
 
@@ -62,35 +65,41 @@ const IdeaCard: React.FC<IdeaCardProps> = ({
     tabIndex={0}
     onClick={onToggle}
     onKeyDown={(e) => {
-      if (e.key === 'Enter' || e.key === ' ') onToggle();
+      if (e.key === "Enter" || e.key === " ") onToggle();
     }}
     className={[
-      'cursor-pointer rounded-xl border-2 p-4 transition hover:-translate-y-0.5',
-      canAfford && !idea.researched ? 'opacity-100' : 'opacity-70',
-      isExpanded ? 'border-moss bg-sage/40' : 'border-moss/15 bg-white/70 hover:border-moss/40',
-    ].join(' ')}
+      "cursor-pointer rounded-xl border-2 p-4 transition hover:-translate-y-0.5",
+      canAfford && !idea.researched ? "opacity-100" : "opacity-70",
+      isExpanded
+        ? "border-moss bg-sage/40"
+        : "border-moss/15 bg-white/70 hover:border-moss/40",
+    ].join(" ")}
   >
     <div className="flex items-start justify-between gap-2">
       <div className="flex items-center gap-2">
-        <span className={`inline-block text-sm transition ${isExpanded ? 'rotate-180' : ''}`}>
+        <span
+          className={`inline-block text-sm transition ${isExpanded ? "rotate-180" : ""}`}
+        >
           ▼
         </span>
-        <span className="text-xl">{categoryIcon[idea.category] ?? '💡'}</span>
+        <span className="text-xl">{categoryIcon[idea.category] ?? "💡"}</span>
         <h3 className="font-display text-base font-bold">{idea.name}</h3>
       </div>
       <div className="flex shrink-0 flex-col items-end gap-1 text-right text-xs font-semibold">
         {idea.researched && (
-          <span className="rounded-full bg-leaf/25 px-2 py-0.5 text-moss">✓</span>
+          <span className="rounded-full bg-leaf/25 px-2 py-0.5 text-moss">
+            ✓
+          </span>
         )}
         <span
-          className={`rounded-full px-2 py-0.5 ${categoryStyle[idea.category] ?? 'bg-sage text-bark'}`}
+          className={`rounded-full px-2 py-0.5 ${categoryStyle[idea.category] ?? "bg-sage text-bark"}`}
         >
           {idea.category.charAt(0).toUpperCase()}
         </span>
         <span>
           🥜 {formatNumber(idea.cost.nuts || 0)}
-          {idea.cost.nutwood ? ` · 🪵 ${formatNumber(idea.cost.nutwood)}` : ''}
-          {idea.cost.stone ? ` · 🪨 ${formatNumber(idea.cost.stone)}` : ''}
+          {idea.cost.nutwood ? ` · 🪵 ${formatNumber(idea.cost.nutwood)}` : ""}
+          {idea.cost.stone ? ` · 🪨 ${formatNumber(idea.cost.stone)}` : ""}
         </span>
       </div>
     </div>
@@ -108,14 +117,18 @@ const IdeaCard: React.FC<IdeaCardProps> = ({
         </div>
         <button
           type="button"
-          className={`btn btn-sm ${canAfford && !idea.researched ? 'btn-primary' : 'btn-secondary'}`}
+          className={`btn btn-sm ${canAfford && !idea.researched ? "btn-primary" : "btn-secondary"}`}
           disabled={idea.researched || !canAfford}
           onClick={(e) => {
             e.stopPropagation();
             onResearch();
           }}
         >
-          {idea.researched ? 'Researched' : canAfford ? 'Research' : 'Not Enough Nuts'}
+          {idea.researched
+            ? "Researched"
+            : canAfford
+              ? "Research"
+              : "Not Enough Nuts"}
         </button>
       </div>
     )}
@@ -123,16 +136,16 @@ const IdeaCard: React.FC<IdeaCardProps> = ({
 );
 
 const eraOrder = [
-  'PREHISTORY',
-  'WOOD_AGE',
-  'STONE_AGE',
-  'BRONZE_AGE',
-  'IRON_AGE',
-  'INDUSTRIAL_AGE',
-  'INFORMATION_AGE',
-  'TECHNOLOGY_AGE',
-  'SPACE_AGE',
-  'GALACTIC_AGE',
+  "PREHISTORY",
+  "WOOD_AGE",
+  "STONE_AGE",
+  "BRONZE_AGE",
+  "IRON_AGE",
+  "INDUSTRIAL_AGE",
+  "INFORMATION_AGE",
+  "TECHNOLOGY_AGE",
+  "SPACE_AGE",
+  "GALACTIC_AGE",
 ];
 
 const IdeasTab: React.FC = () => {
@@ -148,12 +161,14 @@ const IdeasTab: React.FC = () => {
       acc[idea.era].push(idea);
       return acc;
     },
-    {} as Record<string, Idea[]>
+    {} as Record<string, Idea[]>,
   );
 
-  const currentEraIndex = eraOrder.indexOf(currentEra || 'PREHISTORY');
+  const currentEraIndex = eraOrder.indexOf(currentEra || "PREHISTORY");
   const erasToShow = eraOrder.slice(0, currentEraIndex + 1);
-  const filteredVisible = visibleIdeas.filter((idea) => showResearched || !idea.researched);
+  const filteredVisible = visibleIdeas.filter(
+    (idea) => showResearched || !idea.researched,
+  );
 
   return (
     <div className="tab-panel space-y-5" id="ideas-content">
@@ -162,11 +177,14 @@ const IdeasTab: React.FC = () => {
         <div className="space-y-1 text-right text-sm">
           {currentEra && (
             <p className="muted">
-              Era: <strong className="text-bark">{currentEra.replace('_', ' ')}</strong>
+              Era:{" "}
+              <strong className="text-bark">
+                {currentEra.replace("_", " ")}
+              </strong>
             </p>
           )}
           <p className="muted">
-            Researched:{' '}
+            Researched:{" "}
             <strong className="text-bark">
               {researchedIdeas.length} / {visibleIdeas.length}
             </strong>
@@ -199,18 +217,24 @@ const IdeasTab: React.FC = () => {
         const eraIdeas = ideasByEra[era];
         if (!eraIdeas?.length) return null;
 
-        const filteredIdeas = eraIdeas.filter((idea) => showResearched || !idea.researched);
-        const researchedCount = eraIdeas.filter((idea) => idea.researched).length;
+        const filteredIdeas = eraIdeas.filter(
+          (idea) => showResearched || !idea.researched,
+        );
+        const researchedCount = eraIdeas.filter(
+          (idea) => idea.researched,
+        ).length;
 
         return (
           <section key={era} className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="font-display text-lg font-bold">{era.replace('_', ' ')}</h3>
+              <h3 className="font-display text-lg font-bold">
+                {era.replace("_", " ")}
+              </h3>
               <span
                 className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                   researchedCount === eraIdeas.length
-                    ? 'bg-leaf/25 text-moss'
-                    : 'bg-sage text-bark'
+                    ? "bg-leaf/25 text-moss"
+                    : "bg-sage text-bark"
                 }`}
               >
                 {researchedCount} / {eraIdeas.length}

@@ -116,7 +116,7 @@ export const productionJobsites: JobSite[] = [
     method: "air",
     unlocked: false,
   },
-  
+
   // STONE AGE — kept above Wood Age top (~5.35 nps with 1 squirrel)
   {
     id: "groundTiller",
@@ -194,4 +194,4 @@ export const productionJobsites: JobSite[] = [
     method: "air",
     unlocked: false,
   },
-]
+];

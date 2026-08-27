@@ -1,12 +1,12 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../store';
-import GameConsole from './GameConsole';
-import { formatNumber, formatTime } from '../utils/formatters';
+import React from "react";
+import { useSelector } from "react-redux";
+import type { RootState } from "../store";
+import GameConsole from "./GameConsole";
+import { formatNumber, formatTime } from "../utils/formatters";
 
 const Header: React.FC = () => {
   const { nutsTotal, nutsAllTime, timer, resources } = useSelector(
-    (state: RootState) => state.game
+    (state: RootState) => state.game,
   );
 
   const hasResources =
@@ -23,7 +23,7 @@ const Header: React.FC = () => {
           <span className="mr-2">🥜</span>
           <span className="text-amber" id="total">
             {formatNumber(nutsTotal)}
-          </span>{' '}
+          </span>{" "}
           Nuts
         </h1>
         <p className="mt-1 text-xs text-muted" id="debug-total">
@@ -37,22 +37,34 @@ const Header: React.FC = () => {
           <div className="mt-3 flex flex-wrap gap-3 text-sm font-semibold">
             {resources.nutwood > 0 && (
               <span>
-                🪵 <span className="text-amber">{formatNumber(resources.nutwood)}</span>
+                🪵{" "}
+                <span className="text-amber">
+                  {formatNumber(resources.nutwood)}
+                </span>
               </span>
             )}
             {resources.stone > 0 && (
               <span>
-                🪨 <span className="text-amber">{formatNumber(resources.stone)}</span>
+                🪨{" "}
+                <span className="text-amber">
+                  {formatNumber(resources.stone)}
+                </span>
               </span>
             )}
             {resources.bronze > 0 && (
               <span>
-                🔶 <span className="text-amber">{formatNumber(resources.bronze)}</span>
+                🔶{" "}
+                <span className="text-amber">
+                  {formatNumber(resources.bronze)}
+                </span>
               </span>
             )}
             {resources.iron > 0 && (
               <span>
-                ⚙️ <span className="text-amber">{formatNumber(resources.iron)}</span>
+                ⚙️{" "}
+                <span className="text-amber">
+                  {formatNumber(resources.iron)}
+                </span>
               </span>
             )}
           </div>

@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState } from '../store';
-import { addNuts } from '../store/gameSlice';
-import { addLog } from '../store/gameLogSlice';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "../store";
+import { addNuts } from "../store/gameSlice";
+import { addLog } from "../store/gameLogSlice";
 
 export interface GoldenNutState {
   id: number;
@@ -32,15 +32,17 @@ const randomPosition = () => ({
 });
 
 /** Expected nuts/sec for one jobless squirrel */
-const joblessNutsPerSecond = (jobless: RootState['game']['jobSites']['jobless']) => {
+const joblessNutsPerSecond = (
+  jobless: RootState["game"]["jobSites"]["jobless"],
+) => {
   const attemptsPerSec = 1000 / jobless.time;
   return attemptsPerSec * jobless.chance * jobless.value * jobless.multi;
 };
 
 /** Burst reward: ~15s of all jobless production, scaled up slightly with count */
 export const calculateGoldenNutReward = (
-  joblessSite: RootState['game']['jobSites']['jobless'],
-  joblessCount: number
+  joblessSite: RootState["game"]["jobSites"]["jobless"],
+  joblessCount: number,
 ): number => {
   const perSquirrel = joblessNutsPerSecond(joblessSite);
   const burst = perSquirrel * Math.max(1, joblessCount) * 15;
@@ -52,11 +54,17 @@ export const calculateGoldenNutReward = (
 export const useGoldenNut = () => {
   const dispatch = useDispatch();
   const isPaused = useSelector((state: RootState) => state.game.isPaused);
-  const joblessIds = useSelector((state: RootState) => state.game.population.jobless);
-  const joblessSite = useSelector((state: RootState) => state.game.jobSites.jobless);
+  const joblessIds = useSelector(
+    (state: RootState) => state.game.population.jobless,
+  );
+  const joblessSite = useSelector(
+    (state: RootState) => state.game.jobSites.jobless,
+  );
 
   const [goldenNut, setGoldenNut] = useState<GoldenNutState | null>(null);
-  const nextSpawnAtRef = useRef<number>(Date.now() + randomBetween(FIRST_SPAWN_MIN_MS, FIRST_SPAWN_MAX_MS));
+  const nextSpawnAtRef = useRef<number>(
+    Date.now() + randomBetween(FIRST_SPAWN_MIN_MS, FIRST_SPAWN_MAX_MS),
+  );
   const idRef = useRef(0);
   const hasJobless = joblessIds.length > 0;
 
@@ -96,8 +104,8 @@ export const useGoldenNut = () => {
     dispatch(
       addLog({
         message: `Lucky find! Grabbed a glowing nut for ${goldenNut.reward} nuts.`,
-        level: 'success',
-      })
+        level: "success",
+      }),
     );
     clearGoldenNut();
   }, [goldenNut, dispatch, clearGoldenNut]);

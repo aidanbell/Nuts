@@ -1,19 +1,19 @@
-import React, { useEffect, useRef } from 'react';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../store';
+import React, { useEffect, useRef } from "react";
+import { useSelector } from "react-redux";
+import type { RootState } from "../store";
 
 const levelClass: Record<string, string> = {
-  success: 'text-leaf',
-  warning: 'text-amber-light',
-  error: 'text-danger',
-  info: 'text-sage',
+  success: "text-leaf",
+  warning: "text-amber-light",
+  error: "text-danger",
+  info: "text-sage",
 };
 
 const levelPrefix: Record<string, string> = {
-  success: '✓',
-  warning: '⚠',
-  error: '✗',
-  info: '›',
+  success: "✓",
+  warning: "⚠",
+  error: "✗",
+  info: "›",
 };
 
 const GameConsole: React.FC = () => {
@@ -21,7 +21,7 @@ const GameConsole: React.FC = () => {
   const consoleEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    consoleEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    consoleEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [logs]);
 
   return (
@@ -30,8 +30,13 @@ const GameConsole: React.FC = () => {
         <p className="text-sage/50">No logs yet...</p>
       ) : (
         logs.map((log) => (
-          <div key={log.id} className={`py-0.5 ${levelClass[log.level] ?? 'text-sage'}`}>
-            <span className="mr-2 opacity-70">{levelPrefix[log.level] ?? '›'}</span>
+          <div
+            key={log.id}
+            className={`py-0.5 ${levelClass[log.level] ?? "text-sage"}`}
+          >
+            <span className="mr-2 opacity-70">
+              {levelPrefix[log.level] ?? "›"}
+            </span>
             {log.message}
           </div>
         ))

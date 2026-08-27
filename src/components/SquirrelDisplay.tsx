@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../store';
+import React, { useState, useEffect, useRef } from "react";
+import { useSelector } from "react-redux";
+import type { RootState } from "../store";
 
 interface SquirrelDisplayProps {
   squirrelId: number;
@@ -11,9 +11,11 @@ const SquirrelDisplay: React.FC<SquirrelDisplayProps> = ({
   squirrelId,
   showNutFinding = false,
 }) => {
-  const squirrel = useSelector((state: RootState) => state.game.squirrels[squirrelId]);
+  const squirrel = useSelector(
+    (state: RootState) => state.game.squirrels[squirrelId],
+  );
   const [showAnimation, setShowAnimation] = useState(false);
-  const [animationPosition, setAnimationPosition] = useState('0%');
+  const [animationPosition, setAnimationPosition] = useState("0%");
   const [isFlipped, setIsFlipped] = useState(false);
   const previousTotalRef = useRef<number>(0);
 
@@ -26,7 +28,7 @@ const SquirrelDisplay: React.FC<SquirrelDisplayProps> = ({
 
       const timeout = setTimeout(() => {
         setShowAnimation(false);
-        setAnimationPosition('0%');
+        setAnimationPosition("0%");
       }, 600);
 
       previousTotalRef.current = squirrel.total;
@@ -49,7 +51,10 @@ const SquirrelDisplay: React.FC<SquirrelDisplayProps> = ({
   if (!squirrel) return null;
 
   return (
-    <div className="relative inline-block p-2 text-5xl" id={`s-${squirrel._id}`}>
+    <div
+      className="relative inline-block p-2 text-5xl"
+      id={`s-${squirrel._id}`}
+    >
       <span
         className="inline-block transition-transform duration-300"
         style={{ transform: `scaleX(${isFlipped ? -1 : 1})` }}
@@ -60,7 +65,7 @@ const SquirrelDisplay: React.FC<SquirrelDisplayProps> = ({
         <div
           id={`f-${squirrel._id}`}
           className="animate-found-nut absolute text-xl"
-          style={{ left: animationPosition, top: '-2em' }}
+          style={{ left: animationPosition, top: "-2em" }}
         >
           🥜
         </div>

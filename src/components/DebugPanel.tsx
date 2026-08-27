@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState } from '../store';
-import { addNuts, createSquirrel, hibernate, pauseGame, resumeGame } from '../store/gameSlice';
-import { resetCheckpoints } from '../store/storySlice';
-import { clearSave, saveGame, loadGame } from '../utils/saveSystem';
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "../store";
+import {
+  addNuts,
+  createSquirrel,
+  hibernate,
+  pauseGame,
+  resumeGame,
+} from "../store/gameSlice";
+import { resetCheckpoints } from "../store/storySlice";
+import { clearSave, saveGame, loadGame } from "../utils/saveSystem";
 
 const DebugPanel: React.FC = () => {
   const dispatch = useDispatch();
@@ -12,26 +18,33 @@ const DebugPanel: React.FC = () => {
 
   const [isOpen, setIsOpen] = useState(false);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(
-    () => localStorage.getItem('debug_autosave_enabled') !== 'false'
+    () => localStorage.getItem("debug_autosave_enabled") !== "false",
   );
   const [showGameState, setShowGameState] = useState(false);
   const [showStoryState, setShowStoryState] = useState(false);
-  const [copiedText, setCopiedText] = useState('');
+  const [copiedText, setCopiedText] = useState("");
 
   const handleAutoSaveToggle = () => {
     setAutoSaveEnabled(!autoSaveEnabled);
-    localStorage.setItem('debug_autosave_enabled', (!autoSaveEnabled).toString());
+    localStorage.setItem(
+      "debug_autosave_enabled",
+      (!autoSaveEnabled).toString(),
+    );
   };
 
   const handleClearSave = () => {
-    if (window.confirm('⚠️ This will delete ALL saved data. Are you sure?')) {
+    if (window.confirm("⚠️ This will delete ALL saved data. Are you sure?")) {
       clearSave();
-      alert('Save data cleared! Refresh the page to start fresh.');
+      alert("Save data cleared! Refresh the page to start fresh.");
     }
   };
 
   const handleResetGame = () => {
-    if (window.confirm('⚠️ This will reset the current game session (not saved data). Continue?')) {
+    if (
+      window.confirm(
+        "⚠️ This will reset the current game session (not saved data). Continue?",
+      )
+    ) {
       dispatch(resetCheckpoints());
       window.location.reload();
     }
@@ -39,16 +52,16 @@ const DebugPanel: React.FC = () => {
 
   const handleManualSave = () => {
     saveGame(gameState);
-    alert('Game saved manually!');
+    alert("Game saved manually!");
   };
 
   const handleManualLoad = () => {
     const data = loadGame();
     if (data) {
-      alert('Game loaded! Refresh to see changes.');
+      alert("Game loaded! Refresh to see changes.");
       window.location.reload();
     } else {
-      alert('No save data found!');
+      alert("No save data found!");
     }
   };
 
@@ -56,28 +69,28 @@ const DebugPanel: React.FC = () => {
     try {
       const saveData = loadGame();
       if (!saveData) {
-        alert('No save data to export!');
+        alert("No save data to export!");
         return;
       }
       const json = JSON.stringify(saveData, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
+      const blob = new Blob([json], { type: "application/json" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `nuts-save-${Date.now()}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {
-      alert('Failed to export save!');
+      alert("Failed to export save!");
       console.error(error);
     }
   };
 
-  const handleCopyState = (stateType: 'game' | 'story') => {
-    const state = stateType === 'game' ? gameState : storyState;
+  const handleCopyState = (stateType: "game" | "story") => {
+    const state = stateType === "game" ? gameState : storyState;
     navigator.clipboard.writeText(JSON.stringify(state, null, 2));
     setCopiedText(stateType);
-    setTimeout(() => setCopiedText(''), 2000);
+    setTimeout(() => setCopiedText(""), 2000);
   };
 
   const handleTogglePause = () => {
@@ -86,7 +99,7 @@ const DebugPanel: React.FC = () => {
   };
 
   const handleHibernate = () => {
-    if (window.confirm('Hibernate now? This will reset your progress.')) {
+    if (window.confirm("Hibernate now? This will reset your progress.")) {
       dispatch(hibernate());
     }
   };
@@ -94,18 +107,18 @@ const DebugPanel: React.FC = () => {
   return (
     <div
       className={[
-        'fixed right-0 bottom-0 z-[10000] overflow-hidden border-2 border-r-0 border-b-0 border-danger bg-paper shadow-xl transition-all',
+        "fixed right-0 bottom-0 z-[10000] overflow-hidden border-2 border-r-0 border-b-0 border-danger bg-paper shadow-xl transition-all",
         isOpen
-          ? 'max-h-[80vh] w-[min(100vw,400px)] rounded-tl-xl'
-          : 'h-14 w-14 rounded-tl-xl',
-      ].join(' ')}
+          ? "max-h-[80vh] w-[min(100vw,400px)] rounded-tl-xl"
+          : "h-14 w-14 rounded-tl-xl",
+      ].join(" ")}
     >
       <button
         type="button"
         className="absolute top-2 right-2 flex size-10 items-center justify-center rounded-full bg-danger text-lg text-white hover:scale-110"
         onClick={() => setIsOpen(!isOpen)}
       >
-        {isOpen ? '✕' : '🐛'}
+        {isOpen ? "✕" : "🐛"}
       </button>
 
       {isOpen && (
@@ -124,15 +137,23 @@ const DebugPanel: React.FC = () => {
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                className={`btn btn-sm ${autoSaveEnabled ? 'btn-success' : 'btn-danger'}`}
+                className={`btn btn-sm ${autoSaveEnabled ? "btn-success" : "btn-danger"}`}
                 onClick={handleAutoSaveToggle}
               >
-                {autoSaveEnabled ? '✓ Enabled' : '✕ Disabled'}
+                {autoSaveEnabled ? "✓ Enabled" : "✕ Disabled"}
               </button>
-              <button type="button" className="btn btn-primary btn-sm" onClick={handleManualSave}>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={handleManualSave}
+              >
                 Save Now
               </button>
-              <button type="button" className="btn btn-secondary btn-sm" onClick={handleManualLoad}>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={handleManualLoad}
+              >
                 Load
               </button>
             </div>
@@ -141,13 +162,25 @@ const DebugPanel: React.FC = () => {
           <section className="space-y-2 rounded-lg bg-sage/40 p-3">
             <p className="text-sm font-bold">Save Data</p>
             <div className="flex flex-wrap gap-2">
-              <button type="button" className="btn btn-danger btn-sm" onClick={handleClearSave}>
+              <button
+                type="button"
+                className="btn btn-danger btn-sm"
+                onClick={handleClearSave}
+              >
                 🗑️ Clear Save
               </button>
-              <button type="button" className="btn btn-warning btn-sm" onClick={handleResetGame}>
+              <button
+                type="button"
+                className="btn btn-warning btn-sm"
+                onClick={handleResetGame}
+              >
                 🔄 Reset Game
               </button>
-              <button type="button" className="btn btn-secondary btn-sm" onClick={handleExportSave}>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={handleExportSave}
+              >
                 💾 Export
               </button>
             </div>
@@ -158,10 +191,10 @@ const DebugPanel: React.FC = () => {
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                className={`btn btn-sm ${gameState.isPaused ? 'btn-success' : 'btn-warning'}`}
+                className={`btn btn-sm ${gameState.isPaused ? "btn-success" : "btn-warning"}`}
                 onClick={handleTogglePause}
               >
-                {gameState.isPaused ? '▶️ Resume' : '⏸️ Pause'}
+                {gameState.isPaused ? "▶️ Resume" : "⏸️ Pause"}
               </button>
               <button
                 type="button"
@@ -184,7 +217,11 @@ const DebugPanel: React.FC = () => {
               >
                 🥜 +10k
               </button>
-              <button type="button" className="btn btn-secondary btn-sm w-full" onClick={handleHibernate}>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm w-full"
+                onClick={handleHibernate}
+              >
                 💤 Hibernate Now
               </button>
             </div>
@@ -195,17 +232,17 @@ const DebugPanel: React.FC = () => {
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                className={`btn btn-sm ${showGameState ? 'btn-primary' : 'btn-secondary'}`}
+                className={`btn btn-sm ${showGameState ? "btn-primary" : "btn-secondary"}`}
                 onClick={() => setShowGameState(!showGameState)}
               >
-                {showGameState ? 'Hide' : 'Show'} Game
+                {showGameState ? "Hide" : "Show"} Game
               </button>
               <button
                 type="button"
-                className={`btn btn-sm ${showStoryState ? 'btn-primary' : 'btn-secondary'}`}
+                className={`btn btn-sm ${showStoryState ? "btn-primary" : "btn-secondary"}`}
                 onClick={() => setShowStoryState(!showStoryState)}
               >
-                {showStoryState ? 'Hide' : 'Show'} Story
+                {showStoryState ? "Hide" : "Show"} Story
               </button>
             </div>
 
@@ -216,9 +253,9 @@ const DebugPanel: React.FC = () => {
                   <button
                     type="button"
                     className="btn btn-secondary btn-sm"
-                    onClick={() => handleCopyState('game')}
+                    onClick={() => handleCopyState("game")}
                   >
-                    {copiedText === 'game' ? '✓ Copied!' : '📋 Copy'}
+                    {copiedText === "game" ? "✓ Copied!" : "📋 Copy"}
                   </button>
                 </div>
                 <pre className="max-h-48 overflow-auto rounded bg-bark p-2 font-mono text-[10px] whitespace-pre-wrap text-sage">
@@ -231,7 +268,7 @@ const DebugPanel: React.FC = () => {
                       tick: gameState.tick,
                     },
                     null,
-                    2
+                    2,
                   )}
                 </pre>
               </>
@@ -244,9 +281,9 @@ const DebugPanel: React.FC = () => {
                   <button
                     type="button"
                     className="btn btn-secondary btn-sm"
-                    onClick={() => handleCopyState('story')}
+                    onClick={() => handleCopyState("story")}
                   >
-                    {copiedText === 'story' ? '✓ Copied!' : '📋 Copy'}
+                    {copiedText === "story" ? "✓ Copied!" : "📋 Copy"}
                   </button>
                 </div>
                 <pre className="max-h-48 overflow-auto rounded bg-bark p-2 font-mono text-[10px] whitespace-pre-wrap text-sage">
@@ -258,7 +295,7 @@ const DebugPanel: React.FC = () => {
                       activeStory: storyState.activeStory,
                     },
                     null,
-                    2
+                    2,
                   )}
                 </pre>
               </>
@@ -270,11 +307,11 @@ const DebugPanel: React.FC = () => {
             <p>Nuts: {gameState.nutsTotal.toFixed(2)}</p>
             <p>Squirrels: {Object.keys(gameState.squirrels).length}</p>
             <p>
-              Checkpoints: {storyState.completedCheckpoints.length} /{' '}
+              Checkpoints: {storyState.completedCheckpoints.length} /{" "}
               {Object.keys(storyState.checkpoints).length}
             </p>
-            <p>Paused: {gameState.isPaused ? 'Yes' : 'No'}</p>
-            <p>Auto-Save: {autoSaveEnabled ? 'On' : 'Off'}</p>
+            <p>Paused: {gameState.isPaused ? "Yes" : "No"}</p>
+            <p>Auto-Save: {autoSaveEnabled ? "On" : "Off"}</p>
           </section>
         </div>
       )}

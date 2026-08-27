@@ -14,10 +14,13 @@ export default defineConfig(
   globalIgnores(["dist/**", "build/**", "coverage/**", ".next/**"]),
   eslint.configs.recommended,
   tseslint.configs.recommended,
-  eslintPluginReactHooks.configs.recommended,
   eslintPluginReactRefresh.configs.recommended,
   {
+    plugins: {
+      "react-hooks": eslintPluginReactHooks,
+    },
     rules: {
+      ...eslintPluginReactHooks.configs.recommended.rules,
       "@typescript-eslint/no-unused-vars": [
         "warn",
         {
@@ -28,10 +31,8 @@ export default defineConfig(
         },
       ],
       // js rules
-      "no-unused-vars": "error",
       "prefer-const": "error",
       "no-var": "error",
-      "no-console": "warn",
       // typescript rules
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/consistent-type-imports": "error",

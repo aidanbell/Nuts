@@ -1,11 +1,11 @@
-import React from 'react';
-import Header from './Header';
-import Navigation from './Navigation';
-import TabContent from './TabContent';
-import GoldenNut from './GoldenNut';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../store';
-import { useGoldenNut } from '../hooks/useGoldenNut';
+import React from "react";
+import Header from "./Header";
+import Navigation from "./Navigation";
+import TabContent from "./TabContent";
+import GoldenNut from "./GoldenNut";
+import { useSelector } from "react-redux";
+import type { RootState } from "../store";
+import { useGoldenNut } from "../hooks/useGoldenNut";
 
 const GameContainer: React.FC = () => {
   const activeTab = useSelector((state: RootState) => state.game.activeTab);

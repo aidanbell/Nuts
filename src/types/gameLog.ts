@@ -1,4 +1,4 @@
-export type LogLevel = 'info' | 'success' | 'warning' | 'error';
+export type LogLevel = "info" | "success" | "warning" | "error";
 
 export interface LogEntry {
   id: string;
@@ -11,4 +11,3 @@ export interface GameLogState {
   logs: LogEntry[];
   maxLogs: number; // Keep only last N logs
 }
-

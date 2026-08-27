@@ -1,5 +1,5 @@
-import React, { memo } from 'react';
-import type { GoldenNutState } from '../hooks/useGoldenNut';
+import React, { memo } from "react";
+import type { GoldenNutState } from "../hooks/useGoldenNut";
 
 interface GoldenNutProps {
   nut: GoldenNutState;
@@ -8,7 +8,12 @@ interface GoldenNutProps {
   onCollect: () => void;
 }
 
-const GoldenNut: React.FC<GoldenNutProps> = ({ nut, fadeMs, lifetimeMs, onCollect }) => {
+const GoldenNut: React.FC<GoldenNutProps> = ({
+  nut,
+  fadeMs,
+  lifetimeMs,
+  onCollect,
+}) => {
   const fadeStartRatio = Math.max(0, (lifetimeMs - fadeMs) / lifetimeMs);
 
   return (
@@ -29,14 +34,14 @@ const GoldenNut: React.FC<GoldenNutProps> = ({ nut, fadeMs, lifetimeMs, onCollec
         // CSS custom property for fade keyframe via inline style sheet isn't easy;
         // approximate with opacity transition near end using animation-delay is complex.
         // Keep lifetime fade via style tag below.
-        ['--fade-start' as string]: `${(fadeStartRatio * 100).toFixed(1)}%`,
+        ["--fade-start" as string]: `${(fadeStartRatio * 100).toFixed(1)}%`,
       }}
     >
       <style>{`
         @keyframes golden-nut-lifetime {
           0% { opacity: 0; transform: scale(0.55); }
           3% { opacity: 1; transform: scale(1); }
-          ${((fadeStartRatio * 100).toFixed(1))}% { opacity: 1; }
+          ${(fadeStartRatio * 100).toFixed(1)}% { opacity: 1; }
           100% { opacity: 0; transform: scale(0.7); }
         }
       `}</style>

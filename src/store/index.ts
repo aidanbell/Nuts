@@ -1,8 +1,8 @@
-import { configureStore } from '@reduxjs/toolkit';
-import gameReducer from './gameSlice';
-import storyReducer from './storySlice';
-import ideasReducer from './ideasSlice';
-import gameLogReducer from './gameLogSlice';
+import { configureStore } from "@reduxjs/toolkit";
+import gameReducer from "./gameSlice";
+import storyReducer from "./storySlice";
+import ideasReducer from "./ideasSlice";
+import gameLogReducer from "./gameLogSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,12 +14,11 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ['game/updateTimestamp'],
-        ignoredPaths: ['game.lastUpdate'],
+        ignoredActions: ["game/updateTimestamp"],
+        ignoredPaths: ["game.lastUpdate"],
       },
     }),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
-

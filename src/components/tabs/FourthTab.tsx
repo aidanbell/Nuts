@@ -1,8 +1,11 @@
-import React from 'react';
+import React from "react";
 
 const FourthTab: React.FC = () => {
   return (
-    <div className="tab-panel flex min-h-[50vh] items-center justify-center" id="fourth-content">
+    <div
+      className="tab-panel flex min-h-[50vh] items-center justify-center"
+      id="fourth-content"
+    >
       <div className="panel max-w-md text-center">
         <div className="text-5xl">🚧</div>
         <h2 className="section-title mt-3">Coming Soon</h2>

@@ -1,11 +1,11 @@
-import React from 'react';
-import HomeTab from './tabs/HomeTab';
-import JobsiteTab from './tabs/JobsiteTab';
-import IdeasTab from './tabs/IdeasTab';
-import PopulationTab from './tabs/PopulationTab';
-import FourthTab from './tabs/FourthTab';
-import HibernateTab from './tabs/HibernateTab';
-import RefinementTab from './tabs/RefinementTab';
+import React from "react";
+import HomeTab from "./tabs/HomeTab";
+import JobsiteTab from "./tabs/JobsiteTab";
+import IdeasTab from "./tabs/IdeasTab";
+import PopulationTab from "./tabs/PopulationTab";
+import FourthTab from "./tabs/FourthTab";
+import HibernateTab from "./tabs/HibernateTab";
+import RefinementTab from "./tabs/RefinementTab";
 
 interface TabContentProps {
   activeTab: string;
@@ -14,19 +14,19 @@ interface TabContentProps {
 const TabContent: React.FC<TabContentProps> = ({ activeTab }) => {
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'home':
+      case "home":
         return <HomeTab />;
-      case 'jobsites':
+      case "jobsites":
         return <JobsiteTab />;
-      case 'ideas':
+      case "ideas":
         return <IdeasTab />;
-      case 'refinement':
+      case "refinement":
         return <RefinementTab />;
-      case 'population':
+      case "population":
         return <PopulationTab />;
-      case 'fourth':
+      case "fourth":
         return <FourthTab />;
-      case 'hibernate':
+      case "hibernate":
         return <HibernateTab />;
       default:
         return <HomeTab />;
@@ -34,7 +34,9 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab }) => {
   };
 
   return (
-    <main className="card min-h-[60vh] flex-1 overflow-hidden">{renderTabContent()}</main>
+    <main className="card min-h-[60vh] flex-1 overflow-hidden">
+      {renderTabContent()}
+    </main>
   );
 };
 

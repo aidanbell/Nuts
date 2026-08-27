@@ -1,13 +1,13 @@
 /**
  * SolidJS Game Loop
  * Replaces React useGameLoop hook with SolidJS createEffect
- * 
+ *
  * Uses a two-tiered approach:
  * - Logic updates at ~10 FPS (100ms intervals)
  * - Render updates at ~60 FPS (16ms intervals)
  */
 
-import { appState } from './state';
+import { appState } from "./state";
 import {
   incrementTick,
   updateTimer,
@@ -15,8 +15,8 @@ import {
   addNuts,
   addResource,
   spendResource,
-} from './state';
-import type { GameState } from '../types/game';
+} from "./state";
+import type { GameState } from "../types/game";
 
 // ============================================================================
 // Game Loop Implementation
@@ -96,15 +96,17 @@ function processJobSites(
   deltaTime: number,
   currentTime: number,
   game: GameState,
-  lastRefinementCycle: Map<string, Map<number, number>>
+  lastRefinementCycle: Map<string, Map<number, number>>,
 ) {
-  const { production: productionJobsites, refinement: refinementJobsites } = game.jobSites;
+  const { production: productionJobsites, refinement: refinementJobsites } =
+    game.jobSites;
   let totalNuts = 0;
 
   // Process production jobsites
   Object.values(productionJobsites).forEach((jobSite) => {
     const baseRate = jobSite.baseProduction * jobSite.multi;
-    const squirrelRate = jobSite.squirrelBonus * jobSite.multi * jobSite.workers.length;
+    const squirrelRate =
+      jobSite.squirrelBonus * jobSite.multi * jobSite.workers.length;
     const totalRate = baseRate + squirrelRate; // nuts per second
     const totalProduction = (totalRate * deltaTime * game.gameSpeed) / 1000;
 
@@ -115,7 +117,8 @@ function processJobSites(
 
   // Process refinement jobsites
   Object.values(refinementJobsites).forEach((jobSite) => {
-    if (jobSite.workers.length === 0 || !jobSite.consumes || !jobSite.produces) return;
+    if (jobSite.workers.length === 0 || !jobSite.consumes || !jobSite.produces)
+      return;
 
     // Initialize tracking for this jobsite if needed
     if (!lastRefinementCycle.has(jobSite.id)) {
@@ -134,15 +137,20 @@ function processJobSites(
       if (currentTime - lastCycle >= jobSite.time) {
         // Check if we have enough resources for this cycle
         const availableResource =
-          consumeType === 'nuts' ? game.nutsTotal : game.resources[consumeType as keyof typeof game.resources];
+          consumeType === "nuts"
+            ? game.nutsTotal
+            : game.resources[consumeType as keyof typeof game.resources];
 
         if (availableResource >= consumeAmount) {
           // Consume input resource
-          if (consumeType === 'nuts') {
+          if (consumeType === "nuts") {
             // Note: spendResource expects a resource key, but 'nuts' is not in GameState['resources']
             // We'll handle nuts separately
           } else {
-            spendResource(consumeType as keyof typeof game.resources, consumeAmount);
+            spendResource(
+              consumeType as keyof typeof game.resources,
+              consumeAmount,
+            );
           }
 
           // Produce output resource
@@ -167,7 +175,7 @@ function processJobSites(
 function processJoblessSquirrels(
   currentTime: number,
   game: GameState,
-  lastJoblessAttempt: Map<number, number>
+  lastJoblessAttempt: Map<number, number>,
 ) {
   const { time, chance: foragingChance } = game.jobSites.jobless;
 
