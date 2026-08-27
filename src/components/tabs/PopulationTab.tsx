@@ -1,33 +1,18 @@
 import React from 'react';
-import styled from 'styled-components';
-import { TabContainer, Column, Heading2, Text, Card } from '../../styles/components';
-import { theme } from '../../styles/theme';
-
-
-const ComingSoonCard = styled(Card)`
-  max-width: 500px;
-  width: 100%;
-  text-align: center;
-`;
 
 const PopulationTab: React.FC = () => {
   return (
-    <TabContainer id="population-content">
-      <ComingSoonCard padding="xl" elevated>
-        <Column gap="lg" align="center">
-          <span style={{ fontSize: '4em' }}>👥</span>
-          <Heading2>Population Management</Heading2>
-          <Text size="lg" color={theme.colors.textLight}>
-            Coming soon...
-          </Text>
-          <Text size="sm" color={theme.colors.textMuted}>
-            Manage your squirrel colony's growth, housing, and social dynamics.
-          </Text>
-        </Column>
-      </ComingSoonCard>
-    </TabContainer>
+    <div className="tab-panel flex min-h-[50vh] items-center justify-center" id="population-content">
+      <div className="panel max-w-md text-center">
+        <div className="text-5xl">👥</div>
+        <h2 className="section-title mt-3">Population Management</h2>
+        <p className="muted mt-2">Coming soon...</p>
+        <p className="muted mt-1 text-xs">
+          Manage your squirrel colony&apos;s growth, housing, and social dynamics.
+        </p>
+      </div>
+    </div>
   );
 };
 
 export default PopulationTab;
-

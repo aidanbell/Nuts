@@ -3,144 +3,72 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../../store';
 import { hibernate } from '../../store/gameSlice';
 import { formatNumber } from '../../utils/formatters';
-import styled from 'styled-components';
-import { Column, Row, Button, Heading1, Heading3, Text, Panel } from '../../styles/components';
-import { theme } from '../../styles/theme';
-
-const TabContainer = styled.div`
-  padding: ${theme.spacing.lg};
-  min-height: 70vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  @media (max-width: ${theme.breakpoints.tablet}) {
-    padding: ${theme.spacing.md};
-  }
-`;
-
-const HibernateCard = styled(Panel)`
-  max-width: 600px;
-  width: 100%;
-  text-align: center;
-`;
-
-const HibernateButton = styled(Button)`
-  font-size: ${theme.typography.fontSize.xl};
-  padding: ${theme.spacing.lg} ${theme.spacing.xxl};
-  font-weight: ${theme.typography.fontWeight.bold};
-  
-  @media (max-width: ${theme.breakpoints.mobile}) {
-    font-size: ${theme.typography.fontSize.lg};
-    padding: ${theme.spacing.md} ${theme.spacing.xl};
-  }
-`;
-
-const ConfirmPanel = styled(Panel)`
-  margin-top: ${theme.spacing.xl};
-  background: ${theme.colors.background};
-  border-color: ${theme.colors.warning};
-  animation: slideIn 0.3s ease;
-  
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`;
-
-const GoldNutDisplay = styled(Heading1)`
-  color: ${theme.colors.gold};
-  font-size: ${theme.typography.fontSize.xxxl};
-  margin: ${theme.spacing.lg} 0;
-`;
 
 const HibernateTab: React.FC = () => {
   const dispatch = useDispatch();
   const { nutsAllTime, goldNuts } = useSelector((state: RootState) => state.game);
   const [showConfirm, setShowConfirm] = useState(false);
-  
-  const goldNutReward = useMemo(() => {
-    return Math.floor(nutsAllTime / Math.pow(10, 6) * goldNuts.multi);
-  }, [nutsAllTime, goldNuts.multi]);
-  
-  const handleHibernateClick = useCallback(() => {
-    setShowConfirm(true);
-  }, []);
-  
+
+  const goldNutReward = useMemo(
+    () => Math.floor((nutsAllTime / Math.pow(10, 6)) * goldNuts.multi),
+    [nutsAllTime, goldNuts.multi]
+  );
+
   const handleConfirmHibernate = useCallback(() => {
     dispatch(hibernate());
     setShowConfirm(false);
   }, [dispatch]);
-  
+
   return (
-    <TabContainer id="hibernate-content">
-      <HibernateCard variant="info">
-        <Column gap="xl" align="center">
-          <Heading1>💤 Hibernate</Heading1>
-          
-          <Column gap="md" align="center">
-            <Text size="lg">
-              Take a long winter's nap and return next season with bonus Gold Nuts!
-            </Text>
-            <Text size="md" color={theme.colors.textLight}>
-              Current Reward: <strong style={{ color: theme.colors.gold }}>{formatNumber(goldNutReward)} ⭐ Gold Nuts</strong>
-            </Text>
-          </Column>
-          
-          <HibernateButton 
-            variant="warning"
-            size="lg"
-            onClick={handleHibernateClick}
-          >
-            💤 HIBERNATE NOW
-          </HibernateButton>
-          
-          {showConfirm && (
-            <ConfirmPanel variant="warning">
-              <Column gap="lg">
-                <Heading3>⚠️ Are you sure?</Heading3>
-                
-                <Column gap="sm">
-                  <Text size="lg">If you hibernate, you will receive:</Text>
-                  <GoldNutDisplay id="gn-preview">
-                    ⭐ {formatNumber(goldNutReward)} Gold Nuts
-                  </GoldNutDisplay>
-                </Column>
-                
-                <Text size="md" color={theme.colors.danger} weight="bold">
-                  ⚠️ This will reset ALL your progress!
-                </Text>
-                
-                <Row gap="md" justify="center">
-                  <Button 
-                    variant="danger"
-                    size="lg"
-                    onClick={handleConfirmHibernate}
-                  >
-                    ✓ Confirm Hibernate
-                  </Button>
-                  <Button 
-                    variant="secondary"
-                    size="lg"
-                    onClick={() => setShowConfirm(false)}
-                  >
-                    ✕ Cancel
-                  </Button>
-                </Row>
-              </Column>
-            </ConfirmPanel>
-          )}
-        </Column>
-      </HibernateCard>
-    </TabContainer>
+    <div
+      className="tab-panel flex min-h-[60vh] items-center justify-center"
+      id="hibernate-content"
+    >
+      <div className="panel w-full max-w-lg text-center">
+        <h1 className="font-display text-3xl font-bold">💤 Hibernate</h1>
+        <p className="mt-3 text-base">
+          Take a long winter&apos;s nap and return next season with bonus Gold Nuts!
+        </p>
+        <p className="muted mt-2">
+          Current reward:{' '}
+          <strong className="text-gold">{formatNumber(goldNutReward)} ⭐ Gold Nuts</strong>
+        </p>
+
+        <button
+          type="button"
+          className="btn btn-warning btn-lg mt-6"
+          onClick={() => setShowConfirm(true)}
+        >
+          💤 HIBERNATE NOW
+        </button>
+
+        {showConfirm && (
+          <div className="mt-6 rounded-xl border border-amber/40 bg-amber/10 p-4 text-left">
+            <h3 className="font-display text-lg font-bold">⚠️ Are you sure?</h3>
+            <p className="mt-2">If you hibernate, you will receive:</p>
+            <p className="my-4 text-center font-display text-3xl font-bold text-gold" id="gn-preview">
+              ⭐ {formatNumber(goldNutReward)} Gold Nuts
+            </p>
+            <p className="text-sm font-bold text-danger">
+              ⚠️ This will reset ALL your progress!
+            </p>
+            <div className="mt-4 flex flex-wrap justify-center gap-3">
+              <button type="button" className="btn btn-danger btn-lg" onClick={handleConfirmHibernate}>
+                ✓ Confirm Hibernate
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-lg"
+                onClick={() => setShowConfirm(false)}
+              >
+                ✕ Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
 export default HibernateTab;
-

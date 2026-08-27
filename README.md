@@ -6,13 +6,24 @@ Incremental / idle game about squirrels, nuts, jobsites, and eras.
 
 - React 19 + TypeScript + Vite
 - Redux Toolkit
-- styled-components
+- Tailwind CSS v4
+
+## Requirements
+
+- Node.js **22.13+** (24 recommended)
+- **pnpm** (via Corepack: `corepack enable`)
 
 ## Run
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
+```
+
+```bash
+pnpm build
+pnpm lint
+pnpm typecheck
 ```
 
 ## Docs

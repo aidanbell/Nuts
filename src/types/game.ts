@@ -32,6 +32,7 @@ export interface JobSite {
   
   // Upgrade system
   level: number; // Number of times upgraded
+  maxLevel?: number; // Optional upgrade cap
   cost: number; // Current upgrade cost
   costGrowthRate: number; // Exponential growth rate (e.g., 1.15 = 15% increase per purchase)
   baseCost: number; // Original base cost for recalculation

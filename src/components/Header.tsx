@@ -3,118 +3,71 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../store';
 import GameConsole from './GameConsole';
 import { formatNumber, formatTime } from '../utils/formatters';
-import { Column, Heading1, Heading2, Heading3, Card } from '../styles/components';
-import styled from 'styled-components';
-import { theme } from '../styles/theme';
-
-const HeaderContainer = styled.div`
-  display: flex;
-  gap: ${theme.spacing.lg};
-  margin-bottom: ${theme.spacing.lg};
-  
-  @media (max-width: ${theme.breakpoints.tablet}) {
-    flex-direction: column;
-    gap: ${theme.spacing.md};
-  }
-`;
-
-const StatsCard = styled(Card)`
-  flex: 1;
-  
-  @media (max-width: ${theme.breakpoints.mobile}) {
-    padding: ${theme.spacing.sm};
-  }
-`;
-
-const ConsoleCard = styled(Card)`
-  flex: 1;
-  
-  @media (max-width: ${theme.breakpoints.mobile}) {
-    padding: ${theme.spacing.sm};
-  }
-`;
-
-const StatValue = styled.span`
-  color: ${theme.colors.primary};
-`;
-
-const DebugValue = styled(Heading2)`
-  color: ${theme.colors.textMuted};
-  font-size: ${theme.typography.fontSize.sm};
-`;
-
-const ResourceRow = styled.div`
-  display: flex;
-  gap: ${theme.spacing.md};
-  flex-wrap: wrap;
-`;
-
-const ResourceItem = styled(Heading3)`
-  display: flex;
-  align-items: center;
-  gap: ${theme.spacing.xs};
-`;
-
-const ResourceValue = styled.span`
-  color: ${theme.colors.secondary};
-  font-weight: ${theme.typography.fontWeight.bold};
-`;
 
 const Header: React.FC = () => {
-  const gameState = useSelector((state: RootState) => state.game);
-  const { nutsTotal, nutsAllTime, timer, resources } = gameState;
-  
+  const { nutsTotal, nutsAllTime, timer, resources } = useSelector(
+    (state: RootState) => state.game
+  );
+
+  const hasResources =
+    resources &&
+    (resources.nutwood > 0 ||
+      resources.stone > 0 ||
+      resources.bronze > 0 ||
+      resources.iron > 0);
+
   return (
-    <HeaderContainer>
-      <StatsCard padding="md" id="stats">
-        <Column gap="sm">
-          <Heading1>
-            🥜 <StatValue id="total">{formatNumber(nutsTotal)}</StatValue> Nuts
-          </Heading1>
-          <DebugValue>
-            <span id="debug-total">{Math.round(nutsTotal * 1000) / 1000}</span>
-          </DebugValue>
-          <Heading3 id="nuts-running">
-            All Time: {Math.round(nutsAllTime * 1000) / 1000}
-          </Heading3>
-          
-          {/* Refined Resources */}
-          {resources && (resources.nutwood > 0 || resources.stone > 0 || resources.bronze > 0 || resources.iron > 0) && (
-            <ResourceRow>
-              {resources.nutwood > 0 && (
-                <ResourceItem>
-                  🪵 <ResourceValue>{formatNumber(resources.nutwood)}</ResourceValue>
-                </ResourceItem>
-              )}
-              {resources.stone > 0 && (
-                <ResourceItem>
-                  🪨 <ResourceValue>{formatNumber(resources.stone)}</ResourceValue>
-                </ResourceItem>
-              )}
-              {resources.bronze > 0 && (
-                <ResourceItem>
-                  🔶 <ResourceValue>{formatNumber(resources.bronze)}</ResourceValue>
-                </ResourceItem>
-              )}
-              {resources.iron > 0 && (
-                <ResourceItem>
-                  ⚙️ <ResourceValue>{formatNumber(resources.iron)}</ResourceValue>
-                </ResourceItem>
-              )}
-            </ResourceRow>
-          )}
-          
-          <Heading3 id="clock">
-            ⏱️ {formatTime(timer.m, timer.s, timer.ms)}
-          </Heading3>
-        </Column>
-      </StatsCard>
-      <ConsoleCard padding="md" id="console">
+    <header className="flex flex-col gap-4 lg:flex-row">
+      <div className="card flex-1 p-4 md:p-5" id="stats">
+        <h1 className="font-display text-2xl font-bold tracking-tight md:text-3xl">
+          <span className="mr-2">🥜</span>
+          <span className="text-amber" id="total">
+            {formatNumber(nutsTotal)}
+          </span>{' '}
+          Nuts
+        </h1>
+        <p className="mt-1 text-xs text-muted" id="debug-total">
+          {Math.round(nutsTotal * 1000) / 1000}
+        </p>
+        <p className="mt-2 text-sm text-muted" id="nuts-running">
+          All time: {Math.round(nutsAllTime * 1000) / 1000}
+        </p>
+
+        {hasResources && (
+          <div className="mt-3 flex flex-wrap gap-3 text-sm font-semibold">
+            {resources.nutwood > 0 && (
+              <span>
+                🪵 <span className="text-amber">{formatNumber(resources.nutwood)}</span>
+              </span>
+            )}
+            {resources.stone > 0 && (
+              <span>
+                🪨 <span className="text-amber">{formatNumber(resources.stone)}</span>
+              </span>
+            )}
+            {resources.bronze > 0 && (
+              <span>
+                🔶 <span className="text-amber">{formatNumber(resources.bronze)}</span>
+              </span>
+            )}
+            {resources.iron > 0 && (
+              <span>
+                ⚙️ <span className="text-amber">{formatNumber(resources.iron)}</span>
+              </span>
+            )}
+          </div>
+        )}
+
+        <p className="mt-3 text-sm font-semibold text-bark" id="clock">
+          ⏱️ {formatTime(timer.m, timer.s, timer.ms)}
+        </p>
+      </div>
+
+      <div className="card flex-1 p-3 md:p-4" id="console">
         <GameConsole />
-      </ConsoleCard>
-    </HeaderContainer>
+      </div>
+    </header>
   );
 };
 
 export default Header;
-

@@ -5,34 +5,19 @@ import TabContent from './TabContent';
 import GoldenNut from './GoldenNut';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store';
-import styled from 'styled-components';
-import { theme } from '../styles/theme';
-import { Container } from '../styles/components';
 import { useGoldenNut } from '../hooks/useGoldenNut';
-
-const GameWrapper = styled.div`
-  margin: 0 auto;
-  gap: ${theme.spacing.md};
-
-  display: flex;
-  flex-direction: row;
-  
-  @media (max-width: ${theme.breakpoints.tablet}) {
-    padding: ${theme.spacing.sm};
-  }
-`;
 
 const GameContainer: React.FC = () => {
   const activeTab = useSelector((state: RootState) => state.game.activeTab);
   const { goldenNut, collectGoldenNut, fadeMs } = useGoldenNut();
-  
+
   return (
-    <Container>
+    <div className="mx-auto max-w-6xl px-3 py-4 md:px-6 md:py-6">
       <Header />
-      <GameWrapper>
+      <div className="mt-4 flex flex-col gap-4 md:flex-row md:gap-5">
         <Navigation />
         <TabContent activeTab={activeTab} />
-      </GameWrapper>
+      </div>
       {goldenNut && (
         <GoldenNut
           key={`${goldenNut.id}-${goldenNut.expiresAt}`}
@@ -42,9 +27,8 @@ const GameContainer: React.FC = () => {
           onCollect={collectGoldenNut}
         />
       )}
-    </Container>
+    </div>
   );
 };
 
 export default GameContainer;
-

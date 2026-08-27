@@ -4,123 +4,44 @@ import type { RootState } from '../store';
 import { addNuts, createSquirrel, hibernate, pauseGame, resumeGame } from '../store/gameSlice';
 import { resetCheckpoints } from '../store/storySlice';
 import { clearSave, saveGame, loadGame } from '../utils/saveSystem';
-import styled from 'styled-components';
-import { Column, Row, Button, Text, Heading3, Divider, Badge } from '../styles';
-import { theme } from '../styles/theme';
-
-const DebugContainer = styled.div<{ isOpen: boolean }>`
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  width: ${({ isOpen }) => isOpen ? '400px' : '60px'};
-  max-height: ${({ isOpen }) => isOpen ? '80vh' : '60px'};
-  min-height: 60px;
-  background: ${theme.colors.surface};
-  border: 2px solid ${theme.colors.danger};
-  border-bottom: none;
-  border-right: none;
-  border-top-left-radius: ${theme.borderRadius.lg};
-  box-shadow: ${theme.shadows.xl};
-  transition: all ${theme.transitions.normal};
-  z-index: 10000;
-  overflow: hidden;
-`;
-
-const DebugContent = styled(Column)`
-  padding: ${theme.spacing.md};
-  max-height: 80vh;
-  overflow-y: auto;
-`;
-
-const ToggleButton = styled.button`
-  position: absolute;
-  top: ${theme.spacing.sm};
-  right: ${theme.spacing.sm};
-  background: ${theme.colors.danger};
-  color: white;
-  border: none;
-  border-radius: ${theme.borderRadius.round};
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
-  font-size: ${theme.typography.fontSize.lg};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform ${theme.transitions.fast};
-  
-  &:hover {
-    transform: scale(1.1);
-  }
-`;
-
-const Section = styled(Column)`
-  background: ${theme.colors.background};
-  padding: ${theme.spacing.md};
-  border-radius: ${theme.borderRadius.md};
-`;
-
-const DebugButton = styled(Button)`
-  font-size: ${theme.typography.fontSize.sm};
-  padding: ${theme.spacing.xs} ${theme.spacing.sm};
-`;
-
-const StateViewer = styled.pre`
-  background: #1e1e1e;
-  color: #d4d4d4;
-  padding: ${theme.spacing.sm};
-  border-radius: ${theme.borderRadius.sm};
-  font-family: ${theme.typography.fontFamily.mono};
-  font-size: ${theme.typography.fontSize.xs};
-  max-height: 300px;
-  overflow: auto;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-`;
 
 const DebugPanel: React.FC = () => {
   const dispatch = useDispatch();
   const gameState = useSelector((state: RootState) => state.game);
   const storyState = useSelector((state: RootState) => state.story);
-  
+
   const [isOpen, setIsOpen] = useState(false);
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(() => {
-    return localStorage.getItem('debug_autosave_enabled') !== 'false';
-  });
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(
+    () => localStorage.getItem('debug_autosave_enabled') !== 'false'
+  );
   const [showGameState, setShowGameState] = useState(false);
   const [showStoryState, setShowStoryState] = useState(false);
   const [copiedText, setCopiedText] = useState('');
-  
-  // Auto-save toggle handler
+
   const handleAutoSaveToggle = () => {
     setAutoSaveEnabled(!autoSaveEnabled);
-    // Store in localStorage so it persists
     localStorage.setItem('debug_autosave_enabled', (!autoSaveEnabled).toString());
   };
-  
-  // Clear save data
+
   const handleClearSave = () => {
     if (window.confirm('⚠️ This will delete ALL saved data. Are you sure?')) {
       clearSave();
       alert('Save data cleared! Refresh the page to start fresh.');
     }
   };
-  
-  // Reset game state
+
   const handleResetGame = () => {
     if (window.confirm('⚠️ This will reset the current game session (not saved data). Continue?')) {
       dispatch(resetCheckpoints());
       window.location.reload();
     }
   };
-  
-  // Manual save
+
   const handleManualSave = () => {
     saveGame(gameState);
     alert('Game saved manually!');
   };
-  
-  // Manual load
+
   const handleManualLoad = () => {
     const data = loadGame();
     if (data) {
@@ -130,34 +51,7 @@ const DebugPanel: React.FC = () => {
       alert('No save data found!');
     }
   };
-  
-  // Add squirrel
-  const handleAddSquirrel = () => {
-    dispatch(createSquirrel());
-  };
-  
-  // Add nuts
-  const handleAddNuts = (amount: number) => {
-    dispatch(addNuts(amount));
-  };
-  
-  // Trigger hibernate
-  const handleHibernate = () => {
-    if (window.confirm('Hibernate now? This will reset your progress.')) {
-      dispatch(hibernate());
-    }
-  };
-  
-  // Copy state to clipboard
-  const handleCopyState = (stateType: 'game' | 'story') => {
-    const state = stateType === 'game' ? gameState : storyState;
-    const json = JSON.stringify(state, null, 2);
-    navigator.clipboard.writeText(json);
-    setCopiedText(stateType);
-    setTimeout(() => setCopiedText(''), 2000);
-  };
-  
-  // Export save
+
   const handleExportSave = () => {
     try {
       const saveData = loadGame();
@@ -178,226 +72,213 @@ const DebugPanel: React.FC = () => {
       console.error(error);
     }
   };
-  
-  // Pause/Resume game
+
+  const handleCopyState = (stateType: 'game' | 'story') => {
+    const state = stateType === 'game' ? gameState : storyState;
+    navigator.clipboard.writeText(JSON.stringify(state, null, 2));
+    setCopiedText(stateType);
+    setTimeout(() => setCopiedText(''), 2000);
+  };
+
   const handleTogglePause = () => {
-    if (gameState.isPaused) {
-      dispatch(resumeGame());
-    } else {
-      dispatch(pauseGame());
+    if (gameState.isPaused) dispatch(resumeGame());
+    else dispatch(pauseGame());
+  };
+
+  const handleHibernate = () => {
+    if (window.confirm('Hibernate now? This will reset your progress.')) {
+      dispatch(hibernate());
     }
   };
-  
+
   return (
-    <DebugContainer isOpen={isOpen}>
-      <ToggleButton onClick={() => setIsOpen(!isOpen)}>
+    <div
+      className={[
+        'fixed right-0 bottom-0 z-[10000] overflow-hidden border-2 border-r-0 border-b-0 border-danger bg-paper shadow-xl transition-all',
+        isOpen
+          ? 'max-h-[80vh] w-[min(100vw,400px)] rounded-tl-xl'
+          : 'h-14 w-14 rounded-tl-xl',
+      ].join(' ')}
+    >
+      <button
+        type="button"
+        className="absolute top-2 right-2 flex size-10 items-center justify-center rounded-full bg-danger text-lg text-white hover:scale-110"
+        onClick={() => setIsOpen(!isOpen)}
+      >
         {isOpen ? '✕' : '🐛'}
-      </ToggleButton>
-      
+      </button>
+
       {isOpen && (
-        <DebugContent gap="md">
-          <Row gap="sm" align="center">
-            <Heading3>🐛 Debug Panel</Heading3>
-            <Badge variant="danger">DEV</Badge>
-          </Row>
-          
-          <Divider />
-          
-          {/* Auto-Save Controls */}
-          <Section gap="sm">
-            <Text weight="bold">Auto-Save</Text>
-            <Row gap="sm">
-              <DebugButton 
-                variant={autoSaveEnabled ? 'success' : 'danger'}
-                size="sm"
+        <div className="max-h-[80vh] space-y-3 overflow-y-auto p-4 pt-14">
+          <div className="flex items-center gap-2">
+            <h3 className="font-display text-lg font-bold">🐛 Debug Panel</h3>
+            <span className="rounded bg-danger/15 px-2 py-0.5 text-xs font-bold text-danger">
+              DEV
+            </span>
+          </div>
+
+          <hr className="border-moss/15" />
+
+          <section className="space-y-2 rounded-lg bg-sage/40 p-3">
+            <p className="text-sm font-bold">Auto-Save</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className={`btn btn-sm ${autoSaveEnabled ? 'btn-success' : 'btn-danger'}`}
                 onClick={handleAutoSaveToggle}
               >
                 {autoSaveEnabled ? '✓ Enabled' : '✕ Disabled'}
-              </DebugButton>
-              <DebugButton 
-                variant="primary" 
-                size="sm"
-                onClick={handleManualSave}
-              >
+              </button>
+              <button type="button" className="btn btn-primary btn-sm" onClick={handleManualSave}>
                 Save Now
-              </DebugButton>
-              <DebugButton 
-                variant="secondary" 
-                size="sm"
-                onClick={handleManualLoad}
-              >
+              </button>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={handleManualLoad}>
                 Load
-              </DebugButton>
-            </Row>
-          </Section>
-          
-          {/* Save Data Management */}
-          <Section gap="sm">
-            <Text weight="bold">Save Data</Text>
-            <Row gap="sm">
-              <DebugButton 
-                variant="danger" 
-                size="sm"
-                onClick={handleClearSave}
-              >
+              </button>
+            </div>
+          </section>
+
+          <section className="space-y-2 rounded-lg bg-sage/40 p-3">
+            <p className="text-sm font-bold">Save Data</p>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className="btn btn-danger btn-sm" onClick={handleClearSave}>
                 🗑️ Clear Save
-              </DebugButton>
-              <DebugButton 
-                variant="warning" 
-                size="sm"
-                onClick={handleResetGame}
-              >
+              </button>
+              <button type="button" className="btn btn-warning btn-sm" onClick={handleResetGame}>
                 🔄 Reset Game
-              </DebugButton>
-              <DebugButton 
-                variant="secondary" 
-                size="sm"
-                onClick={handleExportSave}
-              >
+              </button>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={handleExportSave}>
                 💾 Export
-              </DebugButton>
-            </Row>
-          </Section>
-          
-          {/* Game Controls */}
-          <Section gap="sm">
-            <Text weight="bold">Game Controls</Text>
-            <Row gap="sm">
-              <DebugButton 
-                variant={gameState.isPaused ? 'success' : 'warning'}
-                size="sm"
+              </button>
+            </div>
+          </section>
+
+          <section className="space-y-2 rounded-lg bg-sage/40 p-3">
+            <p className="text-sm font-bold">Game Controls</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className={`btn btn-sm ${gameState.isPaused ? 'btn-success' : 'btn-warning'}`}
                 onClick={handleTogglePause}
               >
                 {gameState.isPaused ? '▶️ Resume' : '⏸️ Pause'}
-              </DebugButton>
-              <DebugButton 
-                variant="primary" 
-                size="sm"
-                onClick={handleAddSquirrel}
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => dispatch(createSquirrel())}
               >
                 🐿️ +1 Squirrel
-              </DebugButton>
-            </Row>
-            <Row gap="sm">
-              <DebugButton 
-                variant="success" 
-                size="sm"
-                onClick={() => handleAddNuts(100)}
+              </button>
+              <button
+                type="button"
+                className="btn btn-success btn-sm"
+                onClick={() => dispatch(addNuts(100))}
               >
-                🥜 +100 Nuts
-              </DebugButton>
-              <DebugButton 
-                variant="success" 
-                size="sm"
-                onClick={() => handleAddNuts(10000)}
+                🥜 +100
+              </button>
+              <button
+                type="button"
+                className="btn btn-success btn-sm"
+                onClick={() => dispatch(addNuts(10000))}
               >
-                🥜 +10k Nuts
-              </DebugButton>
-            </Row>
-            <DebugButton 
-              variant="secondary" 
-              size="sm"
-              onClick={handleHibernate}
-              fullWidth
-            >
-              💤 Hibernate Now
-            </DebugButton>
-          </Section>
-          
-          {/* State Inspector */}
-          <Section gap="sm">
-            <Text weight="bold">State Inspector</Text>
-            <Row gap="sm">
-              <DebugButton 
-                variant={showGameState ? 'primary' : 'secondary'}
-                size="sm"
+                🥜 +10k
+              </button>
+              <button type="button" className="btn btn-secondary btn-sm w-full" onClick={handleHibernate}>
+                💤 Hibernate Now
+              </button>
+            </div>
+          </section>
+
+          <section className="space-y-2 rounded-lg bg-sage/40 p-3">
+            <p className="text-sm font-bold">State Inspector</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className={`btn btn-sm ${showGameState ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => setShowGameState(!showGameState)}
               >
-                {showGameState ? 'Hide' : 'Show'} Game State
-              </DebugButton>
-              <DebugButton 
-                variant={showStoryState ? 'primary' : 'secondary'}
-                size="sm"
+                {showGameState ? 'Hide' : 'Show'} Game
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm ${showStoryState ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => setShowStoryState(!showStoryState)}
               >
-                {showStoryState ? 'Hide' : 'Show'} Story State
-              </DebugButton>
-            </Row>
-            
+                {showStoryState ? 'Hide' : 'Show'} Story
+              </button>
+            </div>
+
             {showGameState && (
               <>
-                <Row justify="space-between" align="center">
-                  <Text size="sm" weight="bold">Game State:</Text>
-                  <DebugButton 
-                    variant="secondary" 
-                    size="sm"
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold">Game State</span>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
                     onClick={() => handleCopyState('game')}
                   >
                     {copiedText === 'game' ? '✓ Copied!' : '📋 Copy'}
-                  </DebugButton>
-                </Row>
-                <StateViewer>
-                  {JSON.stringify({
-                    nuts: gameState.nutsTotal,
-                    nutsAllTime: gameState.nutsAllTime,
-                    goldNuts: gameState.goldNuts,
-                    squirrels: Object.keys(gameState.squirrels).length,
-                    jobSites: {
-                      production: Object.entries(gameState.jobSites.production).map(([id, js]) => ({
-                      id,
-                      capacity: js.capacity,
-                      workers: js.workers.length,
-                    })),
-                    refinement: Object.entries(gameState.jobSites.refinement).map(([id, js]) => ({
-                      id,
-                      capacity: js.capacity,
-                      workers: js.workers.length,
-                    })),
-                  },
-                    isPaused: gameState.isPaused,
-                    gameSpeed: gameState.gameSpeed,
-                    tick: gameState.tick,
-                  }, null, 2)}
-                </StateViewer>
+                  </button>
+                </div>
+                <pre className="max-h-48 overflow-auto rounded bg-bark p-2 font-mono text-[10px] whitespace-pre-wrap text-sage">
+                  {JSON.stringify(
+                    {
+                      nuts: gameState.nutsTotal,
+                      nutsAllTime: gameState.nutsAllTime,
+                      squirrels: Object.keys(gameState.squirrels).length,
+                      isPaused: gameState.isPaused,
+                      tick: gameState.tick,
+                    },
+                    null,
+                    2
+                  )}
+                </pre>
               </>
             )}
-            
+
             {showStoryState && (
               <>
-                <Row justify="space-between" align="center">
-                  <Text size="sm" weight="bold">Story State:</Text>
-                  <DebugButton 
-                    variant="secondary" 
-                    size="sm"
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold">Story State</span>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
                     onClick={() => handleCopyState('story')}
                   >
                     {copiedText === 'story' ? '✓ Copied!' : '📋 Copy'}
-                  </DebugButton>
-                </Row>
-                <StateViewer>
-                  {JSON.stringify({
-                    currentEra: storyState.currentEra,
-                    storyProgress: storyState.storyProgress,
-                    completedCheckpoints: storyState.completedCheckpoints,
-                    activeStory: storyState.activeStory,
-                  }, null, 2)}
-                </StateViewer>
+                  </button>
+                </div>
+                <pre className="max-h-48 overflow-auto rounded bg-bark p-2 font-mono text-[10px] whitespace-pre-wrap text-sage">
+                  {JSON.stringify(
+                    {
+                      currentEra: storyState.currentEra,
+                      storyProgress: storyState.storyProgress,
+                      completedCheckpoints: storyState.completedCheckpoints,
+                      activeStory: storyState.activeStory,
+                    },
+                    null,
+                    2
+                  )}
+                </pre>
               </>
             )}
-          </Section>
-          
-          {/* Quick Stats */}
-          <Section gap="xs">
-            <Text weight="bold" size="sm">Quick Stats</Text>
-            <Text size="xs">Nuts: {gameState.nutsTotal.toFixed(2)}</Text>
-            <Text size="xs">Squirrels: {Object.keys(gameState.squirrels).length}</Text>
-            <Text size="xs">Checkpoints: {storyState.completedCheckpoints.length} / {Object.keys(storyState.checkpoints).length}</Text>
-            <Text size="xs">Game Paused: {gameState.isPaused ? 'Yes' : 'No'}</Text>
-            <Text size="xs">Auto-Save: {autoSaveEnabled ? 'On' : 'Off'}</Text>
-          </Section>
-        </DebugContent>
+          </section>
+
+          <section className="space-y-1 rounded-lg bg-sage/40 p-3 text-xs">
+            <p className="font-bold">Quick Stats</p>
+            <p>Nuts: {gameState.nutsTotal.toFixed(2)}</p>
+            <p>Squirrels: {Object.keys(gameState.squirrels).length}</p>
+            <p>
+              Checkpoints: {storyState.completedCheckpoints.length} /{' '}
+              {Object.keys(storyState.checkpoints).length}
+            </p>
+            <p>Paused: {gameState.isPaused ? 'Yes' : 'No'}</p>
+            <p>Auto-Save: {autoSaveEnabled ? 'On' : 'Off'}</p>
+          </section>
+        </div>
       )}
-    </DebugContainer>
+    </div>
   );
 };
 

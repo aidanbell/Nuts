@@ -1,94 +1,44 @@
 import React, { useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store';
-import styled from 'styled-components';
-import { theme } from '../styles/theme';
-import { Column, Text } from '../styles/components';
 
-const ConsoleContainer = styled(Column)`
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: ${theme.borderRadius.md};
-  padding: ${theme.spacing.sm};
-  max-height: 200px;
-  overflow-y: auto;
-  font-family: ${theme.typography.fontFamily.mono};
-  font-size: ${theme.typography.fontSize.sm};
-  
-  /* Custom scrollbar */
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 4px;
-  }
-  
-  &::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.5);
-  }
-`;
+const levelClass: Record<string, string> = {
+  success: 'text-leaf',
+  warning: 'text-amber-light',
+  error: 'text-danger',
+  info: 'text-sage',
+};
 
-const LogEntry = styled.div<{ level: string }>`
-  padding: 2px 0;
-  color: ${props => {
-    switch (props.level) {
-      case 'success': return '#0f0';
-      case 'warning': return '#ff0';
-      case 'error': return '#f00';
-      default: return '#ccc';
-    }
-  }};
-  
-  &::before {
-    content: '${props => {
-      switch (props.level) {
-        case 'success': return '✓';
-        case 'warning': return '⚠';
-        case 'error': return '✗';
-        default: return '›';
-      }
-    }}';
-    margin-right: 8px;
-    opacity: 0.7;
-  }
-`;
+const levelPrefix: Record<string, string> = {
+  success: '✓',
+  warning: '⚠',
+  error: '✗',
+  info: '›',
+};
 
 const GameConsole: React.FC = () => {
   const logs = useSelector((state: RootState) => state.gameLog.logs);
   const consoleEndRef = useRef<HTMLDivElement>(null);
-  
-  // Auto-scroll to bottom when new logs appear
+
   useEffect(() => {
-    if (consoleEndRef.current) {
-      consoleEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
+    consoleEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [logs]);
-  
+
   return (
-    <ConsoleContainer gap="xs">
-      
+    <div className="max-h-48 overflow-y-auto rounded-lg bg-bark/90 p-3 font-mono text-xs text-sage md:max-h-52">
       {logs.length === 0 ? (
-        <Text size="sm" color="rgba(255, 255, 255, 0.5)">
-          No logs yet...
-        </Text>
+        <p className="text-sage/50">No logs yet...</p>
       ) : (
-        logs.map(log => (
-          <LogEntry key={log.id} level={log.level}>
+        logs.map((log) => (
+          <div key={log.id} className={`py-0.5 ${levelClass[log.level] ?? 'text-sage'}`}>
+            <span className="mr-2 opacity-70">{levelPrefix[log.level] ?? '›'}</span>
             {log.message}
-          </LogEntry>
+          </div>
         ))
       )}
-      
       <div ref={consoleEndRef} />
-    </ConsoleContainer>
+    </div>
   );
 };
 
 export default GameConsole;
-

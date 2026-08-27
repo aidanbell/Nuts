@@ -1,0 +1,6 @@
+# Single-package project settings for pnpm 11+
+engineStrict: true
+autoInstallPeers: true
+
+allowBuilds:
+  esbuild: true
