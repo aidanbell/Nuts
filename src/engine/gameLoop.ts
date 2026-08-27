@@ -3,8 +3,11 @@
  * Replaces React useGameLoop hook with SolidJS createEffect
  *
  * Uses a two-tiered approach:
- * - Logic updates at ~10 FPS (100ms intervals)
- * - Render updates at ~60 FPS (16ms intervals)
+ * - Logic updates at ~10 FPS (100ms intervals) for game state updates
+ * - Render updates at ~60 FPS (16ms intervals) for smooth UI
+ *
+ * Note: This module provides the core game loop that drives the game forward.
+ * It processes production jobsites, refinement jobsites, and jobless squirrels.
  */
 
 import { appState } from "./state";
@@ -24,6 +27,7 @@ import type { GameState } from "../types/game";
 
 /**
  * Random chance helper - deterministic when seed is provided
+ * Used for RNG-based foraging by jobless squirrels
  */
 export const chance = (probability: number): boolean => {
   return Math.random() < probability;
@@ -32,6 +36,14 @@ export const chance = (probability: number): boolean => {
 /**
  * Start the game loop using requestAnimationFrame
  * This is the SolidJS equivalent of the React useGameLoop hook
+ *
+ * The game loop processes:
+ * 1. Production jobsites (passive + squirrel bonus production)
+ * 2. Refinement jobsites (resource conversion cycles)
+ * 3. Jobless squirrels (RNG-based foraging)
+ * 4. Game state updates (tick, timer, timestamp)
+ *
+ * @returns A cleanup function to stop the game loop
  */
 export function startGameLoop() {
   let lastLogicUpdate = 0;
@@ -39,13 +51,17 @@ export function startGameLoop() {
   let gameLoopRef: number | null = null;
 
   // Track last refinement cycle time for each worker at each jobsite
+  // Using Maps for O(1) lookups which is crucial for performance with many workers
   const lastRefinementCycle = new Map<string, Map<number, number>>();
+
   // Track last jobless attempt time for each squirrel
+  // This ensures each squirrel has its own foraging timer
   const lastJoblessAttempt = new Map<number, number>();
 
   const gameLoop = (timestamp: number) => {
     const game = appState.game;
 
+    // Skip processing if game is paused
     if (game.isPaused) {
       gameLoopRef = requestAnimationFrame(gameLoop);
       return;
@@ -54,6 +70,7 @@ export function startGameLoop() {
     const deltaTime = timestamp - lastLogicUpdate;
 
     // Logic updates at ~10 FPS (every 100ms)
+    // This is where all game state calculations happen
     if (timestamp - lastLogicUpdate >= 100) {
       // Process production jobsites
       processJobSites(deltaTime, timestamp, game, lastRefinementCycle);
@@ -61,7 +78,7 @@ export function startGameLoop() {
       // Process jobless squirrels
       processJoblessSquirrels(timestamp, game, lastJoblessAttempt);
 
-      // Update game state
+      // Update game state counters
       incrementTick();
       updateTimer();
 
@@ -69,8 +86,9 @@ export function startGameLoop() {
     }
 
     // Render updates at ~60 FPS (every 16ms)
-    // Note: SolidJS handles reactivity automatically, so we don't need manual render updates
-    // But we still need to update the timestamp for time-based effects
+    // Note: SolidJS handles reactivity automatically via signals/stores,
+    // so we don't need manual DOM updates here. This just maintains
+    // the render timing for consistency.
     if (timestamp - lastRenderUpdate >= 16) {
       lastRenderUpdate = timestamp;
     }
@@ -91,6 +109,9 @@ export function startGameLoop() {
 
 /**
  * Process all jobSites (production and refinement)
+ *
+ * Production jobsites: Generate nuts passively (baseProduction) + bonus from squirrels
+ * Refinement jobsites: Convert resources (e.g., nuts -> nutwood) in cycles
  */
 function processJobSites(
   deltaTime: number,
@@ -103,6 +124,7 @@ function processJobSites(
   let totalNuts = 0;
 
   // Process production jobsites
+  // These generate nuts continuously based on their baseProduction and squirrelBonus
   Object.values(productionJobsites).forEach((jobSite) => {
     const baseRate = jobSite.baseProduction * jobSite.multi;
     const squirrelRate =
@@ -116,7 +138,10 @@ function processJobSites(
   });
 
   // Process refinement jobsites
+  // These consume one resource and produce another in cycles
+  // Each worker at a refinement jobsite runs on its own cycle timer
   Object.values(refinementJobsites).forEach((jobSite) => {
+    // Skip if no workers or no consume/produce defined
     if (jobSite.workers.length === 0 || !jobSite.consumes || !jobSite.produces)
       return;
 
@@ -144,8 +169,11 @@ function processJobSites(
         if (availableResource >= consumeAmount) {
           // Consume input resource
           if (consumeType === "nuts") {
-            // Note: spendResource expects a resource key, but 'nuts' is not in GameState['resources']
-            // We'll handle nuts separately
+            // Note: nuts are handled separately since they're not in the resources object
+            spendResource(
+              "nuts" as unknown as keyof typeof game.resources,
+              consumeAmount,
+            );
           } else {
             spendResource(
               consumeType as keyof typeof game.resources,
@@ -159,11 +187,13 @@ function processJobSites(
           // Update the last cycle time for this worker
           siteCycles.set(workerId, currentTime);
         }
+        // If not enough resources, skip this cycle (try again next tick)
       }
     });
   });
 
   // Apply all nuts at once for performance
+  // Batching updates reduces the number of store mutations
   if (totalNuts > 0) {
     addNuts(totalNuts);
   }
@@ -171,6 +201,13 @@ function processJobSites(
 
 /**
  * Process jobless squirrels with RNG-based foraging
+ *
+ * Jobless squirrels attempt to find nuts at regular intervals (jobless.time ms)
+ * with a certain probability (jobless.chance). On success, they find nuts
+ * based on the jobless.value and jobless.multi properties.
+ *
+ * This creates an interesting early-game dynamic where production is random
+ * and unpredictable, contrasting with the steady production from jobsites.
  */
 function processJoblessSquirrels(
   currentTime: number,
@@ -182,7 +219,7 @@ function processJoblessSquirrels(
   game.population.jobless.forEach((squirrelId) => {
     const lastAttempt = lastJoblessAttempt.get(squirrelId) ?? 0;
     if (currentTime - lastAttempt >= time) {
-      // Random chance to find nuts
+      // Random chance to find nuts (value & multi applied in squirrelFoundNut)
       if (chance(foragingChance)) {
         squirrelFoundNut(squirrelId);
       }
@@ -197,7 +234,10 @@ function processJoblessSquirrels(
 
 /**
  * Create a game loop that works with SolidJS components
- * Usage: const cleanup = useGameLoop(); onCleanup(cleanup);
+ * Usage: const cleanup = createGameLoop(); onCleanup(cleanup);
+ *
+ * This wraps startGameLoop() in a function that can be called from
+ * SolidJS components and properly cleaned up with onCleanup().
  */
 export function createGameLoop() {
   const cleanup = startGameLoop();
@@ -208,5 +248,5 @@ export function createGameLoop() {
 // Export for use in components
 // ============================================================================
 
-// Re-export the start function
+// Re-export the start function for convenience
 export { startGameLoop as start };
