@@ -1,6 +1,5 @@
 /**
- * SolidJS Global State Store
- * Replaces Redux store - single source of truth for all game state
+ * Global game store — single source of truth for all game state.
  */
 
 import { createStore, type SetStoreFunction } from "solid-js/store";
@@ -153,7 +152,7 @@ export const storyState = () => appState.story;
 export const gameLogState = () => appState.gameLog;
 
 // ============================================================================
-// Action Creators (replacing Redux actions)
+// Actions
 // ============================================================================
 
 // Core resource actions
@@ -571,7 +570,7 @@ export const researchIdea = (ideaId: string) => {
   setAppState("ideas", "researchedIdeas", (prev) => [...prev, ideaId]);
   setAppState("ideas", "researchedCount", (prev) => prev + 1);
 
-  // Apply research effects that mutate game state (ported from Redux extraReducers)
+  // Apply research effects that mutate game state
   const effects = idea.effects;
 
   if (effects.upgradeJobsite) {

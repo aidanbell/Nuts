@@ -2,9 +2,8 @@ import { createEffect, createSignal, onCleanup, onMount } from "solid-js";
 
 /**
  * Smoothly eases a displayed number toward a reactive target.
- * Used for premium counter feel (e.g. header nutsTotal).
  */
-export function useAnimatedNumber(getTarget: () => number) {
+export function createAnimatedNumber(getTarget: () => number) {
   const [display, setDisplay] = createSignal(getTarget());
   const targetRef = { current: getTarget() };
 

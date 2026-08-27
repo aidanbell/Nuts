@@ -6,7 +6,7 @@ import {
   onCleanup,
 } from "solid-js";
 import { appState } from "../engine/state";
-import { useAnimatedNumber } from "../hooks/useAnimatedNumber";
+import { createAnimatedNumber } from "../utils/createAnimatedNumber";
 import GameConsole from "./GameConsole";
 import { formatNumber, formatTime } from "../utils/formatters";
 
@@ -16,7 +16,7 @@ const Header: Component = () => {
   const timer = () => appState.game.timer;
   const resources = () => appState.game.resources;
 
-  const animatedNuts = useAnimatedNumber(nutsTotal);
+  const animatedNuts = createAnimatedNumber(nutsTotal);
   const [bump, setBump] = createSignal(false);
   let lastActual = nutsTotal();
 

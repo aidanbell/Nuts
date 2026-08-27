@@ -1,8 +1,5 @@
 /**
- * SolidJS Save/Load System
- * Replaces the React saveSystem with SolidJS-compatible versions
- *
- * Uses the same cookie-based storage but works with the SolidJS store
+ * Save/load via cookie storage, backed by the Solid store.
  */
 
 import { appState, loadSaveData } from "./state";

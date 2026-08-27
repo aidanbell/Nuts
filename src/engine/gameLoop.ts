@@ -1,13 +1,7 @@
 /**
- * SolidJS Game Loop
- * Replaces React useGameLoop hook with SolidJS createEffect
+ * Game loop — two-tiered logic (~10 FPS) and render cadence (~60 FPS).
  *
- * Uses a two-tiered approach:
- * - Logic updates at ~10 FPS (100ms intervals) for game state updates
- * - Render updates at ~60 FPS (16ms intervals) for smooth UI
- *
- * Note: This module provides the core game loop that drives the game forward.
- * It processes production jobsites, refinement jobsites, and jobless squirrels.
+ * Drives production jobsites, refinement cycles, and jobless foraging.
  */
 
 import { appState } from "./state";
@@ -28,24 +22,22 @@ import type { GameState } from "../types/game";
 // ============================================================================
 
 /**
- * Random chance helper - deterministic when seed is provided
- * Used for RNG-based foraging by jobless squirrels
+ * Random chance helper for jobless foraging.
  */
 export const chance = (probability: number): boolean => {
   return Math.random() < probability;
 };
 
 /**
- * Start the game loop using requestAnimationFrame
- * This is the SolidJS equivalent of the React useGameLoop hook
+ * Start the game loop with requestAnimationFrame.
  *
- * The game loop processes:
- * 1. Production jobsites (passive + squirrel bonus production)
- * 2. Refinement jobsites (resource conversion cycles)
- * 3. Jobless squirrels (RNG-based foraging)
- * 4. Game state updates (tick, timer, timestamp)
+ * Processes:
+ * 1. Production jobsites
+ * 2. Refinement jobsites
+ * 3. Jobless squirrels
+ * 4. Tick / timer / timestamp
  *
- * @returns A cleanup function to stop the game loop
+ * @returns Cleanup function to stop the loop
  */
 export function startGameLoop() {
   let lastLogicUpdate = 0;
@@ -232,20 +224,8 @@ function processJoblessSquirrels(
 // ============================================================================
 
 /**
- * Create a game loop that works with SolidJS components
- * Usage: const cleanup = createGameLoop(); onCleanup(cleanup);
- *
- * This wraps startGameLoop() in a function that can be called from
- * SolidJS components and properly cleaned up with onCleanup().
+ * Start the game loop; returns a cleanup function for onCleanup().
  */
 export function createGameLoop() {
-  const cleanup = startGameLoop();
-  return cleanup;
+  return startGameLoop();
 }
-
-// ============================================================================
-// Export for use in components
-// ============================================================================
-
-// Re-export the start function for convenience
-export { startGameLoop as start };

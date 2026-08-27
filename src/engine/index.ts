@@ -1,9 +1,5 @@
 /**
- * SolidJS Engine Index
- * Central export point for all SolidJS engine modules
- *
- * This provides a clean API for the SolidJS-based game engine,
- * replacing the Redux-based store system.
+ * Engine public API
  */
 
 // State management
@@ -77,18 +73,17 @@ export {
 // Game loop
 export { startGameLoop, createGameLoop, chance } from "./gameLoop";
 
-// Hooks
+// Primitives
 export {
-  useSolidGameLoop,
-  useSolidAutoSave,
-  useSolidStoryCheckpoints,
-  useSolidIdeas,
-  useSolidGoldenNut,
+  createAutoSave,
+  createStoryCheckpoints,
+  createIdeas,
+  createGoldenNut,
   calculateGoldenNutReward,
   type GoldenNutState,
-} from "./hooks";
+} from "./primitives";
 
-// Save/Load system
+// Save/Load
 export {
   saveGame,
   loadGame,
@@ -97,7 +92,7 @@ export {
   importSave,
 } from "./saveSystem";
 
-// Effect processor
+// Effects
 export {
   processEffects,
   logEffects,

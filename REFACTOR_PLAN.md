@@ -450,9 +450,10 @@ function updateGameState(timestamp: number) {
 
 ## **🎯 Next Steps**
 
-1. **Phases 1–4 complete** — Solid engine + UI live; counter easing shipped.
-2. **Phase 5** — profile hot paths, Maps for lookups, optional Workers / UI throttling.
-3. **Phase 6** — stress tests, memory checks, error boundaries (save/load already exists).
+1. **Phases 1–4 complete** — Solid engine + UI; naming cleaned to `create*` primitives.
+2. **Story / content work** — expand checkpoints, ideas, jobsites as desired.
+3. **Phase 5** — profile hot paths, Maps for lookups, optional Workers / UI throttling.
+4. **Phase 6** — stress tests, memory checks, error boundaries (save/load already exists).
 
 ---
 

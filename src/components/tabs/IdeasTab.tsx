@@ -1,5 +1,5 @@
 import { type Component, Show, For, createSignal, createMemo } from "solid-js";
-import { useSolidIdeas } from "../../engine/hooks";
+import { createIdeas } from "../../engine/primitives";
 import { appState } from "../../engine/state";
 import type { Idea } from "../../types/ideas";
 import { formatNumber } from "../../utils/formatters";
@@ -150,8 +150,7 @@ const eraOrder = [
 ];
 
 const IdeasTab: Component = () => {
-  const { visibleIdeas, researchedIdeas, canAfford, research } =
-    useSolidIdeas();
+  const { visibleIdeas, researchedIdeas, canAfford, research } = createIdeas();
   const nutsTotal = () => appState.game.nutsTotal;
   const currentEra = () => appState.story.currentEra;
   const [showResearched, setShowResearched] = createSignal(false);

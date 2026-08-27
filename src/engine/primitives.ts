@@ -1,6 +1,5 @@
 /**
- * SolidJS Hooks for Game Logic
- * Replaces React hooks with Solid equivalents using the engine store.
+ * Reactive game primitives (create* factories for component setup).
  */
 
 import { createEffect, createSignal, onCleanup, createMemo } from "solid-js";
@@ -16,7 +15,6 @@ import {
   addLog,
   loadSaveData,
 } from "./state";
-import { createGameLoop } from "./gameLoop";
 import { processEffects } from "./effectProcessor";
 import { saveGame, loadGame } from "./saveSystem";
 import type { GameState } from "../types/game";
@@ -27,22 +25,10 @@ import type {
 } from "../types/story";
 
 // ============================================================================
-// useGameLoop
+// createAutoSave
 // ============================================================================
 
-/**
- * Starts the two-tiered game loop. Cleanup is registered via onCleanup.
- */
-export function useSolidGameLoop() {
-  const cleanup = createGameLoop();
-  onCleanup(cleanup);
-}
-
-// ============================================================================
-// useAutoSave
-// ============================================================================
-
-export function useSolidAutoSave() {
+export function createAutoSave() {
   // Load once on mount
   createEffect(() => {
     const savedData = loadGame();
@@ -78,7 +64,7 @@ export function useSolidAutoSave() {
 }
 
 // ============================================================================
-// useStoryCheckpoints
+// createStoryCheckpoints
 // ============================================================================
 
 function checkCondition(condition: CheckpointCondition): boolean {
@@ -215,7 +201,7 @@ function processCheckpoints() {
   }
 }
 
-export function useSolidStoryCheckpoints() {
+export function createStoryCheckpoints() {
   createEffect(() => {
     const interval = setInterval(() => {
       processCheckpoints();
@@ -235,10 +221,10 @@ export function useSolidStoryCheckpoints() {
 }
 
 // ============================================================================
-// useIdeas
+// createIdeas
 // ============================================================================
 
-export function useSolidIdeas() {
+export function createIdeas() {
   createEffect(() => {
     updateIdeaVisibility({
       nutsCollected: appState.game.nutsTotal,
@@ -310,7 +296,7 @@ export function useSolidIdeas() {
 }
 
 // ============================================================================
-// useGoldenNut
+// createGoldenNut
 // ============================================================================
 
 const joblessNutsPerSecond = (jobless: GameState["jobSites"]["jobless"]) => {
@@ -354,7 +340,7 @@ const randomPosition = () => ({
   y: randomBetween(MARGIN_PERCENT, 100 - MARGIN_PERCENT),
 });
 
-export function useSolidGoldenNut() {
+export function createGoldenNut() {
   const [goldenNut, setGoldenNut] = createSignal<GoldenNutState | null>(null);
   const nextSpawnAtRef = {
     current: Date.now() + randomBetween(FIRST_SPAWN_MIN_MS, FIRST_SPAWN_MAX_MS),

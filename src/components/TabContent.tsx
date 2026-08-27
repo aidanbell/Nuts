@@ -1,7 +1,5 @@
 /**
- * TabContent Component - SolidJS Version
- *
- * Renders the appropriate tab content based on the active tab.
+ * Renders the active tab panel.
  */
 
 import { type Component, Switch, Match } from "solid-js";

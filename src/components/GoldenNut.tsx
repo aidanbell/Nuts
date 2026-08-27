@@ -1,5 +1,5 @@
 import type { Component } from "solid-js";
-import type { GoldenNutState } from "../engine/hooks";
+import type { GoldenNutState } from "../engine/primitives";
 
 interface GoldenNutProps {
   nut: GoldenNutState;

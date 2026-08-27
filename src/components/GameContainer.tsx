@@ -4,11 +4,11 @@ import Navigation from "./Navigation";
 import TabContent from "./TabContent";
 import GoldenNut from "./GoldenNut";
 import { appState } from "../engine/state";
-import { useSolidGoldenNut } from "../engine/hooks";
+import { createGoldenNut } from "../engine/primitives";
 
 const GameContainer: Component = () => {
   const activeTab = () => appState.game.activeTab;
-  const { goldenNut, collectGoldenNut, fadeMs } = useSolidGoldenNut();
+  const { goldenNut, collectGoldenNut, fadeMs } = createGoldenNut();
 
   return (
     <div class="mx-auto max-w-6xl px-3 py-4 md:px-6 md:py-6">

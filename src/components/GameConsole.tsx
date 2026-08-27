@@ -1,8 +1,5 @@
 /**
- * GameConsole Component - SolidJS Version
- *
- * Displays game log messages with different log levels.
- * Auto-scrolls to bottom when new logs are added.
+ * Game log console with auto-scroll.
  */
 
 import { type Component, createEffect, For, Show } from "solid-js";
