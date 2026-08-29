@@ -42,16 +42,35 @@ const JobSiteCard: Component<JobSiteCardProps> = (props) => {
     }
   };
 
+  const isMaxed = () => {
+    const site = jobSite();
+    return Boolean(site?.maxLevel !== undefined && site.level >= site.maxLevel);
+  };
+
   const canAfford = () => {
     const site = jobSite();
-    return site ? nuts() >= site.cost : false;
+    return Boolean(site && !isMaxed() && nuts() >= site.cost);
   };
 
   const canAddWorker = () => {
     const site = jobSite();
     return Boolean(
-      site && site.workers.length < site.maxSquirrels && jobless().length > 0,
+      site &&
+      site.level >= 1 &&
+      site.workers.length < site.maxSquirrels &&
+      jobless().length > 0,
     );
+  };
+
+  const isBuilt = () => {
+    const site = jobSite();
+    return Boolean(site && site.level >= 1);
+  };
+
+  const upgradeLabel = () => {
+    if (isMaxed()) return "Maxed";
+    if (!isBuilt()) return "Build";
+    return "Upgrade";
   };
 
   const canRemoveWorker = () => {
@@ -98,39 +117,53 @@ const JobSiteCard: Component<JobSiteCardProps> = (props) => {
               </span>
             </div>
             <div class="flex gap-3 text-sm font-semibold">
-              <span>
-                👥 {site().workers.length}/{site().maxSquirrels}
-              </span>
-              <span>Lv.{site().level}</span>
+              <Show
+                when={isBuilt()}
+                fallback={<span class="muted">Unbuilt</span>}
+              >
+                <span>
+                  👥 {site().workers.length}/{site().maxSquirrels}
+                </span>
+                <span>Lv.{site().level}</span>
+              </Show>
             </div>
           </div>
 
           <Show when={props.isExpanded}>
             <div class="mt-4 space-y-3 border-t border-moss/10 pt-4">
               <div class="flex flex-wrap gap-6">
-                <div>
-                  <p class="muted">Total Production</p>
-                  <p class="font-display text-xl font-bold">
-                    {formatProductionRate(totalRate())}
-                  </p>
-                </div>
-                <div>
-                  <p class="muted">Base</p>
-                  <p>
-                    {formatProductionRate(
-                      site().baseProduction * site().multi,
-                    )}
-                  </p>
-                </div>
-                <div>
-                  <p class="muted">Per Squirrel</p>
-                  <p>
-                    +
-                    {formatProductionRate(
-                      site().squirrelBonus * site().multi,
-                    )}
-                  </p>
-                </div>
+                <Show
+                  when={isBuilt()}
+                  fallback={
+                    <p class="muted">
+                      Build this site before you can staff it.
+                    </p>
+                  }
+                >
+                  <div>
+                    <p class="muted">Total Production</p>
+                    <p class="font-display text-xl font-bold">
+                      {formatProductionRate(totalRate())}
+                    </p>
+                  </div>
+                  <div>
+                    <p class="muted">Base</p>
+                    <p>
+                      {formatProductionRate(
+                        site().baseProduction * site().multi,
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <p class="muted">Per Squirrel</p>
+                    <p>
+                      +
+                      {formatProductionRate(
+                        site().squirrelBonus * site().multi,
+                      )}
+                    </p>
+                  </div>
+                </Show>
               </div>
 
               <div class="flex flex-wrap items-end justify-between gap-3">
@@ -159,11 +192,13 @@ const JobSiteCard: Component<JobSiteCardProps> = (props) => {
                     onClick={handleBuy}
                     disabled={!canAfford()}
                   >
-                    Upgrade
+                    {upgradeLabel()}
                   </button>
-                  <p class="mt-1 text-sm font-semibold">
-                    🥜 {formatNumber(site().cost)}
-                  </p>
+                  <Show when={!isMaxed()}>
+                    <p class="mt-1 text-sm font-semibold">
+                      🥜 {formatNumber(site().cost)}
+                    </p>
+                  </Show>
                 </div>
               </div>
             </div>

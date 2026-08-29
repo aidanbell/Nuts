@@ -1,5 +1,5 @@
 import { type Component, Show, For } from "solid-js";
-import { appState, setEra } from "../../engine/state";
+import { appState, setEra, canEnterEra } from "../../engine/state";
 import SquirrelDisplay from "../SquirrelDisplay";
 
 const HomeTab: Component = () => {
@@ -7,6 +7,8 @@ const HomeTab: Component = () => {
   const currentEra = () => appState.story.currentEra;
   const unlockedTabs = () => appState.game.unlockedTabs;
   const nutsTotal = () => appState.game.nutsTotal;
+  const seasonIndex = () => appState.meta.seasonIndex;
+  const winterIncoming = () => appState.meta.winterIncoming;
 
   const handleAdvanceEra = () => {
     if (currentEra() === "PREHISTORY") {
@@ -14,12 +16,25 @@ const HomeTab: Component = () => {
     }
   };
 
+  const erasUnlocked = () => unlockedTabs().includes("eras");
   const canAdvanceToWoodAge = () =>
-    unlockedTabs().includes("eras") && currentEra() === "PREHISTORY";
+    erasUnlocked() && currentEra() === "PREHISTORY" && canEnterEra("WOOD_AGE");
+  const woodAgeTeased = () =>
+    erasUnlocked() && currentEra() === "PREHISTORY" && !canEnterEra("WOOD_AGE");
 
   return (
     <div class="tab-panel space-y-6" id="home-content">
-      <Show when={unlockedTabs().includes("eras")}>
+      <Show when={seasonIndex() > 0 || winterIncoming()}>
+        <p class="muted text-sm">
+          Season {seasonIndex() + 1}
+          <Show when={winterIncoming()}>
+            {" "}
+            · <span class="font-semibold text-amber">Winter closing in</span>
+          </Show>
+        </p>
+      </Show>
+
+      <Show when={erasUnlocked()}>
         <section class="space-y-3">
           <h2 class="section-title">Current Era</h2>
           <p class="font-display text-lg font-semibold">
@@ -33,7 +48,7 @@ const HomeTab: Component = () => {
               </h3>
               <p class="muted mt-2">
                 Your squirrels have discovered refined materials! Choose when
-                you're ready to advance.
+                you&apos;re ready to advance.
               </p>
               <p class="muted mt-2">
                 <strong>Tip:</strong> Gather more nuts before advancing. Current
@@ -48,14 +63,28 @@ const HomeTab: Component = () => {
               </button>
             </div>
           </Show>
+
+          <Show when={woodAgeTeased()}>
+            <div class="panel border-amber/30 bg-amber/10">
+              <h3 class="font-display text-lg font-bold">
+                🌳 Dreams of the Wood Age
+              </h3>
+              <p class="muted mt-2">
+                You can almost taste NutWood tools and taller dens — but winter
+                will wipe this clearing first. Hibernate, keep your Gold Nuts,
+                and chase the Wood Age next spring.
+              </p>
+              <p class="mt-3 text-sm font-semibold text-amber">
+                Survive your first winter to unlock this era.
+              </p>
+            </div>
+          </Show>
         </section>
       </Show>
 
       <section>
         <h2 class="section-title">Population</h2>
-        <p class="muted mt-1">
-          {joblessSquirrels().length} jobless squirrels
-        </p>
+        <p class="muted mt-1">{joblessSquirrels().length} jobless squirrels</p>
         <div class="mt-3 flex flex-wrap justify-center gap-2" id="jobless">
           <For each={joblessSquirrels()}>
             {(squirrelId) => (

@@ -1,3 +1,5 @@
+import type { MetaState } from "./meta";
+
 export interface Squirrel {
   _id: number;
   employed: boolean;
@@ -138,27 +140,17 @@ export interface SaveData {
     value: number;
     mult: number;
   };
-  timestamp: number;
-}
-
-export interface SaveData {
-  nutsTotal: number;
-  nutsAllTime: number;
-  goldNuts: {
-    total: number;
-    multi: number;
+  resources?: GameState["resources"];
+  unlockedTabs?: string[];
+  activeTab?: string;
+  timer?: GameState["timer"];
+  meta?: MetaState;
+  story?: {
+    completedCheckpoints: string[];
+    currentEra: string | null;
   };
-  squirrels: Record<number, Squirrel>;
-  nextSquirrelId: number;
-  population: Population;
-  jobSites: {
-    jobless: JoblessJobSite;
-    production: Record<string, JobSite>;
-    refinement: Record<string, JobSite>;
-  };
-  getButton: {
-    value: number;
-    mult: number;
+  ideas?: {
+    researchedIdeas: string[];
   };
   timestamp: number;
 }

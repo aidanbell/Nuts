@@ -55,8 +55,18 @@ export function startGameLoop() {
   const gameLoop = (timestamp: number) => {
     const game = appState.game;
 
-    // Skip processing if game is paused
+    // Skip processing if game is paused (keep clocks fresh to avoid catch-up spike)
     if (game.isPaused) {
+      lastLogicUpdate = timestamp;
+      lastRenderUpdate = timestamp;
+      gameLoopRef = requestAnimationFrame(gameLoop);
+      return;
+    }
+
+    // Seed timing on first frame so we don't apply a huge delta
+    if (lastLogicUpdate === 0) {
+      lastLogicUpdate = timestamp;
+      lastRenderUpdate = timestamp;
       gameLoopRef = requestAnimationFrame(gameLoop);
       return;
     }
@@ -64,26 +74,18 @@ export function startGameLoop() {
     const deltaTime = timestamp - lastLogicUpdate;
 
     // Logic updates at ~10 FPS (every 100ms)
-    // This is where all game state calculations happen
     if (timestamp - lastLogicUpdate >= 100) {
-      // Process production jobsites
       processJobSites(deltaTime, timestamp, game, lastRefinementCycle);
-
-      // Process jobless squirrels
       processJoblessSquirrels(timestamp, game, lastJoblessAttempt);
 
-      // Update game state counters
       incrementTick();
-      updateTimer();
+      updateTimer(deltaTime);
       updateTimestamp();
 
       lastLogicUpdate = timestamp;
     }
 
-    // Render updates at ~60 FPS (every 16ms)
-    // Note: SolidJS handles reactivity automatically via signals/stores,
-    // so we don't need manual DOM updates here. This just maintains
-    // the render timing for consistency.
+    // Render cadence bookkeeping (~60 FPS); Solid handles DOM reactively
     if (timestamp - lastRenderUpdate >= 16) {
       lastRenderUpdate = timestamp;
     }
@@ -121,6 +123,9 @@ function processJobSites(
   // Process production jobsites
   // These generate nuts continuously based on their baseProduction and squirrelBonus
   Object.values(productionJobsites).forEach((jobSite) => {
+    // Unbuilt sites produce nothing
+    if (jobSite.level < 1) return;
+
     const baseRate = jobSite.baseProduction * jobSite.multi;
     const squirrelRate =
       jobSite.squirrelBonus * jobSite.multi * jobSite.workers.length;
@@ -136,8 +141,13 @@ function processJobSites(
   // These consume one resource and produce another in cycles
   // Each worker at a refinement jobsite runs on its own cycle timer
   Object.values(refinementJobsites).forEach((jobSite) => {
-    // Skip if no workers or no consume/produce defined
-    if (jobSite.workers.length === 0 || !jobSite.consumes || !jobSite.produces)
+    // Skip if unbuilt, no workers, or no consume/produce defined
+    if (
+      jobSite.level < 1 ||
+      jobSite.workers.length === 0 ||
+      !jobSite.consumes ||
+      !jobSite.produces
+    )
       return;
 
     // Initialize tracking for this jobsite if needed

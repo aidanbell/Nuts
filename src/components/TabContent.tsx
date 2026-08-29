@@ -7,6 +7,7 @@ import HomeTab from "./tabs/HomeTab";
 import JobsiteTab from "./tabs/JobsiteTab";
 import IdeasTab from "./tabs/IdeasTab";
 import PopulationTab from "./tabs/PopulationTab";
+import BuildingsTab from "./tabs/BuildingsTab";
 import FourthTab from "./tabs/FourthTab";
 import HibernateTab from "./tabs/HibernateTab";
 import RefinementTab from "./tabs/RefinementTab";
@@ -17,7 +18,7 @@ interface TabContentProps {
 
 const TabContent: Component<TabContentProps> = (props) => {
   return (
-    <main class="card min-h-[60vh] flex-1 overflow-hidden">
+    <main class="card min-h-[50vh] flex-1 overflow-hidden">
       <Switch fallback={<HomeTab />}>
         <Match when={props.activeTab === "home"}>
           <HomeTab />
@@ -30,6 +31,9 @@ const TabContent: Component<TabContentProps> = (props) => {
         </Match>
         <Match when={props.activeTab === "refinement"}>
           <RefinementTab />
+        </Match>
+        <Match when={props.activeTab === "buildings"}>
+          <BuildingsTab />
         </Match>
         <Match when={props.activeTab === "population"}>
           <PopulationTab />

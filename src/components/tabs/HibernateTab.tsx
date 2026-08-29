@@ -1,14 +1,19 @@
 import { type Component, Show, createSignal, createMemo } from "solid-js";
-import { appState, hibernate } from "../../engine/state";
+import {
+  appState,
+  hibernate,
+  calculateHibernationReward,
+} from "../../engine/state";
 import { formatNumber } from "../../utils/formatters";
 
 const HibernateTab: Component = () => {
   const nutsAllTime = () => appState.game.nutsAllTime;
   const goldNuts = () => appState.game.goldNuts;
+  const meta = () => appState.meta;
   const [showConfirm, setShowConfirm] = createSignal(false);
 
   const goldNutReward = createMemo(() =>
-    Math.floor((nutsAllTime() / Math.pow(10, 6)) * goldNuts().multi),
+    calculateHibernationReward(nutsAllTime(), goldNuts().multi),
   );
 
   const handleConfirmHibernate = () => {
@@ -24,13 +29,34 @@ const HibernateTab: Component = () => {
       <div class="panel w-full max-w-lg text-center">
         <h1 class="font-display text-3xl font-bold">💤 Hibernate</h1>
         <p class="mt-3 text-base">
-          Take a long winter's nap and return next season with bonus Gold Nuts!
+          Winter takes the clearing — nuts, squirrels, and jobsites. You keep
+          Gold Nuts, and wake stronger next season.
         </p>
-        <p class="muted mt-2">
+
+        <Show when={meta().winterIncoming}>
+          <p class="mt-3 rounded-lg border border-amber/40 bg-amber/10 px-3 py-2 text-sm font-semibold text-amber">
+            Winter is here. The longer you wait, the colder the clearing gets —
+            but the den will not survive either way.
+          </p>
+        </Show>
+
+        <p class="muted mt-3">
+          Season {meta().seasonIndex + 1} · Winters survived:{" "}
+          {meta().hibernations}
+        </p>
+        <p class="muted mt-1">
           Current reward:{" "}
           <strong class="text-gold">
             {formatNumber(goldNutReward())} ⭐ Gold Nuts
           </strong>
+        </p>
+        <p class="muted mt-1 text-xs">
+          Banked Gold Nuts boost foraging next season (+
+          {((meta().goldForageMulti - 1) * 100).toFixed(0)}% now
+          {goldNutReward() > 0
+            ? `, +${(goldNutReward() * 2).toFixed(0)}% after`
+            : ""}
+          ).
         </p>
 
         <button
@@ -52,8 +78,14 @@ const HibernateTab: Component = () => {
               ⭐ {formatNumber(goldNutReward())} Gold Nuts
             </p>
             <p class="text-sm font-bold text-danger">
-              ⚠️ This will reset ALL your progress!
+              ⚠️ This wipes nuts, squirrels, jobsites, and research for this
+              season!
             </p>
+            <Show when={meta().hibernations === 0}>
+              <p class="muted mt-2 text-sm">
+                Next spring, the Wood Age will no longer be just a dream.
+              </p>
+            </Show>
             <div class="mt-4 flex flex-wrap justify-center gap-3">
               <button
                 type="button"

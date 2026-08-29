@@ -7,6 +7,7 @@ export type CheckpointTriggerType =
   | "building_built"
   | "idea_researched"
   | "hibernations_completed"
+  | "jobsite_level"
   | "resource_count" // Amount of a specific refined resource
   | "combined"; // Multiple conditions required
 
@@ -15,6 +16,7 @@ export interface CheckpointCondition {
   value: number | string;
   operator?: ">=" | ">" | "==" | "<" | "<=";
   resource?: "nutwood" | "stone" | "bronze" | "iron"; // For resource_count triggers
+  jobsiteId?: string; // For jobsite_level triggers
 }
 
 export interface StoryCheckpoint {
@@ -54,6 +56,13 @@ export interface StoryCheckpoint {
   priority: number; // Higher priority checkpoints check first
   oneTime: boolean; // Can only trigger once
   repeatable?: boolean;
+
+  /**
+   * Season gating via meta.seasonIndex (0 = first life).
+   * Omit both = any season. Inclusive range when set.
+   */
+  minSeason?: number;
+  maxSeason?: number;
 }
 
 export interface StoryChoice {

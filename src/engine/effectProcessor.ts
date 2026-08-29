@@ -9,7 +9,6 @@ import {
   unlockTabs,
   addNuts,
   unlockJobsites,
-  showStory,
   setEra,
   addLog,
 } from "./state";
@@ -54,15 +53,16 @@ export const processEffects = (
   effects: GameEffect,
   options: EffectProcessorOptions = {},
 ): void => {
-  const { sourceName, checkpointId, suppressLogs = false } = options;
+  const { sourceName, suppressLogs = false } = options;
 
   if (effects.unlockSquirrels) {
+    let joined = 0;
     for (let i = 0; i < effects.unlockSquirrels; i++) {
-      createSquirrel();
+      if (createSquirrel()) joined += 1;
     }
-    if (!suppressLogs && sourceName) {
+    if (!suppressLogs && sourceName && joined > 0) {
       addLog(
-        `🐿️ ${effects.unlockSquirrels} squirrel(s) joined! (${sourceName})`,
+        `🐿️ ${joined} squirrel(s) joined! (${sourceName})`,
         "success",
       );
     }
@@ -122,9 +122,8 @@ export const processEffects = (
     pauseGame();
   }
 
-  if (effects.showStory && checkpointId) {
-    showStory(checkpointId);
-  }
+  // Stories are queued by createStoryCheckpoints via queueStories —
+  // do not set activeStory here or multi-checkpoint batches overwrite each other.
 };
 
 export const logEffects = (effects: GameEffect, source: string): void => {

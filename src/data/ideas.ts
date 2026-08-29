@@ -105,6 +105,7 @@ export const ideas: Record<string, Idea> = {
     effects: {
       unlockJobsites: ["gatherer"],
     },
+    persists: true,
     researched: false,
     visible: false,
   },
@@ -125,6 +126,7 @@ export const ideas: Record<string, Idea> = {
     effects: {
       unlockFeature: "refinement",
     },
+    persists: true,
     researched: false,
     visible: false,
   },
@@ -148,6 +150,7 @@ export const ideas: Record<string, Idea> = {
     effects: {
       unlockJobsites: ["treeClimber"],
     },
+    persists: true,
     researched: false,
     visible: false,
   },
@@ -166,6 +169,7 @@ export const ideas: Record<string, Idea> = {
     effects: {
       unlockRefinement: ["nutWood"],
     },
+    persists: true,
     researched: false,
     visible: false,
   },
@@ -200,6 +204,7 @@ export const ideas: Record<string, Idea> = {
     effects: {
       unlockJobsites: ["groundTiller", "basketCarrier"],
     },
+    persists: true,
     researched: false,
     visible: false,
   },
@@ -217,6 +222,7 @@ export const ideas: Record<string, Idea> = {
     effects: {
       unlockJobsites: ["branchBeater", "ledgePercher"],
     },
+    persists: true,
     researched: false,
     visible: false,
   },
@@ -267,6 +273,7 @@ export const ideas: Record<string, Idea> = {
     effects: {
       unlockJobsites: ["farmer"],
     },
+    persists: true,
     researched: false,
     visible: false,
   },
@@ -284,6 +291,7 @@ export const ideas: Record<string, Idea> = {
     effects: {
       unlockJobsites: ["gatheringParty"],
     },
+    persists: true,
     researched: false,
     visible: false,
   },
@@ -302,6 +310,7 @@ export const ideas: Record<string, Idea> = {
     effects: {
       unlockJobsites: ["treeThumper"],
     },
+    persists: true,
     researched: false,
     visible: false,
   },
@@ -319,6 +328,7 @@ export const ideas: Record<string, Idea> = {
     effects: {
       unlockJobsites: ["stiltWalker"],
     },
+    persists: true,
     researched: false,
     visible: false,
   },
@@ -392,6 +402,7 @@ export const ideas: Record<string, Idea> = {
     effects: {
       unlockJobsites: ["cropTender"],
     },
+    persists: true,
     researched: false,
     visible: false,
   },
@@ -409,6 +420,7 @@ export const ideas: Record<string, Idea> = {
     effects: {
       unlockJobsites: ["floorRakers"],
     },
+    persists: true,
     researched: false,
     visible: false,
   },
@@ -427,6 +439,7 @@ export const ideas: Record<string, Idea> = {
     effects: {
       unlockJobsites: ["treeShaker"],
     },
+    persists: true,
     researched: false,
     visible: false,
   },
@@ -445,6 +458,7 @@ export const ideas: Record<string, Idea> = {
     effects: {
       unlockJobsites: ["treeLifts"],
     },
+    persists: true,
     researched: false,
     visible: false,
   },

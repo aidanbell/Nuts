@@ -65,6 +65,12 @@ export interface Idea {
   // What happens when researched
   effects: IdeaEffect;
 
+  /**
+   * Structure ideas (jobsite/tab unlocks) survive winter.
+   * Season ideas (efficiency buffs, etc.) reset each hibernation.
+   */
+  persists?: boolean;
+
   // Metadata
   researched: boolean;
   researchedAt?: number;

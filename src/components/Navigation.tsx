@@ -6,6 +6,7 @@ const tabs = [
   { id: "ideas", label: "Ideas" },
   { id: "jobsites", label: "Jobsites" },
   { id: "refinement", label: "Refinement" },
+  { id: "buildings", label: "Buildings" },
   { id: "population", label: "Population" },
   { id: "fourth", label: "Fourth" },
   { id: "hibernate", label: "Hibernate!" },

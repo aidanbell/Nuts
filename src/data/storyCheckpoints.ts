@@ -13,6 +13,7 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
     priority: 100,
     oneTime: true,
     completed: false,
+    maxSeason: 0,
 
     triggers: [{ type: "time_elapsed", value: 0, operator: ">=" }],
 
@@ -35,6 +36,7 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
     priority: 90,
     oneTime: true,
     completed: false,
+    maxSeason: 0,
 
     triggers: [
       { type: "nuts_collected", value: 5, operator: ">=" },
@@ -62,6 +64,7 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
     priority: 85,
     oneTime: true,
     completed: false,
+    maxSeason: 0,
 
     requirements: [
       { type: "nuts_collected", value: 25, operator: ">=" },
@@ -90,6 +93,7 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
     priority: 83,
     oneTime: true,
     completed: false,
+    maxSeason: 0,
 
     requirements: [
       { type: "nuts_collected", value: 75, operator: ">=" },
@@ -111,34 +115,60 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
     },
   },
 
-  moreSquirrelsJoin: {
-    id: "moreSquirrelsJoin",
-    name: "More Squirrels Join",
-    description: "More squirrels join your colony",
-    priority: 82,
+  /** Season 2+: quiet return to a working trio before the population wall */
+  seasonCompanions: {
+    id: "seasonCompanions",
+    name: "Familiar Faces",
+    description: "Two companions return after winter",
+    priority: 90,
     oneTime: true,
     completed: false,
+    minSeason: 1,
 
-    requirements: [
-      { type: "squirrels_count", value: 3, operator: ">=" },
-      {
-        type: "idea_researched",
-        value: "territorialAwareness",
-        operator: "==",
-      },
+    triggers: [
+      { type: "nuts_collected", value: 5, operator: ">=" },
+      { type: "time_elapsed", value: 8000, operator: ">=" },
     ],
-
-    triggers: [{ type: "nuts_collected", value: 250, operator: ">=" }],
 
     effects: {
       unlockSquirrels: 2,
-      nutReward: 30,
       showStory: true,
+      pauseGame: true,
     },
 
     story: {
-      title: "More Squirrels Join",
-      body: `Two more squirrels join your colony, each bringing their own nut stash to contribute. "We should organize better," one suggests. "Together we're stronger!" (+30 nuts)`,
+      title: "Familiar Faces",
+      body: "Two squirrels from last season shake frost from their fur and pad into the clearing. No introductions needed — the work begins again.",
+      character: "squirrel_01",
+    },
+  },
+
+  moreSquirrelsJoin: {
+    id: "moreSquirrelsJoin",
+    name: "No Room Left",
+    description: "Two more want in — but the clearing is full",
+    priority: 82,
+    oneTime: true,
+    completed: false,
+    minSeason: 1,
+
+    requirements: [
+      { type: "squirrels_count", value: 3, operator: ">=" },
+      { type: "hibernations_completed", value: 1, operator: ">=" },
+    ],
+
+    triggers: [{ type: "nuts_collected", value: 200, operator: ">=" }],
+
+    effects: {
+      unlockSquirrels: 2,
+      unlockTabs: ["buildings"],
+      showStory: true,
+      pauseGame: true,
+    },
+
+    story: {
+      title: "No Room Left",
+      body: "Two more squirrels press in at the edge of the clearing, eager to help — but there's nowhere left to sleep. Crowding this hard won't work. You'll have to figure out housing… and maybe more. The Buildings tab is open.",
       character: "narrator",
     },
   },
@@ -150,6 +180,8 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
     priority: 81,
     oneTime: true,
     completed: false,
+    // Deferred until housing raises the soft cap
+    minSeason: 99,
 
     requirements: [
       { type: "squirrels_count", value: 5, operator: ">=" },
@@ -180,6 +212,7 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
     priority: 79,
     oneTime: true,
     completed: false,
+    maxSeason: 0,
 
     requirements: [{ type: "squirrels_count", value: 3, operator: ">=" }],
 
@@ -206,6 +239,7 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
     priority: 84,
     oneTime: true,
     completed: false,
+    maxSeason: 0,
 
     triggers: [{ type: "jobsites_purchased", value: 1, operator: ">=" }],
 
@@ -228,6 +262,7 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
     priority: 73,
     oneTime: true,
     completed: false,
+    maxSeason: 0,
 
     triggers: [{ type: "jobsites_purchased", value: 10, operator: ">=" }],
 
@@ -485,17 +520,109 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
     },
   },
 
-  // ==================== HIBERNATION ====================
+  // ==================== HIBERNATION / WINTER ====================
+
+  winterApproaching: {
+    id: "winterApproaching",
+    name: "Winter Approaches",
+    description: "Gatherer upgrades grow costly as the cold closes in",
+    priority: 95,
+    oneTime: true,
+    completed: false,
+
+    // First season only — later winters use different beats
+    requirements: [
+      { type: "hibernations_completed", value: 0, operator: "==" },
+    ],
+
+    triggers: [
+      {
+        type: "jobsite_level",
+        value: 6,
+        operator: ">=",
+        jobsiteId: "gatherer",
+      },
+    ],
+
+    effects: {
+      unlockTabs: ["hibernate"],
+      showStory: true,
+      pauseGame: true,
+    },
+
+    story: {
+      title: "The Cold Creeps In",
+      body: "Nights stretch longer. Your Gatherer site still works, but each upgrade costs more than the last — and frost is already kissing the clearing. The colony must hibernate soon, or winter will take everything. Dream of Wood Age tools and dens… next spring, those dreams might be real.",
+      character: "narrator",
+    },
+  },
+
+  woodAgeDream: {
+    id: "woodAgeDream",
+    name: "Dreams of Wood",
+    description: "Tease Wood Age before the first winter",
+    priority: 70,
+    oneTime: true,
+    completed: false,
+    maxSeason: 0,
+
+    requirements: [
+      { type: "hibernations_completed", value: 0, operator: "==" },
+      { type: "idea_researched", value: "divisionOfLabor", operator: "==" },
+    ],
+
+    triggers: [
+      {
+        type: "jobsite_level",
+        value: 3,
+        operator: ">=",
+        jobsiteId: "gatherer",
+      },
+    ],
+
+    effects: {
+      showStory: true,
+    },
+
+    story: {
+      title: "Harder Than Shells",
+      body: "A squirrel gnaws a tough husk and mutters about shaping it into something lasting — a tool, a brace, a den wall. NutWood is only a dream for now. Survive the coming winter, and spring might let you chase it.",
+      character: "squirrel_inventor",
+    },
+  },
+
+  springAwakening: {
+    id: "springAwakening",
+    name: "Spring Awakening",
+    description: "Wake after hibernation into a new season",
+    priority: 100,
+    oneTime: false,
+    repeatable: true,
+    completed: false,
+
+    // Fired manually after hibernate — triggers never auto-match
+    triggers: [{ type: "hibernations_completed", value: 999, operator: ">=" }],
+
+    effects: {
+      showStory: true,
+    },
+
+    story: {
+      title: "Spring",
+      body: "You wake alone in a bare clearing. The den is gone. The nuts are gone. But something warm remains — Gold Nuts from the long dream — and with them, a clearer memory of wooden tools and taller trees. This season, the Wood Age is within reach.",
+      character: "narrator",
+    },
+  },
 
   firstHibernation: {
     id: "firstHibernation",
-    name: "Winter Approaches",
+    name: "First Winter Survived",
     description: "Complete your first hibernation cycle",
     priority: 50,
     oneTime: true,
     completed: false,
 
-    requirements: [{ type: "nuts_collected", value: 1000000, operator: ">=" }],
+    requirements: [],
 
     triggers: [{ type: "hibernations_completed", value: 1, operator: ">=" }],
 
@@ -505,14 +632,8 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
 
     story: {
       title: "The Cycle Continues",
-      body: "Winter has come. You hibernate with your colony, dreaming of Gold Nuts and future prosperity. When spring arrives, you'll start anew, stronger than before.",
+      body: "You have survived your first winter. Gold Nuts pulse with remembered warmth. The colony will grow again — faster, wiser — and this time, Wood Age craft is no longer just a dream.",
       character: "narrator",
-      choices: [
-        {
-          id: "continue",
-          text: "Begin Again",
-        },
-      ],
     },
   },
 

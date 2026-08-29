@@ -81,16 +81,12 @@ const IdeaCard: Component<IdeaCardProps> = (props) => (
         >
           ▼
         </span>
-        <span class="text-xl">
-          {categoryIcon[props.idea.category] ?? "💡"}
-        </span>
+        <span class="text-xl">{categoryIcon[props.idea.category] ?? "💡"}</span>
         <h3 class="font-display text-base font-bold">{props.idea.name}</h3>
       </div>
       <div class="flex shrink-0 flex-col items-end gap-1 text-right text-xs font-semibold">
         <Show when={props.idea.researched}>
-          <span class="rounded-full bg-leaf/25 px-2 py-0.5 text-moss">
-            ✓
-          </span>
+          <span class="rounded-full bg-leaf/25 px-2 py-0.5 text-moss">✓</span>
         </Show>
         <span
           class={`rounded-full px-2 py-0.5 ${categoryStyle[props.idea.category] ?? "bg-sage text-bark"}`}

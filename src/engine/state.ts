@@ -10,18 +10,44 @@ import type {
   Population,
   Squirrel,
 } from "../types/game";
-import type { IdeasState } from "../types/ideas";
+import type { Idea, IdeaEra, IdeasState } from "../types/ideas";
 import type { StoryState } from "../types/story";
 import type { GameLogState } from "../types/gameLog";
+import {
+  INITIAL_META_STATE,
+  STORY_MODAL_HIBERNATION_LIMIT,
+  SEASON_ZERO_SQUIRREL_CAP,
+  PRE_HOUSING_SQUIRREL_CAP,
+  TUTORIAL_CHECKPOINT_IDS,
+  type MetaState,
+} from "../types/meta";
 import { ideas } from "../data/ideas";
 import { storyCheckpoints } from "../data/storyCheckpoints";
 import { productionJobsites, refinementJobsites } from "../data/jobsites";
+
+/** Immutable templates — store state is cloned from these so resets stay clean */
+const ideasTemplate: Record<string, Idea> = structuredClone(ideas);
+const checkpointsTemplate = structuredClone(storyCheckpoints);
+const jobSitesTemplate: GameState["jobSites"] = {
+  jobless: {
+    time: 1500,
+    value: 1,
+    chance: 0.5,
+    multi: 1,
+    level: 0,
+    cost: 0,
+    method: "ground",
+  },
+  production: {},
+  refinement: {},
+};
 
 // ============================================================================
 // Initial State
 // ============================================================================
 
-const initialGameState: GameState = {
+/** Clean game template — never passed into the store (store would mutate it) */
+const gameStateTemplate: GameState = {
   // Core resources
   nutsTotal: 0,
   nutsAllTime: 0,
@@ -53,19 +79,7 @@ const initialGameState: GameState = {
   },
 
   // JobSites
-  jobSites: {
-    jobless: {
-      time: 1500, // Milliseconds between foraging attempts
-      value: 1, // Nuts found per successful forage
-      chance: 0.5, // 50% chance
-      multi: 1,
-      level: 0,
-      cost: 0,
-      method: "ground",
-    },
-    production: {},
-    refinement: {},
-  },
+  jobSites: structuredClone(jobSitesTemplate),
 
   // Get button
   getButton: {
@@ -91,15 +105,29 @@ const initialGameState: GameState = {
   },
 };
 
+function createFreshGameState(overrides: Partial<GameState> = {}): GameState {
+  return {
+    ...structuredClone(gameStateTemplate),
+    ...overrides,
+    jobSites: structuredClone(jobSitesTemplate),
+    resources: { ...gameStateTemplate.resources, ...overrides.resources },
+    goldNuts: { ...gameStateTemplate.goldNuts, ...overrides.goldNuts },
+    getButton: { ...gameStateTemplate.getButton, ...overrides.getButton },
+    timer: { ...gameStateTemplate.timer, ...overrides.timer },
+    population: overrides.population ?? { jobless: [] },
+    squirrels: overrides.squirrels ?? {},
+  };
+}
+
 const initialIdeasState: IdeasState = {
-  ideas: ideas,
+  ideas: structuredClone(ideasTemplate),
   researchedIdeas: [],
   researchedCount: 0,
   totalResearchPoints: 0,
 };
 
 const initialStoryState: StoryState = {
-  checkpoints: storyCheckpoints,
+  checkpoints: structuredClone(checkpointsTemplate),
   activeStory: null,
   storyQueue: [],
   completedCheckpoints: [],
@@ -123,13 +151,26 @@ export interface AppState {
   ideas: IdeasState;
   story: StoryState;
   gameLog: GameLogState;
+  meta: MetaState;
 }
 
 const initialAppState: AppState = {
-  game: initialGameState,
+  game: createFreshGameState({
+    squirrels: {
+      0: {
+        _id: 0,
+        employed: false,
+        jobSite: null,
+        total: 0,
+      },
+    },
+    nextSquirrelId: 1,
+    population: { jobless: [0] },
+  }),
   ideas: initialIdeasState,
   story: initialStoryState,
   gameLog: initialGameLogState,
+  meta: { ...INITIAL_META_STATE },
 };
 
 // ============================================================================
@@ -150,6 +191,7 @@ export const gameState = () => appState.game;
 export const ideasState = () => appState.ideas;
 export const storyState = () => appState.story;
 export const gameLogState = () => appState.gameLog;
+export const metaState = () => appState.meta;
 
 // ============================================================================
 // Actions
@@ -183,6 +225,11 @@ export const spendResource = (
 // Squirrel actions
 export const createSquirrel = () => {
   const game = appState.game;
+  const currentCount = Object.keys(game.squirrels).length;
+  if (currentCount >= getSquirrelCap()) {
+    return false;
+  }
+
   const id = game.nextSquirrelId;
 
   setAppState("game", "squirrels", id, {
@@ -193,6 +240,15 @@ export const createSquirrel = () => {
   });
   setAppState("game", "population", "jobless", (prev) => [...prev, id]);
   setAppState("game", "nextSquirrelId", id + 1);
+  return true;
+};
+
+/** Soft population cap until housing exists */
+export const getSquirrelCap = (): number => {
+  if (appState.meta.hibernations === 0) {
+    return SEASON_ZERO_SQUIRREL_CAP;
+  }
+  return PRE_HOUSING_SQUIRREL_CAP;
 };
 
 export const squirrelFoundNut = (squirrelId: number) => {
@@ -201,7 +257,10 @@ export const squirrelFoundNut = (squirrelId: number) => {
   const jobSite = game.jobSites.jobless;
 
   if (squirrel && jobSite) {
-    const amount = Math.max(0, jobSite.value * jobSite.multi);
+    const amount = Math.max(
+      0,
+      jobSite.value * jobSite.multi * appState.meta.goldForageMulti,
+    );
     setAppState(
       "game",
       "squirrels",
@@ -215,45 +274,51 @@ export const squirrelFoundNut = (squirrelId: number) => {
 
 // JobSite actions
 export const unlockJobsites = (jobsiteIds: string[]) => {
-  const game = appState.game;
-
-  // Unlock jobsites tab if not already unlocked
-  if (!game.unlockedTabs.includes("jobsites")) {
-    setAppState("game", "unlockedTabs", (prev) => [...prev, "jobsites"]);
-  }
+  // Jobsites tab is a permanent unlock
+  unlockTab("jobsites");
 
   jobsiteIds.forEach((id) => {
-    // Find the jobsite in the master list
+    // Already known this season — keep current level/staffing
+    if (
+      appState.game.jobSites.production[id] ||
+      appState.game.jobSites.refinement[id]
+    ) {
+      setAppState("meta", "unlockedJobsiteIds", (prev) =>
+        prev.includes(id) ? prev : [...prev, id],
+      );
+      return;
+    }
+
     const jobsiteTemplate =
       productionJobsites.find((js) => js.id === id) ||
       refinementJobsites.find((js) => js.id === id);
 
     if (jobsiteTemplate) {
-      // Create a new jobsite instance from the template
+      // Level 0 = known but unbuilt; first upgrade builds it
       const newJobsite: JobSite = {
         ...jobsiteTemplate,
         unlocked: true,
         maxSquirrels: jobsiteTemplate.maxSquirrels,
         workers: [],
         level: 0,
-        // Production values
         baseProduction: jobsiteTemplate.baseProduction,
         squirrelBonus: jobsiteTemplate.squirrelBonus,
-        // Cost growth properties
         cost: jobsiteTemplate.baseCost,
         costGrowthRate: jobsiteTemplate.costGrowthRate,
         baseCost: jobsiteTemplate.baseCost,
-        // Refinement properties (if applicable)
         consumes: jobsiteTemplate.consumes,
         produces: jobsiteTemplate.produces,
       };
 
-      // Add to the appropriate category
       if (newJobsite.type === "production") {
         setAppState("game", "jobSites", "production", id, newJobsite);
       } else if (newJobsite.type === "refinement") {
         setAppState("game", "jobSites", "refinement", id, newJobsite);
       }
+
+      setAppState("meta", "unlockedJobsiteIds", (prev) =>
+        prev.includes(id) ? prev : [...prev, id],
+      );
     }
   });
 };
@@ -263,55 +328,55 @@ export const buyJobSiteCapacity = (jobSiteId: string) => {
   const jobSite =
     game.jobSites.production[jobSiteId] || game.jobSites.refinement[jobSiteId];
 
-  if (jobSite && game.nutsTotal >= jobSite.cost) {
-    spendNuts(jobSite.cost);
+  if (!jobSite || game.nutsTotal < jobSite.cost) return;
 
+  // Capture before mutating — Solid store proxies update in place
+  const previousLevel = jobSite.level;
+  const newLevel = previousLevel + 1;
+  const siteType = jobSite.type;
+  const baseCost = jobSite.baseCost;
+  const costGrowthRate = jobSite.costGrowthRate;
+  const maxLevel = jobSite.maxLevel;
+
+  if (maxLevel !== undefined && previousLevel >= maxLevel) return;
+
+  spendNuts(jobSite.cost);
+
+  setAppState("game", "jobSites", siteType, jobSiteId, "level", newLevel);
+
+  // Capacity bump when reaching levels 5, 10, 15, ...
+  if (newLevel % 5 === 0) {
     setAppState(
       "game",
       "jobSites",
-      jobSite.type,
+      siteType,
       jobSiteId,
-      "level",
+      "maxSquirrels",
       (prev) => prev + 1,
     );
-
-    // Every 5 levels, increase max squirrels by 1
-    const newLevel = jobSite.level + 1;
-    if (newLevel % 5 === 0) {
-      setAppState(
-        "game",
-        "jobSites",
-        jobSite.type,
-        jobSiteId,
-        "maxSquirrels",
-        (prev) => prev + 1,
-      );
-    }
-
-    // Every level, slightly increase production (5% boost to both base and bonus)
-    setAppState(
-      "game",
-      "jobSites",
-      jobSite.type,
-      jobSiteId,
-      "baseProduction",
-      (prev) => prev * 1.05,
-    );
-    setAppState(
-      "game",
-      "jobSites",
-      jobSite.type,
-      jobSiteId,
-      "squirrelBonus",
-      (prev) => prev * 1.05,
-    );
-
-    // Calculate next cost using exponential growth formula
-    const newCost = Math.floor(
-      jobSite.baseCost * Math.pow(jobSite.costGrowthRate, newLevel),
-    );
-    setAppState("game", "jobSites", jobSite.type, jobSiteId, "cost", newCost);
   }
+
+  // Every level, slightly increase production (5% boost to both base and bonus)
+  setAppState(
+    "game",
+    "jobSites",
+    siteType,
+    jobSiteId,
+    "baseProduction",
+    (prev) => prev * 1.05,
+  );
+  setAppState(
+    "game",
+    "jobSites",
+    siteType,
+    jobSiteId,
+    "squirrelBonus",
+    (prev) => prev * 1.05,
+  );
+
+  // Next cost from the level we just reached
+  const newCost = Math.floor(baseCost * Math.pow(costGrowthRate, newLevel));
+  setAppState("game", "jobSites", siteType, jobSiteId, "cost", newCost);
 };
 
 export const assignSquirrelToJobSite = (
@@ -323,7 +388,13 @@ export const assignSquirrelToJobSite = (
   const jobSite =
     game.jobSites.production[jobSiteId] || game.jobSites.refinement[jobSiteId];
 
-  if (squirrel && jobSite && jobSite.workers.length < jobSite.maxSquirrels) {
+  // Level 0 sites are known but unbuilt — cannot staff until first upgrade
+  if (
+    squirrel &&
+    jobSite &&
+    jobSite.level >= 1 &&
+    jobSite.workers.length < jobSite.maxSquirrels
+  ) {
     // Remove from jobless
     setAppState("game", "population", "jobless", (prev) =>
       prev.filter((id) => id !== squirrelId),
@@ -474,14 +545,19 @@ export const incrementTick = () => {
   setAppState("game", "tick", (prev) => prev + 1);
 };
 
-export const updateTimer = () => {
+export const updateTimer = (deltaMs: number = 10) => {
+  // Legacy timer advances +1 unit per 10ms of real time (old loop ran ~100 FPS).
+  // time_elapsed checkpoints use m*60000 + s*1000 + ms ≈ real milliseconds.
+  const units = Math.max(0, Math.round(deltaMs / 10));
+  if (units === 0) return;
+
   setAppState("game", "timer", (prev) => {
-    const newMs = prev.ms + 1;
-    const newS = newMs >= 100 ? prev.s + 1 : prev.s;
-    const newM = newS >= 60 ? prev.m + 1 : prev.m;
-    const finalMs = newMs >= 100 ? 0 : newMs;
-    const finalS = newS >= 60 ? 0 : newS;
-    return { ms: finalMs, s: finalS, m: newM };
+    let ms = prev.ms + units;
+    let s = prev.s + Math.floor(ms / 100);
+    ms = ms % 100;
+    const m = prev.m + Math.floor(s / 60);
+    s = s % 60;
+    return { ms, s, m };
   });
 };
 
@@ -508,6 +584,14 @@ export const unlockTab = (tab: string) => {
     }
     return prev;
   });
+  // Hibernate is seasonal — only unlock for the current winter
+  if (tab === "hibernate") return;
+  setAppState("meta", "unlockedTabs", (prev) => {
+    if (!prev.includes(tab)) {
+      return [...prev, tab];
+    }
+    return prev;
+  });
 };
 
 export const unlockTabs = (tabs: string[]) => {
@@ -520,31 +604,187 @@ export const unlockTabs = (tabs: string[]) => {
     });
     return newTabs;
   });
+  const permanent = tabs.filter((tab) => tab !== "hibernate");
+  if (permanent.length === 0) return;
+  setAppState("meta", "unlockedTabs", (prev) => {
+    const newTabs = [...prev];
+    permanent.forEach((tab) => {
+      if (!newTabs.includes(tab)) {
+        newTabs.push(tab);
+      }
+    });
+    return newTabs;
+  });
 };
 
 // Hibernate action
+export const calculateHibernationReward = (
+  nutsAllTime: number,
+  multi: number,
+): number => {
+  // Early-game friendly: sqrt curve so first winter still pays Gold Nuts
+  return Math.max(
+    1,
+    Math.floor(Math.sqrt(Math.max(0, nutsAllTime)) * multi * 2),
+  );
+};
+
+/** Permanent forage bonus from banked Gold Nuts (~2% each) */
+export const goldNutsToForageMulti = (goldNutsTotal: number): number =>
+  1 + goldNutsTotal * 0.02;
+
+export const canEnterEra = (era: string): boolean => {
+  const order: IdeaEra[] = [
+    "PREHISTORY",
+    "WOOD_AGE",
+    "STONE_AGE",
+    "BRONZE_AGE",
+    "IRON_AGE",
+    "INDUSTRIAL_AGE",
+    "INFORMATION_AGE",
+    "TECHNOLOGY_AGE",
+    "SPACE_AGE",
+    "GALACTIC_AGE",
+  ];
+  const available = appState.meta.maxEraAvailable;
+  const wantIdx = order.indexOf(era as IdeaEra);
+  const maxIdx = order.indexOf(available);
+  if (wantIdx < 0 || maxIdx < 0) return false;
+  return wantIdx <= maxIdx;
+};
+
+export const markWinterIncoming = () => {
+  setAppState("meta", "winterIncoming", true);
+  unlockTab("hibernate");
+};
+
+/**
+ * Season rollover (prestige): wipe run state, keep colony legacy (Gold Nuts / season).
+ */
 export const hibernate = () => {
   const game = appState.game;
-  const goldenNutsEarned = Math.floor(
-    (game.nutsAllTime / Math.pow(10, 6)) * game.goldNuts.multi,
+  const goldenNutsEarned = calculateHibernationReward(
+    game.nutsAllTime,
+    game.goldNuts.multi,
   );
 
-  // Update gold nuts
-  setAppState("game", "goldNuts", "total", (prev) => prev + goldenNutsEarned);
+  const newGoldTotal = game.goldNuts.total + goldenNutsEarned;
+  const nextHibernations = appState.meta.hibernations + 1;
 
-  // Reset game state
-  setAppState("game", (prev) => ({
-    ...prev,
-    nutsTotal: 0,
-    nutsAllTime: 0,
-    squirrels: {},
-    nextSquirrelId: 1,
-    population: { jobless: [] },
-    jobSites: initialGameState.jobSites,
-    timer: { ms: 0, s: 0, m: 0 },
-    tick: 0,
-  }));
+  // After first winter, Wood Age becomes available next season
+  const maxEra: IdeaEra =
+    nextHibernations >= 1 ? "WOOD_AGE" : appState.meta.maxEraAvailable;
+
+  // Preserve structure knowledge across the wipe (hibernate tab is seasonal)
+  const preservedTabs = appState.meta.unlockedTabs.filter(
+    (tab) => tab !== "hibernate",
+  );
+  const preservedStructure = [...appState.meta.structureIdeas];
+  const preservedJobsites = [...appState.meta.unlockedJobsiteIds];
+
+  setAppState("meta", {
+    hibernations: nextHibernations,
+    seasonIndex: nextHibernations,
+    winterIncoming: false,
+    maxEraAvailable: maxEra,
+    goldForageMulti: goldNutsToForageMulti(newGoldTotal),
+    suppressCheckpointsUntil: Date.now() + 2000,
+    unlockedTabs: preservedTabs,
+    structureIdeas: preservedStructure,
+    unlockedJobsiteIds: preservedJobsites,
+  });
+
+  // Wipe run state from a clean template (never reuse store-mutated objects)
+  setAppState(
+    "game",
+    createFreshGameState({
+      goldNuts: {
+        total: newGoldTotal,
+        multi: game.goldNuts.multi,
+      },
+      squirrels: {},
+      nextSquirrelId: 0,
+      population: { jobless: [] },
+      unlockedTabs: Array.from(new Set(["home", ...preservedTabs])),
+      lastUpdate: Date.now(),
+    }),
+  );
+
+  // Reset ideas, then restore structure research
+  setAppState("ideas", {
+    ideas: structuredClone(ideasTemplate),
+    researchedIdeas: [],
+    researchedCount: 0,
+    totalResearchPoints: 0,
+  });
+
+  // Reset story progress but keep checkpoint definitions
+  setAppState("story", {
+    checkpoints: structuredClone(checkpointsTemplate),
+    activeStory: null,
+    storyQueue: [],
+    completedCheckpoints: [],
+    currentEra: "PREHISTORY",
+    storyProgress: 0,
+    eraBonuses: {},
+    pendingChoice: null,
+  });
+
+  // Skip tutorial / intro beats — spring + season gating cover the wake
+  const skipped = [...TUTORIAL_CHECKPOINT_IDS];
+  for (const id of skipped) {
+    if (appState.story.checkpoints[id]) {
+      setAppState("story", "checkpoints", id, "completed", true);
+    }
+  }
+  setAppState("story", "completedCheckpoints", skipped);
+
+  setAppState("gameLog", "logs", []);
+
+  restoreStructureKnowledge();
+
+  // Wake alone with one squirrel
+  createSquirrel();
+
+  const spring = appState.story.checkpoints.springAwakening;
+  if (nextHibernations < STORY_MODAL_HIBERNATION_LIMIT) {
+    // First wipe or two: keep the spring modal
+    queueStories(["springAwakening"]);
+  } else if (spring?.story) {
+    completeCheckpoint("springAwakening");
+    addLog(`📖 ${spring.story.title} — ${spring.story.body}`, "info");
+  }
+
+  addLog(
+    `Hibernated! +${goldenNutsEarned} Gold Nuts. Season ${nextHibernations + 1} begins.`,
+    "success",
+  );
 };
+
+/** Re-apply structure ideas + known jobsites after a winter wipe */
+function restoreStructureKnowledge() {
+  const { structureIdeas, unlockedJobsiteIds, unlockedTabs } = appState.meta;
+
+  setAppState(
+    "game",
+    "unlockedTabs",
+    Array.from(new Set(["home", ...unlockedTabs])),
+  );
+
+  for (const ideaId of structureIdeas) {
+    const idea = appState.ideas.ideas[ideaId];
+    if (!idea) continue;
+    setAppState("ideas", "ideas", ideaId, "researched", true);
+    setAppState("ideas", "ideas", ideaId, "visible", true);
+  }
+  setAppState("ideas", "researchedIdeas", [...structureIdeas]);
+  setAppState("ideas", "researchedCount", structureIdeas.length);
+
+  // Rebuild known jobsites at level 0 (empty staff)
+  if (unlockedJobsiteIds.length > 0) {
+    unlockJobsites(unlockedJobsiteIds);
+  }
+}
 
 // Update timestamp
 export const updateTimestamp = () => {
@@ -552,8 +792,77 @@ export const updateTimestamp = () => {
 };
 
 // Load save data
-export const loadSaveData = (data: Partial<GameState>) => {
-  setAppState("game", (prev) => ({ ...prev, ...data }));
+export const loadSaveData = (
+  data: Partial<GameState> & {
+    meta?: MetaState;
+    story?: { completedCheckpoints: string[]; currentEra: string | null };
+    ideas?: { researchedIdeas: string[] };
+    resources?: GameState["resources"];
+    unlockedTabs?: string[];
+    activeTab?: string;
+    timer?: GameState["timer"];
+  },
+) => {
+  setAppState("game", (prev) => ({
+    ...prev,
+    ...data,
+    resources: data.resources ?? prev.resources,
+    unlockedTabs: data.unlockedTabs ?? prev.unlockedTabs,
+    activeTab: data.activeTab ?? prev.activeTab,
+    timer: data.timer ?? prev.timer,
+  }));
+
+  if (data.meta) {
+    setAppState("meta", { ...INITIAL_META_STATE, ...data.meta });
+  }
+
+  // Permanent tabs: prefer meta, fall back to saved run tabs
+  const metaTabs = appState.meta.unlockedTabs;
+  const runTabs = data.unlockedTabs ?? appState.game.unlockedTabs;
+  const mergedTabs = Array.from(new Set(["home", ...metaTabs, ...runTabs]));
+  setAppState("meta", "unlockedTabs", mergedTabs);
+  setAppState("game", "unlockedTabs", mergedTabs);
+
+  if (data.story) {
+    setAppState("story", "currentEra", data.story.currentEra);
+    setAppState(
+      "story",
+      "completedCheckpoints",
+      data.story.completedCheckpoints,
+    );
+    data.story.completedCheckpoints.forEach((id) => {
+      if (appState.story.checkpoints[id]) {
+        setAppState("story", "checkpoints", id, "completed", true);
+      }
+    });
+  }
+
+  if (data.ideas?.researchedIdeas) {
+    data.ideas.researchedIdeas.forEach((ideaId) => {
+      if (appState.ideas.ideas[ideaId]) {
+        setAppState("ideas", "ideas", ideaId, "researched", true);
+        setAppState("ideas", "ideas", ideaId, "visible", true);
+        if (appState.ideas.ideas[ideaId].persists) {
+          setAppState("meta", "structureIdeas", (prev) =>
+            prev.includes(ideaId) ? prev : [...prev, ideaId],
+          );
+        }
+      }
+    });
+    setAppState("ideas", "researchedIdeas", data.ideas.researchedIdeas);
+    setAppState("ideas", "researchedCount", data.ideas.researchedIdeas.length);
+  }
+
+  // Migrate known jobsites into meta from a mid-season save
+  const knownIds = [
+    ...Object.keys(appState.game.jobSites.production),
+    ...Object.keys(appState.game.jobSites.refinement),
+  ];
+  if (knownIds.length > 0) {
+    setAppState("meta", "unlockedJobsiteIds", (prev) =>
+      Array.from(new Set([...prev, ...knownIds])),
+    );
+  }
 };
 
 // ============================================================================
@@ -570,6 +879,13 @@ export const researchIdea = (ideaId: string) => {
   setAppState("ideas", "researchedIdeas", (prev) => [...prev, ideaId]);
   setAppState("ideas", "researchedCount", (prev) => prev + 1);
 
+  // Structure research survives winter
+  if (idea.persists) {
+    setAppState("meta", "structureIdeas", (prev) =>
+      prev.includes(ideaId) ? prev : [...prev, ideaId],
+    );
+  }
+
   // Apply research effects that mutate game state
   const effects = idea.effects;
 
@@ -579,13 +895,37 @@ export const researchIdea = (ideaId: string) => {
     if (jobsiteId === "jobless") {
       const jobless = appState.game.jobSites.jobless;
       if (property === "multi") {
-        setAppState("game", "jobSites", "jobless", "multi", jobless.multi + amount);
+        setAppState(
+          "game",
+          "jobSites",
+          "jobless",
+          "multi",
+          jobless.multi + amount,
+        );
       } else if (property === "value") {
-        setAppState("game", "jobSites", "jobless", "value", jobless.value + amount);
+        setAppState(
+          "game",
+          "jobSites",
+          "jobless",
+          "value",
+          jobless.value + amount,
+        );
       } else if (property === "time") {
-        setAppState("game", "jobSites", "jobless", "time", jobless.time - amount);
+        setAppState(
+          "game",
+          "jobSites",
+          "jobless",
+          "time",
+          jobless.time - amount,
+        );
       } else if (property === "chance") {
-        setAppState("game", "jobSites", "jobless", "chance", jobless.chance + amount);
+        setAppState(
+          "game",
+          "jobSites",
+          "jobless",
+          "chance",
+          jobless.chance + amount,
+        );
       }
     } else if (appState.game.jobSites.production[jobsiteId]) {
       if (property === "multi") {
@@ -829,6 +1169,13 @@ export const queueStories = (checkpointIds: string[]) => {
 };
 
 export const setEra = (era: string) => {
+  if (!canEnterEra(era)) {
+    addLog(
+      `The ${era.replace(/_/g, " ")} is still only a dream. Survive winter first.`,
+      "warning",
+    );
+    return;
+  }
   setAppState("story", "currentEra", era);
 };
 
@@ -847,7 +1194,7 @@ export const makeChoice = (checkpointId: string, choiceId: string) => {
 
   // Apply choice effects
   if (choice.effects.setEra) {
-    setAppState("story", "currentEra", choice.effects.setEra);
+    setEra(choice.effects.setEra);
   }
 
   if (choice.effects.grantBonus) {

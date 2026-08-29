@@ -1,8 +1,4 @@
-import {
-  type Component,
-  Show,
-  For,
-} from "solid-js";
+import { type Component, Show, For } from "solid-js";
 import {
   appState,
   dismissStory,
@@ -78,7 +74,8 @@ const StoryModal: Component = () => {
 
   const handleDismiss = () => {
     dismissStory();
-    if (storyQueue().length === 0) resumeGame();
+    // dismissStory may promote the next queued story — only unpause when done
+    if (!appState.story.activeStory) resumeGame();
   };
 
   const handleChoice = (choiceId: string) => {
@@ -91,7 +88,7 @@ const StoryModal: Component = () => {
       addNuts(choice.effects.addNuts);
     }
     makeChoice(id, choiceId);
-    if (storyQueue().length === 0) resumeGame();
+    if (!appState.story.activeStory) resumeGame();
   };
 
   const hasChoices = () => {
@@ -117,13 +114,9 @@ const StoryModal: Component = () => {
                 </p>
               )}
             </Show>
-            <h2 class="font-display text-2xl font-bold">
-              {story()!.title}
-            </h2>
+            <h2 class="font-display text-2xl font-bold">{story()!.title}</h2>
             <hr class="border-moss/15" />
-            <p class="text-base leading-relaxed md:text-lg">
-              {story()!.body}
-            </p>
+            <p class="text-base leading-relaxed md:text-lg">{story()!.body}</p>
 
             <Show
               when={hasChoices()}
@@ -158,9 +151,7 @@ const StoryModal: Component = () => {
                         <button
                           type="button"
                           class={`btn w-full ${available() ? "btn-primary" : "btn-secondary"}`}
-                          onClick={() =>
-                            available() && handleChoice(choice.id)
-                          }
+                          onClick={() => available() && handleChoice(choice.id)}
                           disabled={!available()}
                         >
                           {choice.text}

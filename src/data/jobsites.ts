@@ -49,7 +49,7 @@ export const productionJobsites: JobSite[] = [
     multi: 1,
     level: 0,
     cost: 20,
-    costGrowthRate: 1.15,
+    costGrowthRate: 1.3,
     baseCost: 20,
     value: 1.67,
     type: "production",

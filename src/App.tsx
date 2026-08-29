@@ -4,10 +4,7 @@
 
 import { onCleanup } from "solid-js";
 import { createGameLoop } from "./engine/gameLoop";
-import {
-  createAutoSave,
-  createStoryCheckpoints,
-} from "./engine/primitives";
+import { createAutoSave, createStoryCheckpoints } from "./engine/primitives";
 import GameContainer from "./components/GameContainer";
 import StoryModal from "./components/StoryModal";
 import DebugPanel from "./components/DebugPanel";

@@ -33,10 +33,7 @@ const Header: Component = () => {
 
   const hasResources = () => {
     const r = resources();
-    return (
-      r &&
-      (r.nutwood > 0 || r.stone > 0 || r.bronze > 0 || r.iron > 0)
-    );
+    return r && (r.nutwood > 0 || r.stone > 0 || r.bronze > 0 || r.iron > 0);
   };
 
   return (
@@ -89,9 +86,7 @@ const Header: Component = () => {
             <Show when={resources().iron > 0}>
               <span>
                 ⚙️{" "}
-                <span class="text-amber">
-                  {formatNumber(resources().iron)}
-                </span>
+                <span class="text-amber">{formatNumber(resources().iron)}</span>
               </span>
             </Show>
           </div>

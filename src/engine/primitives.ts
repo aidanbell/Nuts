@@ -14,15 +14,14 @@ import {
   queueStories,
   addLog,
   loadSaveData,
+  markWinterIncoming,
 } from "./state";
-import { processEffects } from "./effectProcessor";
+import { processEffects, type GameEffect } from "./effectProcessor";
 import { saveGame, loadGame } from "./saveSystem";
 import type { GameState } from "../types/game";
 import type { Idea } from "../types/ideas";
-import type {
-  StoryCheckpoint,
-  CheckpointCondition,
-} from "../types/story";
+import type { StoryCheckpoint, CheckpointCondition } from "../types/story";
+import { STORY_MODAL_HIBERNATION_LIMIT } from "../types/meta";
 
 // ============================================================================
 // createAutoSave
@@ -104,8 +103,14 @@ function checkCondition(condition: CheckpointCondition): boolean {
     case "idea_researched":
       return ideas.ideas[value as string]?.researched || false;
     case "hibernations_completed":
-      currentValue = game.goldNuts?.total || 0;
+      currentValue = appState.meta.hibernations;
       break;
+    case "jobsite_level": {
+      const id = condition.jobsiteId || "gatherer";
+      const site = game.jobSites.production[id] || game.jobSites.refinement[id];
+      currentValue = site?.level ?? 0;
+      break;
+    }
     case "resource_count": {
       const resourceType = condition.resource;
       if (resourceType && game.resources && resourceType in game.resources) {
@@ -144,8 +149,29 @@ function checkCondition(condition: CheckpointCondition): boolean {
   return false;
 }
 
+function seasonAllowsCheckpoint(checkpoint: StoryCheckpoint): boolean {
+  const season = appState.meta.seasonIndex;
+  if (
+    checkpoint.minSeason !== undefined &&
+    season < checkpoint.minSeason
+  ) {
+    return false;
+  }
+  if (
+    checkpoint.maxSeason !== undefined &&
+    season > checkpoint.maxSeason
+  ) {
+    return false;
+  }
+  return true;
+}
+
 function shouldTriggerCheckpoint(checkpoint: StoryCheckpoint): boolean {
   if (checkpoint.completed && checkpoint.oneTime) {
+    return false;
+  }
+
+  if (!seasonAllowsCheckpoint(checkpoint)) {
     return false;
   }
 
@@ -165,7 +191,37 @@ function shouldTriggerCheckpoint(checkpoint: StoryCheckpoint): boolean {
   return false;
 }
 
+function shouldUseStoryModal(): boolean {
+  return appState.meta.hibernations < STORY_MODAL_HIBERNATION_LIMIT;
+}
+
+function presentCheckpointStory(checkpoint: StoryCheckpoint): boolean {
+  if (!checkpoint.effects.showStory || !checkpoint.story) return false;
+
+  if (shouldUseStoryModal()) {
+    return true; // caller will queue modal
+  }
+
+  // Later seasons: same beat, console only — no popup spam
+  const { title, body } = checkpoint.story;
+  addLog(`📖 ${title} — ${body}`, "info");
+  return false;
+}
+
+function effectsForSeason(effects: GameEffect): GameEffect {
+  // After the first winter, skip free nut dumps from replaying early beats
+  if (appState.meta.hibernations >= 1 && effects.nutReward) {
+    const { nutReward: _nutReward, ...rest } = effects;
+    return rest;
+  }
+  return effects;
+}
+
 function processCheckpoints() {
+  if (Date.now() < appState.meta.suppressCheckpointsUntil) {
+    return;
+  }
+
   const checkpointsToCheck = Object.values(appState.story.checkpoints)
     .filter((cp) => !cp.completed || cp.repeatable)
     .sort((a, b) => b.priority - a.priority);
@@ -181,17 +237,30 @@ function processCheckpoints() {
   if (triggeredCheckpoints.length === 0) return;
 
   const checkpointIds: string[] = [];
+  const useModal = shouldUseStoryModal();
 
   for (const checkpoint of triggeredCheckpoints) {
     addLog(`Story checkpoint: ${checkpoint.name}`, "success");
     completeCheckpoint(checkpoint.id);
-    processEffects(checkpoint.effects, {
+
+    const effects = effectsForSeason(checkpoint.effects);
+    // Only pause when a modal will actually show
+    const effectsToApply: GameEffect = {
+      ...effects,
+      pauseGame: Boolean(effects.pauseGame && useModal && effects.showStory),
+    };
+
+    processEffects(effectsToApply, {
       sourceName: checkpoint.name,
       sourceType: "checkpoint",
       checkpointId: checkpoint.id,
     });
 
-    if (checkpoint.effects.showStory && checkpoint.story) {
+    if (checkpoint.id === "winterApproaching") {
+      markWinterIncoming();
+    }
+
+    if (presentCheckpointStory(checkpoint)) {
       checkpointIds.push(checkpoint.id);
     }
   }
@@ -211,11 +280,16 @@ export function createStoryCheckpoints() {
   });
 
   createEffect(() => {
-    // Track values that commonly trigger checkpoints
+    // Re-check when common trigger inputs change
     void appState.game.nutsTotal;
+    void appState.game.timer.s;
+    void appState.game.timer.m;
     void Object.keys(appState.game.squirrels).length;
     void appState.game.resources?.nutwood;
     void appState.story.currentEra;
+    void appState.ideas.researchedCount;
+    void appState.meta.hibernations;
+    void appState.game.jobSites.production.gatherer?.level;
     processCheckpoints();
   });
 }
@@ -299,11 +373,18 @@ export function createIdeas() {
 // createGoldenNut
 // ============================================================================
 
+/**
+ * Expected nuts/sec for one jobless squirrel
+ */
 const joblessNutsPerSecond = (jobless: GameState["jobSites"]["jobless"]) => {
   const attemptsPerSec = 1000 / jobless.time;
   return attemptsPerSec * jobless.chance * jobless.value * jobless.multi;
 };
 
+/**
+ * Burst reward: ~15s of jobless production, with count bonus + roll variance.
+ * Variance matters — without it, identical jobless state yields identical nuts.
+ */
 export const calculateGoldenNutReward = (
   joblessSite: GameState["jobSites"]["jobless"],
   joblessCount: number,
@@ -311,7 +392,9 @@ export const calculateGoldenNutReward = (
   const perSquirrel = joblessNutsPerSecond(joblessSite);
   const burst = perSquirrel * Math.max(1, joblessCount) * 15;
   const countBonus = 1 + Math.log2(1 + Math.max(0, joblessCount - 1)) * 0.15;
-  return Math.max(5, Math.round(burst * countBonus));
+  // ±25% roll so back-to-back finds feel distinct
+  const variance = 0.75 + Math.random() * 0.5;
+  return Math.max(5, Math.round(burst * countBonus * variance));
 };
 
 export interface GoldenNutState {

@@ -55,10 +55,7 @@ const SquirrelDisplay: Component<SquirrelDisplayProps> = (props) => {
   return (
     <Show when={squirrel()}>
       {(sq) => (
-        <div
-          class="relative inline-block p-2 text-5xl"
-          id={`s-${sq()._id}`}
-        >
+        <div class="relative inline-block p-2 text-5xl" id={`s-${sq()._id}`}>
           <span
             class="inline-block transition-transform duration-300"
             style={{ transform: `scaleX(${isFlipped() ? -1 : 1})` }}
