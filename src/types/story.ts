@@ -1,33 +1,36 @@
-export type CheckpointTriggerType = 
-  | 'nuts_collected'
-  | 'time_elapsed'
-  | 'squirrels_count'
-  | 'jobsites_purchased'
-  | 'era_reached'
-  | 'building_built'
-  | 'idea_researched'
-  | 'hibernations_completed'
-  | 'resource_count' // Amount of a specific refined resource
-  | 'combined'; // Multiple conditions required
+export type CheckpointTriggerType =
+  | "nuts_collected"
+  | "time_elapsed"
+  | "squirrels_count"
+  | "jobsites_purchased"
+  | "era_reached"
+  | "building_built"
+  | "idea_researched"
+  | "hibernations_completed"
+  | "jobsite_level"
+  | "resource_count" // Amount of a specific refined resource
+  | "wooden_houses" // Seasonal wooden house count
+  | "combined"; // Multiple conditions required
 
 export interface CheckpointCondition {
   type: CheckpointTriggerType;
   value: number | string;
-  operator?: '>=' | '>' | '==' | '<' | '<=';
-  resource?: 'nutwood' | 'stone' | 'bronze' | 'iron'; // For resource_count triggers
+  operator?: ">=" | ">" | "==" | "<" | "<=";
+  resource?: "nutwood" | "stone" | "bronze" | "iron"; // For resource_count triggers
+  jobsiteId?: string; // For jobsite_level triggers
 }
 
 export interface StoryCheckpoint {
   id: string;
   name: string;
   description: string;
-  
+
   // Trigger conditions (OR logic - any one triggers it)
   triggers?: CheckpointCondition[];
-  
+
   // Required conditions (AND logic - all must be true)
   requirements?: CheckpointCondition[];
-  
+
   // What happens when checkpoint is reached
   effects: {
     unlockSquirrels?: number;
@@ -39,7 +42,7 @@ export interface StoryCheckpoint {
     pauseGame?: boolean;
     setEra?: string; // Set the current era
   };
-  
+
   // Story content
   story?: {
     title: string;
@@ -47,13 +50,20 @@ export interface StoryCheckpoint {
     character?: string; // Who's speaking
     choices?: StoryChoice[];
   };
-  
+
   // Metadata
   completed: boolean;
   completedAt?: number;
   priority: number; // Higher priority checkpoints check first
   oneTime: boolean; // Can only trigger once
   repeatable?: boolean;
+
+  /**
+   * Season gating via meta.seasonIndex (0 = first life).
+   * Omit both = any season. Inclusive range when set.
+   */
+  minSeason?: number;
+  maxSeason?: number;
 }
 
 export interface StoryChoice {
@@ -64,7 +74,7 @@ export interface StoryChoice {
   effects?: {
     setEra?: string;
     grantBonus?: {
-      type: 'global_multiplier' | 'era_multiplier' | 'resource_bonus';
+      type: "global_multiplier" | "era_multiplier" | "resource_bonus";
       value: number;
       target?: string; // Which era or resource
     };

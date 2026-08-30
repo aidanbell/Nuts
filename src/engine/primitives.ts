@@ -1,0 +1,589 @@
+/**
+ * Reactive game primitives (create* factories for component setup).
+ */
+
+import { createEffect, createSignal, onCleanup, createMemo } from "solid-js";
+import {
+  appState,
+  addNuts,
+  spendNuts,
+  spendResource,
+  researchIdea,
+  refreshIdeaCatalog,
+  completeCheckpoint,
+  queueStories,
+  addLog,
+  loadSaveData,
+  markWinterIncoming,
+  canEnterEra,
+  getEffectiveNps,
+} from "./state";
+import { processEffects, type GameEffect } from "./effectProcessor";
+import { saveGame, loadGame } from "./saveSystem";
+import type { Idea } from "../types/ideas";
+import type { StoryCheckpoint, CheckpointCondition } from "../types/story";
+import { STORY_MODAL_HIBERNATION_LIMIT } from "../types/meta";
+
+// ============================================================================
+// createAutoSave
+// ============================================================================
+
+export function createAutoSave() {
+  // Load once on mount
+  createEffect(() => {
+    const savedData = loadGame();
+    if (savedData) {
+      loadSaveData(savedData);
+    }
+  });
+
+  createEffect(() => {
+    const autoSaveEnabled =
+      localStorage.getItem("debug_autosave_enabled") !== "false";
+
+    if (!autoSaveEnabled) return;
+
+    const interval = setInterval(() => {
+      saveGame();
+      console.log("Auto-saved game state");
+    }, 30000);
+
+    const handleBeforeUnload = () => {
+      if (localStorage.getItem("debug_autosave_enabled") !== "false") {
+        saveGame();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    onCleanup(() => {
+      clearInterval(interval);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    });
+  });
+}
+
+// ============================================================================
+// createStoryCheckpoints
+// ============================================================================
+
+function checkCondition(condition: CheckpointCondition): boolean {
+  const game = appState.game;
+  const story = appState.story;
+  const ideas = appState.ideas;
+  const { type, value, operator = ">=" } = condition;
+  let currentValue: number | string = 0;
+
+  switch (type) {
+    case "nuts_collected":
+      currentValue = game.nutsTotal;
+      break;
+    case "time_elapsed":
+      currentValue = game.timer.m * 60000 + game.timer.s * 1000 + game.timer.ms;
+      break;
+    case "squirrels_count":
+      currentValue = Object.keys(game.squirrels).length;
+      break;
+    case "jobsites_purchased": {
+      const productionLevel = Object.values(game.jobSites.production).reduce(
+        (total, jobsite) => total + jobsite.level,
+        0,
+      );
+      const refinementLevel = Object.values(game.jobSites.refinement).reduce(
+        (total, jobsite) => total + jobsite.level,
+        0,
+      );
+      currentValue = productionLevel + refinementLevel;
+      break;
+    }
+    case "era_reached":
+      currentValue = story.currentEra || "";
+      break;
+    case "building_built":
+      return false;
+    case "idea_researched":
+      return ideas.ideas[value as string]?.researched || false;
+    case "hibernations_completed":
+      currentValue = appState.meta.hibernations;
+      break;
+    case "jobsite_level": {
+      const id = condition.jobsiteId || "gatherer";
+      const site = game.jobSites.production[id] || game.jobSites.refinement[id];
+      currentValue = site?.level ?? 0;
+      break;
+    }
+    case "resource_count": {
+      const resourceType = condition.resource;
+      if (resourceType && game.resources && resourceType in game.resources) {
+        currentValue =
+          game.resources[resourceType as keyof typeof game.resources];
+      } else {
+        return false;
+      }
+      break;
+    }
+    case "wooden_houses":
+      currentValue = game.town?.woodenHouses ?? 0;
+      break;
+    default:
+      return false;
+  }
+
+  if (typeof value === "string" && typeof currentValue === "string") {
+    return operator === "==" ? currentValue === value : false;
+  }
+
+  if (typeof value === "number" && typeof currentValue === "number") {
+    switch (operator) {
+      case ">=":
+        return currentValue >= value;
+      case ">":
+        return currentValue > value;
+      case "==":
+        return currentValue === value;
+      case "<":
+        return currentValue < value;
+      case "<=":
+        return currentValue <= value;
+      default:
+        return false;
+    }
+  }
+
+  return false;
+}
+
+function seasonAllowsCheckpoint(checkpoint: StoryCheckpoint): boolean {
+  const season = appState.meta.seasonIndex;
+  if (checkpoint.minSeason !== undefined && season < checkpoint.minSeason) {
+    return false;
+  }
+  if (checkpoint.maxSeason !== undefined && season > checkpoint.maxSeason) {
+    return false;
+  }
+  return true;
+}
+
+function shouldTriggerCheckpoint(checkpoint: StoryCheckpoint): boolean {
+  if (checkpoint.completed && checkpoint.oneTime) {
+    return false;
+  }
+
+  if (!seasonAllowsCheckpoint(checkpoint)) {
+    return false;
+  }
+
+  if (checkpoint.requirements) {
+    const allRequirementsMet = checkpoint.requirements.every((req) =>
+      checkCondition(req),
+    );
+    if (!allRequirementsMet) {
+      return false;
+    }
+  }
+
+  if (checkpoint.triggers) {
+    return checkpoint.triggers.some((trigger) => checkCondition(trigger));
+  }
+
+  return false;
+}
+
+function shouldUseStoryModal(): boolean {
+  return appState.meta.hibernations < STORY_MODAL_HIBERNATION_LIMIT;
+}
+
+function presentCheckpointStory(checkpoint: StoryCheckpoint): boolean {
+  if (!checkpoint.effects.showStory || !checkpoint.story) return false;
+
+  if (shouldUseStoryModal()) {
+    return true; // caller will queue modal
+  }
+
+  // Later seasons: same beat, console only — no popup spam
+  const { title, body } = checkpoint.story;
+  addLog(`📖 ${title} — ${body}`, "info");
+  return false;
+}
+
+function effectsForSeason(effects: GameEffect): GameEffect {
+  // After the first winter, skip free nut dumps from replaying early beats
+  if (appState.meta.hibernations >= 1 && effects.nutReward) {
+    const { nutReward: _nutReward, ...rest } = effects;
+    return rest;
+  }
+  return effects;
+}
+
+function processCheckpoints() {
+  if (Date.now() < appState.meta.suppressCheckpointsUntil) {
+    return;
+  }
+
+  const checkpointsToCheck = Object.values(appState.story.checkpoints)
+    .filter((cp) => !cp.completed || cp.repeatable)
+    .sort((a, b) => b.priority - a.priority);
+
+  const triggeredCheckpoints: StoryCheckpoint[] = [];
+
+  for (const checkpoint of checkpointsToCheck) {
+    if (shouldTriggerCheckpoint(checkpoint)) {
+      triggeredCheckpoints.push(checkpoint);
+    }
+  }
+
+  if (triggeredCheckpoints.length === 0) return;
+
+  const checkpointIds: string[] = [];
+  const useModal = shouldUseStoryModal();
+
+  for (const checkpoint of triggeredCheckpoints) {
+    addLog(`Story checkpoint: ${checkpoint.name}`, "success");
+    completeCheckpoint(checkpoint.id);
+
+    const effects = effectsForSeason(checkpoint.effects);
+    // Only pause when a modal will actually show
+    const effectsToApply: GameEffect = {
+      ...effects,
+      pauseGame: Boolean(effects.pauseGame && useModal && effects.showStory),
+    };
+
+    processEffects(effectsToApply, {
+      sourceName: checkpoint.name,
+      sourceType: "checkpoint",
+      checkpointId: checkpoint.id,
+    });
+
+    if (
+      checkpoint.id === "winterApproaching" ||
+      checkpoint.id === "secondWinterApproaching"
+    ) {
+      markWinterIncoming();
+    }
+
+    if (presentCheckpointStory(checkpoint)) {
+      checkpointIds.push(checkpoint.id);
+    }
+  }
+
+  if (checkpointIds.length > 0) {
+    queueStories(checkpointIds);
+  }
+}
+
+export function createStoryCheckpoints() {
+  createEffect(() => {
+    const interval = setInterval(() => {
+      processCheckpoints();
+    }, 1000);
+
+    onCleanup(() => clearInterval(interval));
+  });
+
+  createEffect(() => {
+    // Re-check when common trigger inputs change
+    void appState.game.nutsTotal;
+    void appState.game.timer.s;
+    void appState.game.timer.m;
+    void Object.keys(appState.game.squirrels).length;
+    void appState.game.resources?.nutwood;
+    void appState.story.currentEra;
+    void appState.ideas.researchedCount;
+    void appState.meta.hibernations;
+    void appState.game.jobSites.production.gatherer?.level;
+    void appState.game.town?.woodenHouses;
+    processCheckpoints();
+  });
+}
+
+// ============================================================================
+// createIdeas
+// ============================================================================
+
+export function createIdeas() {
+  createEffect(() => {
+    void appState.story.currentEra;
+    void appState.meta.maxEraAvailable;
+    void appState.ideas.researchedCount;
+    refreshIdeaCatalog();
+  });
+
+  const meetsRequirements = (idea: Idea): boolean => {
+    const reqs = idea.requirements;
+    if (!reqs) return true;
+
+    const game = appState.game;
+
+    if (reqs.era && reqs.era !== (appState.story.currentEra || "PREHISTORY")) {
+      return false;
+    }
+    if (reqs.maxEraAvailable && !canEnterEra(reqs.maxEraAvailable)) {
+      return false;
+    }
+    if (
+      reqs.minHibernations !== undefined &&
+      appState.meta.hibernations < reqs.minHibernations
+    ) {
+      return false;
+    }
+    if (reqs.nutsCollected && game.nutsTotal < reqs.nutsCollected) {
+      return false;
+    }
+    if (
+      reqs.squirrelsCount &&
+      Object.keys(game.squirrels).length < reqs.squirrelsCount
+    ) {
+      return false;
+    }
+    if (reqs.jobsitesPurchased) {
+      const levels =
+        Object.values(game.jobSites.production).reduce(
+          (t, s) => t + s.level,
+          0,
+        ) +
+        Object.values(game.jobSites.refinement).reduce(
+          (t, s) => t + s.level,
+          0,
+        );
+      if (levels < reqs.jobsitesPurchased) return false;
+    }
+    if (reqs.ideasResearched) {
+      if (
+        !reqs.ideasResearched.every(
+          (id) => appState.ideas.ideas[id]?.researched,
+        )
+      ) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const canAfford = (idea: Idea): boolean => {
+    if (idea.researched) return false;
+    if (!meetsRequirements(idea)) return false;
+
+    const game = appState.game;
+    const nutCost = idea.cost.nuts || 0;
+    const woodCost = idea.cost.nutwood || 0;
+    const stoneCost = idea.cost.stone || 0;
+    const bronzeCost = idea.cost.bronze || 0;
+    return (
+      game.nutsTotal >= nutCost &&
+      game.resources.nutwood >= woodCost &&
+      game.resources.stone >= stoneCost &&
+      game.resources.bronze >= bronzeCost
+    );
+  };
+
+  const research = (ideaId: string) => {
+    const idea = appState.ideas.ideas[ideaId];
+    if (!idea || idea.researched || !canAfford(idea)) return;
+
+    const nutCost = idea.cost.nuts || 0;
+    const woodCost = idea.cost.nutwood || 0;
+    const stoneCost = idea.cost.stone || 0;
+    const bronzeCost = idea.cost.bronze || 0;
+    if (nutCost > 0) spendNuts(nutCost);
+    if (woodCost > 0) spendResource("nutwood", woodCost);
+    if (stoneCost > 0) spendResource("stone", stoneCost);
+    if (bronzeCost > 0) spendResource("bronze", bronzeCost);
+
+    researchIdea(ideaId);
+    addLog(`Researched: ${idea.name}`, "success");
+
+    processEffects(idea.effects, {
+      sourceName: idea.name,
+      sourceType: "idea",
+      suppressLogs: true,
+    });
+
+    refreshIdeaCatalog();
+  };
+
+  const visibleIdeas = createMemo(() =>
+    Object.values(appState.ideas.ideas).filter((idea) => idea.visible),
+  );
+
+  const researchedIdeas = createMemo(() =>
+    Object.values(appState.ideas.ideas).filter((idea) => idea.researched),
+  );
+
+  const affordableIdeas = createMemo(() =>
+    visibleIdeas().filter((idea) => !idea.researched && canAfford(idea)),
+  );
+
+  return {
+    ideas: () => Object.values(appState.ideas.ideas),
+    visibleIdeas,
+    researchedIdeas,
+    affordableIdeas,
+    researchedCount: () => appState.ideas.researchedCount,
+    canAfford,
+    meetsRequirements,
+    research,
+  };
+}
+
+// ============================================================================
+// createGoldenNut
+// ============================================================================
+
+/**
+ * Glowing nut burst: ~15s of colony effective NPS, with light variance.
+ * Uses full economy (jobless + jobsites), so staffing sites does not tank the find.
+ */
+export const calculateGoldenNutReward = (): number => {
+  const nps = getEffectiveNps();
+  const burst = Math.max(0.5, nps) * 15;
+  // ±25% roll so back-to-back finds feel distinct
+  const variance = 0.75 + Math.random() * 0.5;
+  return Math.max(5, Math.round(burst * variance));
+};
+
+export interface GoldenNutState {
+  id: number;
+  x: number;
+  y: number;
+  reward: number;
+  spawnedAt: number;
+  expiresAt: number;
+  durationMs: number;
+}
+
+const MIN_SPAWN_DELAY_MS = 20_000;
+const MAX_SPAWN_DELAY_MS = 45_000;
+const FIRST_SPAWN_MIN_MS = 8_000;
+const FIRST_SPAWN_MAX_MS = 15_000;
+const LIFETIME_MS = 13_000;
+const FADE_MS = 2_000;
+const MARGIN_PERCENT = 8;
+
+const randomBetween = (min: number, max: number) =>
+  min + Math.random() * (max - min);
+
+const randomPosition = () => ({
+  x: randomBetween(MARGIN_PERCENT, 100 - MARGIN_PERCENT),
+  y: randomBetween(MARGIN_PERCENT, 100 - MARGIN_PERCENT),
+});
+
+export function createGoldenNut() {
+  const [goldenNut, setGoldenNut] = createSignal<GoldenNutState | null>(null);
+  const nextSpawnAtRef = {
+    current: Date.now() + randomBetween(FIRST_SPAWN_MIN_MS, FIRST_SPAWN_MAX_MS),
+  };
+  const idRef = { current: 0 };
+  const pauseStartedAtRef = { current: null as number | null };
+
+  const hasJobless = createMemo(
+    () => appState.game.population.jobless.length > 0,
+  );
+
+  const scheduleNextSpawn = (fromTime: number = Date.now()) => {
+    nextSpawnAtRef.current =
+      fromTime + randomBetween(MIN_SPAWN_DELAY_MS, MAX_SPAWN_DELAY_MS);
+  };
+
+  const spawnGoldenNut = () => {
+    const joblessIds = appState.game.population.jobless;
+    if (joblessIds.length === 0) return;
+
+    const now = Date.now();
+    const { x, y } = randomPosition();
+    const reward = calculateGoldenNutReward();
+
+    idRef.current += 1;
+    setGoldenNut({
+      id: idRef.current,
+      x,
+      y,
+      reward,
+      spawnedAt: now,
+      expiresAt: now + LIFETIME_MS,
+      durationMs: LIFETIME_MS,
+    });
+  };
+
+  const clearGoldenNut = () => {
+    setGoldenNut(null);
+    scheduleNextSpawn();
+  };
+
+  const collectGoldenNut = () => {
+    const gn = goldenNut();
+    if (!gn) return;
+
+    addNuts(gn.reward);
+    addLog(
+      `Lucky find! Grabbed a glowing nut for ${gn.reward} nuts.`,
+      "success",
+    );
+    clearGoldenNut();
+  };
+
+  createEffect(() => {
+    if (!hasJobless() && goldenNut()) {
+      setGoldenNut(null);
+      scheduleNextSpawn();
+    }
+  });
+
+  createEffect(() => {
+    const isPaused = appState.game.isPaused;
+
+    const tick = () => {
+      if (appState.game.isPaused) return;
+
+      const now = Date.now();
+      const gn = goldenNut();
+
+      if (gn && now >= gn.expiresAt) {
+        setGoldenNut(null);
+        scheduleNextSpawn(now);
+        return;
+      }
+
+      if (
+        !gn &&
+        appState.game.population.jobless.length > 0 &&
+        now >= nextSpawnAtRef.current
+      ) {
+        spawnGoldenNut();
+      }
+    };
+
+    void isPaused;
+    const interval = window.setInterval(tick, 250);
+    onCleanup(() => window.clearInterval(interval));
+  });
+
+  createEffect(() => {
+    const isPaused = appState.game.isPaused;
+
+    if (isPaused) {
+      pauseStartedAtRef.current = Date.now();
+      return;
+    }
+
+    if (pauseStartedAtRef.current !== null) {
+      const pausedFor = Date.now() - pauseStartedAtRef.current;
+      nextSpawnAtRef.current += pausedFor;
+      setGoldenNut((current) => {
+        if (!current) return null;
+        const newExpiresAt = current.expiresAt + pausedFor;
+        return {
+          ...current,
+          expiresAt: newExpiresAt,
+          durationMs: Math.max(FADE_MS, newExpiresAt - Date.now()),
+        };
+      });
+      pauseStartedAtRef.current = null;
+    }
+  });
+
+  return {
+    goldenNut,
+    collectGoldenNut,
+    fadeMs: FADE_MS,
+  };
+}

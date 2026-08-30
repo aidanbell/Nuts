@@ -1,45 +1,54 @@
-import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState } from '../store';
-import { setActiveTab } from '../store/gameSlice';
+import { type Component, For } from "solid-js";
+import { appState, setActiveTab, getSettlementLabel } from "../engine/state";
+import { TOWN_TAB_ID } from "../data/town";
 
 const tabs = [
-  { id: 'home', label: 'Home' },
-  { id: 'ideas', label: 'Ideas' },
-  { id: 'jobsites', label: 'Jobsites' },
-  { id: 'refinement', label: 'Refinement' },
-  { id: 'population', label: 'Population' },
-  { id: 'fourth', label: 'Fourth' },
-  { id: 'hibernate', label: 'Hibernate!' },
+  { id: "home", label: "Home" },
+  { id: "ideas", label: "Ideas" },
+  { id: "jobsites", label: "Jobsites" },
+  { id: "refinement", label: "Refinement" },
+  { id: TOWN_TAB_ID, label: "Town" },
+  { id: "population", label: "Population" },
+  { id: "fourth", label: "Fourth" },
+  { id: "hibernate", label: "Hibernate!" },
 ];
 
-const Navigation: React.FC = () => {
-  const dispatch = useDispatch();
-  const activeTab = useSelector((state: RootState) => state.game.activeTab);
-  const unlockedTabs = useSelector((state: RootState) => state.game.unlockedTabs);
+const Navigation: Component = () => {
+  const activeTab = () => appState.game.activeTab;
+  const unlockedTabs = () => appState.game.unlockedTabs;
+
+  const visibleTabs = () =>
+    tabs.filter((tab) => unlockedTabs().includes(tab.id));
+
+  const tabLabel = (tab: { id: string; label: string }) => {
+    if (tab.id === TOWN_TAB_ID) {
+      return getSettlementLabel();
+    }
+    return tab.label;
+  };
 
   return (
-    <nav className="flex w-full shrink-0 flex-row flex-wrap gap-2 md:w-44 md:flex-col">
-      {tabs
-        .filter((tab) => unlockedTabs.includes(tab.id))
-        .map((tab) => {
-          const active = activeTab === tab.id;
+    <nav class="flex w-full shrink-0 flex-row flex-wrap gap-2 md:w-44 md:flex-col">
+      <For each={visibleTabs()}>
+        {(tab) => {
+          const active = () => activeTab() === tab.id;
+
           return (
             <button
-              key={tab.id}
               type="button"
-              onClick={() => dispatch(setActiveTab(tab.id))}
-              className={[
-                'rounded-lg border px-3 py-2.5 text-sm font-semibold transition md:w-full md:text-base',
-                active
-                  ? 'border-moss bg-moss text-white shadow-md'
-                  : 'border-moss/20 bg-paper/80 text-bark hover:-translate-y-0.5 hover:border-moss/40 hover:bg-white',
-              ].join(' ')}
+              onClick={() => setActiveTab(tab.id)}
+              class={[
+                "rounded-lg border px-3 py-2.5 text-sm font-semibold transition md:w-full md:text-base",
+                active()
+                  ? "border-moss bg-moss text-white shadow-md"
+                  : "border-moss/20 bg-paper/80 text-bark hover:-translate-y-0.5 hover:border-moss/40 hover:bg-white",
+              ].join(" ")}
             >
-              {tab.label}
+              {tabLabel(tab)}
             </button>
           );
-        })}
+        }}
+      </For>
     </nav>
   );
 };

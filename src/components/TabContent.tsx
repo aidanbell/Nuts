@@ -1,40 +1,52 @@
-import React from 'react';
-import HomeTab from './tabs/HomeTab';
-import JobsiteTab from './tabs/JobsiteTab';
-import IdeasTab from './tabs/IdeasTab';
-import PopulationTab from './tabs/PopulationTab';
-import FourthTab from './tabs/FourthTab';
-import HibernateTab from './tabs/HibernateTab';
-import RefinementTab from './tabs/RefinementTab';
+/**
+ * Renders the active tab panel.
+ */
+
+import { type Component, Switch, Match } from "solid-js";
+import HomeTab from "./tabs/HomeTab";
+import JobsiteTab from "./tabs/JobsiteTab";
+import IdeasTab from "./tabs/IdeasTab";
+import PopulationTab from "./tabs/PopulationTab";
+import TownTab from "./tabs/TownTab";
+import FourthTab from "./tabs/FourthTab";
+import HibernateTab from "./tabs/HibernateTab";
+import RefinementTab from "./tabs/RefinementTab";
+import { TOWN_TAB_ID } from "../data/town";
 
 interface TabContentProps {
   activeTab: string;
 }
 
-const TabContent: React.FC<TabContentProps> = ({ activeTab }) => {
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'home':
-        return <HomeTab />;
-      case 'jobsites':
-        return <JobsiteTab />;
-      case 'ideas':
-        return <IdeasTab />;
-      case 'refinement':
-        return <RefinementTab />;
-      case 'population':
-        return <PopulationTab />;
-      case 'fourth':
-        return <FourthTab />;
-      case 'hibernate':
-        return <HibernateTab />;
-      default:
-        return <HomeTab />;
-    }
-  };
-
+const TabContent: Component<TabContentProps> = (props) => {
   return (
-    <main className="card min-h-[60vh] flex-1 overflow-hidden">{renderTabContent()}</main>
+    <main class="card min-h-[50vh] flex-1 overflow-hidden">
+      <Switch fallback={<HomeTab />}>
+        <Match when={props.activeTab === "home"}>
+          <HomeTab />
+        </Match>
+        <Match when={props.activeTab === "jobsites"}>
+          <JobsiteTab />
+        </Match>
+        <Match when={props.activeTab === "ideas"}>
+          <IdeasTab />
+        </Match>
+        <Match when={props.activeTab === "refinement"}>
+          <RefinementTab />
+        </Match>
+        <Match when={props.activeTab === TOWN_TAB_ID}>
+          <TownTab />
+        </Match>
+        <Match when={props.activeTab === "population"}>
+          <PopulationTab />
+        </Match>
+        <Match when={props.activeTab === "fourth"}>
+          <FourthTab />
+        </Match>
+        <Match when={props.activeTab === "hibernate"}>
+          <HibernateTab />
+        </Match>
+      </Switch>
+    </main>
   );
 };
 

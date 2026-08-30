@@ -1,3 +1,5 @@
+import type { MetaState } from "./meta";
+
 export interface Squirrel {
   _id: number;
   employed: boolean;
@@ -8,18 +10,18 @@ export interface Squirrel {
 export interface JobSite {
   id: string;
   name: string;
-  
+
   // Building capacity system
   maxSquirrels: number; // Maximum squirrels that can be assigned
   workers: number[]; // Array of squirrel IDs currently assigned
-  
+
   // Production system
   baseProduction: number; // Passive production per second (without squirrels)
   squirrelBonus: number; // Additional production per second per squirrel assigned
   time: number; // Legacy: may be used for animation/display timing
   multi: number; // Global multiplier from upgrades
   value: number; // Legacy: base value for calculations
-  
+
   // Refinement system (for type: "refinement")
   consumes?: {
     resource: "nuts" | "nutwood" | "stone" | "bronze" | "iron";
@@ -29,14 +31,14 @@ export interface JobSite {
     resource: "nutwood" | "stone" | "bronze" | "iron";
     amount: number; // Amount produced per production cycle
   };
-  
+
   // Upgrade system
   level: number; // Number of times upgraded
   maxLevel?: number; // Optional upgrade cap
   cost: number; // Current upgrade cost
   costGrowthRate: number; // Exponential growth rate (e.g., 1.15 = 15% increase per purchase)
   baseCost: number; // Original base cost for recalculation
-  
+
   // Metadata
   type: "production" | "refinement";
   method: "ground" | "air" | "refinement";
@@ -66,7 +68,7 @@ export interface GameState {
     total: number;
     multi: number;
   };
-  
+
   // Refined resources
   resources: {
     nutwood: number;
@@ -74,7 +76,7 @@ export interface GameState {
     bronze: number;
     iron: number;
   };
-  
+
   // Population and jobs
   squirrels: Record<number, Squirrel>;
   nextSquirrelId: number;
@@ -83,24 +85,34 @@ export interface GameState {
     jobless: JoblessJobSite;
     production: Record<string, JobSite>;
     refinement: Record<string, JobSite>;
-  }
-  
+  };
+
   // Get button
   getButton: {
     value: number;
     mult: number;
   };
-  
+
   // Game settings
   gameSpeed: number;
   isPaused: boolean;
   tick: number;
   lastUpdate: number;
-  
+
   // UI state
   activeTab: string;
   unlockedTabs: string[];
-  
+
+  /**
+   * Seasonal settlement (wipes on hibernate).
+   * Durable buildings will live elsewhere later.
+   */
+  town: {
+    woodenHouses: number;
+    /** 0 = not built this season; 1+ = lit (attraction rolls) */
+    bonfireLevel: number;
+  };
+
   // Timer
   timer: {
     ms: number;
@@ -110,7 +122,7 @@ export interface GameState {
 }
 
 export interface GameUpdate {
-  type: 'ADD_NUTS' | 'UPDATE_SQUIRREL' | 'UPDATE_JOBSITE';
+  type: "ADD_NUTS" | "UPDATE_SQUIRREL" | "UPDATE_JOBSITE";
   data: {
     amount?: number;
     id?: number | string;
@@ -138,6 +150,19 @@ export interface SaveData {
     value: number;
     mult: number;
   };
+  resources?: GameState["resources"];
+  unlockedTabs?: string[];
+  activeTab?: string;
+  timer?: GameState["timer"];
+  clearing?: GameState["town"];
+  town?: GameState["town"];
+  meta?: MetaState;
+  story?: {
+    completedCheckpoints: string[];
+    currentEra: string | null;
+  };
+  ideas?: {
+    researchedIdeas: string[];
+  };
   timestamp: number;
 }
-

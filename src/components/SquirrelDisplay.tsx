@@ -1,71 +1,79 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../store';
+import {
+  type Component,
+  Show,
+  createSignal,
+  createEffect,
+  onCleanup,
+} from "solid-js";
+import { appState } from "../engine/state";
 
 interface SquirrelDisplayProps {
   squirrelId: number;
   showNutFinding?: boolean;
 }
 
-const SquirrelDisplay: React.FC<SquirrelDisplayProps> = ({
-  squirrelId,
-  showNutFinding = false,
-}) => {
-  const squirrel = useSelector((state: RootState) => state.game.squirrels[squirrelId]);
-  const [showAnimation, setShowAnimation] = useState(false);
-  const [animationPosition, setAnimationPosition] = useState('0%');
-  const [isFlipped, setIsFlipped] = useState(false);
-  const previousTotalRef = useRef<number>(0);
+const SquirrelDisplay: Component<SquirrelDisplayProps> = (props) => {
+  const squirrel = () => appState.game.squirrels[props.squirrelId];
 
-  useEffect(() => {
-    if (!squirrel || !showNutFinding) return;
+  const [showAnimation, setShowAnimation] = createSignal(false);
+  const [animationPosition, setAnimationPosition] = createSignal("0%");
+  const [isFlipped, setIsFlipped] = createSignal(false);
 
-    if (squirrel.total > previousTotalRef.current) {
+  let previousTotal = 0;
+
+  createEffect(() => {
+    const sq = squirrel();
+    if (!sq || !props.showNutFinding) return;
+
+    if (sq.total > previousTotal) {
       setAnimationPosition(`${Math.floor(Math.random() * 50)}%`);
       setShowAnimation(true);
 
       const timeout = setTimeout(() => {
         setShowAnimation(false);
-        setAnimationPosition('0%');
+        setAnimationPosition("0%");
       }, 600);
 
-      previousTotalRef.current = squirrel.total;
-      return () => clearTimeout(timeout);
+      previousTotal = sq.total;
+      onCleanup(() => clearTimeout(timeout));
+      return;
     }
 
-    previousTotalRef.current = squirrel.total;
-  }, [squirrel, showNutFinding]);
+    previousTotal = sq.total;
+  });
 
-  useEffect(() => {
-    if (!showNutFinding) return;
+  createEffect(() => {
+    if (!props.showNutFinding) return;
 
     const flipInterval = setInterval(() => {
       setIsFlipped(Math.random() > 0.33);
     }, 1000);
 
-    return () => clearInterval(flipInterval);
-  }, [showNutFinding]);
-
-  if (!squirrel) return null;
+    onCleanup(() => clearInterval(flipInterval));
+  });
 
   return (
-    <div className="relative inline-block p-2 text-5xl" id={`s-${squirrel._id}`}>
-      <span
-        className="inline-block transition-transform duration-300"
-        style={{ transform: `scaleX(${isFlipped ? -1 : 1})` }}
-      >
-        🐿️
-      </span>
-      {showNutFinding && showAnimation && (
-        <div
-          id={`f-${squirrel._id}`}
-          className="animate-found-nut absolute text-xl"
-          style={{ left: animationPosition, top: '-2em' }}
-        >
-          🥜
+    <Show when={squirrel()}>
+      {(sq) => (
+        <div class="relative inline-block p-2 text-5xl" id={`s-${sq()._id}`}>
+          <span
+            class="inline-block transition-transform duration-300"
+            style={{ transform: `scaleX(${isFlipped() ? -1 : 1})` }}
+          >
+            🐿️
+          </span>
+          <Show when={props.showNutFinding && showAnimation()}>
+            <div
+              id={`f-${sq()._id}`}
+              class="animate-found-nut absolute text-xl"
+              style={{ left: animationPosition(), top: "-2em" }}
+            >
+              🥜
+            </div>
+          </Show>
         </div>
       )}
-    </div>
+    </Show>
   );
 };
 

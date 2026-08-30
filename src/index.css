@@ -30,9 +30,22 @@
     font-family: var(--font-sans);
     color: var(--color-bark);
     background:
-      radial-gradient(ellipse at 20% 0%, rgba(107, 143, 94, 0.18), transparent 50%),
-      radial-gradient(ellipse at 90% 10%, rgba(196, 120, 43, 0.12), transparent 45%),
-      linear-gradient(165deg, var(--color-mist) 0%, var(--color-sage) 55%, #c5d4bc 100%);
+      radial-gradient(
+        ellipse at 20% 0%,
+        rgba(107, 143, 94, 0.18),
+        transparent 50%
+      ),
+      radial-gradient(
+        ellipse at 90% 10%,
+        rgba(196, 120, 43, 0.12),
+        transparent 45%
+      ),
+      linear-gradient(
+        165deg,
+        var(--color-mist) 0%,
+        var(--color-sage) 55%,
+        #c5d4bc 100%
+      );
     background-attachment: fixed;
   }
 
@@ -120,11 +133,13 @@
   0%,
   100% {
     transform: scale(1) rotate(-6deg);
-    filter: drop-shadow(0 0 6px #e6b422) drop-shadow(0 0 14px rgba(230, 180, 34, 0.55));
+    filter: drop-shadow(0 0 6px #e6b422)
+      drop-shadow(0 0 14px rgba(230, 180, 34, 0.55));
   }
   50% {
     transform: scale(1.12) rotate(6deg);
-    filter: drop-shadow(0 0 10px #e6b422) drop-shadow(0 0 22px rgba(230, 180, 34, 0.8));
+    filter: drop-shadow(0 0 10px #e6b422)
+      drop-shadow(0 0 22px rgba(230, 180, 34, 0.8));
   }
 }
 
