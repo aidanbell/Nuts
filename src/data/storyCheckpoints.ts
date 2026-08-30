@@ -1,4 +1,5 @@
 import type { StoryCheckpoint } from "../types/story";
+import { FIRST_WINTER_GATHERER_LEVEL } from "../types/meta";
 
 /**
  * Story checkpoints define the progression of the game's narrative.
@@ -161,14 +162,14 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
 
     effects: {
       unlockSquirrels: 2,
-      unlockTabs: ["buildings"],
+      unlockTabs: ["town"],
       showStory: true,
       pauseGame: true,
     },
 
     story: {
       title: "No Room Left",
-      body: "Two more squirrels press in at the edge of the clearing, eager to help — but there's nowhere left to sleep. Crowding this hard won't work. You'll have to figure out housing… and maybe more. The Buildings tab is open.",
+      body: "Two more squirrels press in at the edge of the clearing, eager to help — but there's nowhere left to sleep. Crowding this hard won't work. You'll have to figure out housing… and maybe more. The Town tab is open.",
       character: "narrator",
     },
   },
@@ -298,15 +299,13 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
     ],
 
     effects: {
-      unlockTabs: ["eras"],
       nutReward: 100,
       showStory: true,
-      pauseGame: true,
     },
 
     story: {
       title: "The First Refined Material",
-      body: "Your squirrels have successfully refined their first piece of NutWood! This breakthrough transforms simple nuts into refined materials. The possibilities are endless! A new era awaits your decision. Check the Home tab to choose when to advance. (+100 nuts)",
+      body: "Your first piece of NutWood! Stockpile these for The Wood Age idea — twenty-five husks bound into a new chapter for the colony. (+100 nuts)",
       character: "squirrel_inventor",
     },
   },
@@ -330,6 +329,65 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
       title: "The Age of Wood",
       body: "Your colony has entered the Wood Age! With refined materials and better tools, new possibilities await. Tree Climber jobsites can now be unlocked through research.",
       character: "squirrel_elder",
+    },
+  },
+
+  stickPokerTravelers: {
+    id: "stickPokerTravelers",
+    name: "Travelers at the Edge",
+    description:
+      "Two squirrels want to join after Stick Poker — but need housing",
+    priority: 88,
+    oneTime: true,
+    completed: false,
+
+    requirements: [
+      { type: "idea_researched", value: "stickPoker", operator: "==" },
+    ],
+
+    triggers: [
+      { type: "idea_researched", value: "stickPoker", operator: "==" },
+    ],
+
+    effects: {
+      showStory: true,
+      pauseGame: true,
+    },
+
+    story: {
+      title: "Two at the Treeline",
+      body: 'Word of your Stick Poker site has traveled. Two squirrels hang at the treeline, eager to work — but they refuse to sleep under open sky. "Build us a den," they call, "and we\'ll stay." Raise a wooden house in Town if you want their help.',
+      character: "narrator",
+    },
+  },
+
+  stickPokerHousing: {
+    id: "stickPokerHousing",
+    name: "Dens for Newcomers",
+    description:
+      "First wooden house after Stick Poker — travelers join and ask for a signal",
+    priority: 87,
+    oneTime: true,
+    completed: false,
+
+    requirements: [
+      { type: "idea_researched", value: "stickPoker", operator: "==" },
+      { type: "wooden_houses", value: 1, operator: ">=" },
+    ],
+
+    triggers: [{ type: "wooden_houses", value: 1, operator: ">=" }],
+
+    effects: {
+      unlockSquirrels: 2,
+      unlockBuildings: ["bonfire"],
+      showStory: true,
+      pauseGame: true,
+    },
+
+    story: {
+      title: "Room Enough",
+      body: 'The new dens smell of fresh NutWood. The two travelers move in at once, tails flicking with relief. "We\'ll put the word out," one says, "but travelers need a signal — a light in the dark. Light a bonfire in Town, and more of us will find this place."',
+      character: "squirrel_01",
     },
   },
 
@@ -525,7 +583,7 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
   winterApproaching: {
     id: "winterApproaching",
     name: "Winter Approaches",
-    description: "Gatherer upgrades grow costly as the cold closes in",
+    description: "Gatherer is maxed — nowhere left to push this season",
     priority: 95,
     oneTime: true,
     completed: false,
@@ -538,7 +596,7 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
     triggers: [
       {
         type: "jobsite_level",
-        value: 6,
+        value: FIRST_WINTER_GATHERER_LEVEL,
         operator: ">=",
         jobsiteId: "gatherer",
       },
@@ -552,7 +610,42 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
 
     story: {
       title: "The Cold Creeps In",
-      body: "Nights stretch longer. Your Gatherer site still works, but each upgrade costs more than the last — and frost is already kissing the clearing. The colony must hibernate soon, or winter will take everything. Dream of Wood Age tools and dens… next spring, those dreams might be real.",
+      body: "The Gatherer site is pushed as far as it can go — every branch picked clean, every squirrel assigned. There's nothing left to chase in this clearing. Frost is already kissing the ground. Hibernate now, keep your Gold Nuts, and wake ready for scavenger routes and NutWood craft.",
+      character: "narrator",
+    },
+  },
+
+  secondWinterApproaching: {
+    id: "secondWinterApproaching",
+    name: "Second Winter",
+    description: "First NutWood crafted — winter returns before the Wood Age",
+    priority: 95,
+    oneTime: true,
+    completed: false,
+
+    requirements: [
+      { type: "hibernations_completed", value: 1, operator: "==" },
+      { type: "idea_researched", value: "nutwoodCraft", operator: "==" },
+    ],
+
+    triggers: [
+      {
+        type: "resource_count",
+        value: 1,
+        operator: ">=",
+        resource: "nutwood",
+      },
+    ],
+
+    effects: {
+      unlockTabs: ["hibernate"],
+      showStory: true,
+      pauseGame: true,
+    },
+
+    story: {
+      title: "Wood Before the Freeze",
+      body: "You've pressed your first NutWood — and already the nights bite harder. The Wood Age will take a full stockpile, and this season won't give you the time. Hibernate with what you've learned. Next spring, Gold in your teeth, you can bind enough husks to commit the colony to wood.",
       character: "narrator",
     },
   },
@@ -609,7 +702,7 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
 
     story: {
       title: "Spring",
-      body: "You wake alone in a bare clearing. The den is gone. The nuts are gone. But something warm remains — Gold Nuts from the long dream — and with them, a clearer memory of wooden tools and taller trees. This season, the Wood Age is within reach.",
+      body: "You wake alone in a bare clearing. The den is gone. The nuts are gone. But something warm remains — Gold Nuts from the long dream — and with them, clearer memories of craft and taller trees. This season, push farther than last year.",
       character: "narrator",
     },
   },

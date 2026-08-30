@@ -5,10 +5,14 @@ import {
   createSignal,
   onCleanup,
 } from "solid-js";
-import { appState } from "../engine/state";
+import { appState, getEffectiveNps } from "../engine/state";
 import { createAnimatedNumber } from "../utils/createAnimatedNumber";
 import GameConsole from "./GameConsole";
-import { formatNumber, formatTime } from "../utils/formatters";
+import {
+  formatNumber,
+  formatTime,
+  formatProductionRate,
+} from "../utils/formatters";
 
 const Header: Component = () => {
   const nutsTotal = () => appState.game.nutsTotal;
@@ -55,6 +59,9 @@ const Header: Component = () => {
         </p>
         <p class="mt-2 text-sm text-muted" id="nuts-running">
           All time: {Math.round(nutsAllTime() * 1000) / 1000}
+        </p>
+        <p class="mt-1 text-sm font-semibold text-bark" id="effective-nps">
+          {formatProductionRate(getEffectiveNps())}
         </p>
 
         <Show when={hasResources()}>

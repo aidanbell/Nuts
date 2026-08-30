@@ -7,13 +7,13 @@ import {
 import { formatNumber } from "../../utils/formatters";
 
 const HibernateTab: Component = () => {
-  const nutsAllTime = () => appState.game.nutsAllTime;
   const goldNuts = () => appState.game.goldNuts;
+  const nutsThisSeason = () => appState.game.nutsAllTime;
   const meta = () => appState.meta;
   const [showConfirm, setShowConfirm] = createSignal(false);
 
   const goldNutReward = createMemo(() =>
-    calculateHibernationReward(nutsAllTime(), goldNuts().multi),
+    calculateHibernationReward(nutsThisSeason(), goldNuts().multi),
   );
 
   const handleConfirmHibernate = () => {
@@ -45,13 +45,17 @@ const HibernateTab: Component = () => {
           {meta().hibernations}
         </p>
         <p class="muted mt-1">
+          Nuts this season: <strong>🥜 {formatNumber(nutsThisSeason())}</strong>
+        </p>
+        <p class="muted mt-1">
           Current reward:{" "}
           <strong class="text-gold">
             {formatNumber(goldNutReward())} ⭐ Gold Nuts
           </strong>
         </p>
         <p class="muted mt-1 text-xs">
-          Banked Gold Nuts boost foraging next season (+
+          Gold Nuts scale with nuts gathered this season. Banked Gold boosts all
+          production next season (+
           {((meta().goldForageMulti - 1) * 100).toFixed(0)}% now
           {goldNutReward() > 0
             ? `, +${(goldNutReward() * 2).toFixed(0)}% after`
@@ -83,7 +87,13 @@ const HibernateTab: Component = () => {
             </p>
             <Show when={meta().hibernations === 0}>
               <p class="muted mt-2 text-sm">
-                Next spring, the Wood Age will no longer be just a dream.
+                Next spring, Scavenger routes and NutWood craft open up.
+              </p>
+            </Show>
+            <Show when={meta().hibernations === 1}>
+              <p class="muted mt-2 text-sm">
+                Next spring, with more Gold, you can stockpile NutWood and
+                research The Wood Age.
               </p>
             </Show>
             <div class="mt-4 flex flex-wrap justify-center gap-3">

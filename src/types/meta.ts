@@ -23,6 +23,8 @@ export interface MetaState {
   structureIdeas: string[];
   /** Jobsite ids known to the colony (rebuilt at level 0 each spring) */
   unlockedJobsiteIds: string[];
+  /** Town building ids the colony knows how to raise (e.g. bonfire) */
+  unlockedTownBuildings: string[];
 }
 
 export const INITIAL_META_STATE: MetaState = {
@@ -35,10 +37,11 @@ export const INITIAL_META_STATE: MetaState = {
   unlockedTabs: ["home"],
   structureIdeas: [],
   unlockedJobsiteIds: [],
+  unlockedTownBuildings: [],
 };
 
-/** Gatherer level at which first winter begins to close in */
-export const FIRST_WINTER_GATHERER_LEVEL = 6;
+/** Gatherer level at which first winter begins (maxed site = natural stop) */
+export const FIRST_WINTER_GATHERER_LEVEL = 10;
 
 /** Story modals for early seasons; console-only after this many hibernations */
 export const STORY_MODAL_HIBERNATION_LIMIT = 2;

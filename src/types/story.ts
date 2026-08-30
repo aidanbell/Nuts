@@ -9,6 +9,7 @@ export type CheckpointTriggerType =
   | "hibernations_completed"
   | "jobsite_level"
   | "resource_count" // Amount of a specific refined resource
+  | "wooden_houses" // Seasonal wooden house count
   | "combined"; // Multiple conditions required
 
 export interface CheckpointCondition {

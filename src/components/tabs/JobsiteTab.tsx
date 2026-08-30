@@ -80,10 +80,12 @@ const JobSiteCard: Component<JobSiteCardProps> = (props) => {
 
   const totalRate = () => {
     const site = jobSite();
-    if (!site) return 0;
+    if (!site || site.level < 1) return 0;
+    const goldMulti = appState.meta.goldForageMulti;
     return (
       (site.baseProduction + site.squirrelBonus * site.workers.length) *
-      site.multi
+      site.multi *
+      goldMulti
     );
   };
 
@@ -150,7 +152,9 @@ const JobSiteCard: Component<JobSiteCardProps> = (props) => {
                     <p class="muted">Base</p>
                     <p>
                       {formatProductionRate(
-                        site().baseProduction * site().multi,
+                        site().baseProduction *
+                          site().multi *
+                          appState.meta.goldForageMulti,
                       )}
                     </p>
                   </div>
@@ -159,7 +163,9 @@ const JobSiteCard: Component<JobSiteCardProps> = (props) => {
                     <p>
                       +
                       {formatProductionRate(
-                        site().squirrelBonus * site().multi,
+                        site().squirrelBonus *
+                          site().multi *
+                          appState.meta.goldForageMulti,
                       )}
                     </p>
                   </div>

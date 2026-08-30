@@ -7,6 +7,7 @@ import {
   createSquirrel,
   pauseGame,
   unlockTabs,
+  unlockTownBuildings,
   addNuts,
   unlockJobsites,
   setEra,
@@ -61,10 +62,7 @@ export const processEffects = (
       if (createSquirrel()) joined += 1;
     }
     if (!suppressLogs && sourceName && joined > 0) {
-      addLog(
-        `🐿️ ${joined} squirrel(s) joined! (${sourceName})`,
-        "success",
-      );
+      addLog(`🐿️ ${joined} squirrel(s) joined! (${sourceName})`, "success");
     }
   }
 
@@ -79,10 +77,11 @@ export const processEffects = (
   }
 
   if (effects.unlockBuildings && effects.unlockBuildings.length > 0) {
+    unlockTownBuildings(effects.unlockBuildings);
     if (!suppressLogs) {
       addLog(
         `🏭 Unlocked buildings: ${effects.unlockBuildings.join(", ")}`,
-        "info",
+        "success",
       );
     }
   }
@@ -99,6 +98,17 @@ export const processEffects = (
     if (!suppressLogs) {
       addLog(
         `+${effects.nutReward} nuts${sourceName ? ` (${sourceName})` : ""}`,
+        "success",
+      );
+    }
+  }
+
+  if (effects.unlockRefinement && effects.unlockRefinement.length > 0) {
+    unlockJobsites(effects.unlockRefinement);
+    unlockTabs(["refinement"]);
+    if (!suppressLogs) {
+      addLog(
+        `🪵 Unlocked refinement: ${effects.unlockRefinement.join(", ")}`,
         "success",
       );
     }

@@ -14,8 +14,10 @@ import {
   addResource,
   spendNuts,
   spendResource,
+  tryBonfireAttraction,
 } from "./state";
 import type { GameState } from "../types/game";
+import { getBonfireStats } from "../data/town";
 
 // ============================================================================
 // Game Loop Implementation
@@ -51,6 +53,7 @@ export function startGameLoop() {
   // Track last jobless attempt time for each squirrel
   // This ensures each squirrel has its own foraging timer
   const lastJoblessAttempt = new Map<number, number>();
+  let lastBonfireCheck = 0;
 
   const gameLoop = (timestamp: number) => {
     const game = appState.game;
@@ -67,6 +70,7 @@ export function startGameLoop() {
     if (lastLogicUpdate === 0) {
       lastLogicUpdate = timestamp;
       lastRenderUpdate = timestamp;
+      lastBonfireCheck = timestamp;
       gameLoopRef = requestAnimationFrame(gameLoop);
       return;
     }
@@ -77,6 +81,7 @@ export function startGameLoop() {
     if (timestamp - lastLogicUpdate >= 100) {
       processJobSites(deltaTime, timestamp, game, lastRefinementCycle);
       processJoblessSquirrels(timestamp, game, lastJoblessAttempt);
+      lastBonfireCheck = processBonfire(timestamp, game, lastBonfireCheck);
 
       incrementTick();
       updateTimer(deltaTime);
@@ -126,9 +131,13 @@ function processJobSites(
     // Unbuilt sites produce nothing
     if (jobSite.level < 1) return;
 
-    const baseRate = jobSite.baseProduction * jobSite.multi;
+    const goldMulti = appState.meta.goldForageMulti;
+    const baseRate = jobSite.baseProduction * jobSite.multi * goldMulti;
     const squirrelRate =
-      jobSite.squirrelBonus * jobSite.multi * jobSite.workers.length;
+      jobSite.squirrelBonus *
+      jobSite.multi *
+      jobSite.workers.length *
+      goldMulti;
     const totalRate = baseRate + squirrelRate; // nuts per second
     const totalProduction = (totalRate * deltaTime * game.gameSpeed) / 1000;
 
@@ -198,6 +207,25 @@ function processJobSites(
   if (totalNuts > 0) {
     addNuts(totalNuts);
   }
+}
+
+/**
+ * Bonfire attraction — slow RNG rolls while lit; fails quietly at pop cap.
+ */
+function processBonfire(
+  currentTime: number,
+  game: GameState,
+  lastBonfireCheck: number,
+): number {
+  const stats = getBonfireStats(game.town?.bonfireLevel ?? 0);
+  if (!stats) return lastBonfireCheck;
+
+  if (currentTime - lastBonfireCheck < stats.checkIntervalMs) {
+    return lastBonfireCheck;
+  }
+
+  tryBonfireAttraction();
+  return currentTime;
 }
 
 /**

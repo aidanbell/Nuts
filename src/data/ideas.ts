@@ -1,18 +1,18 @@
 import type { Idea } from "../types/ideas";
+import { efficiencyIdea, unlockIdea } from "./defineIdea";
 
 /**
- * Ideas represent the research/tech tree of the game.
- * They unlock jobsites, buildings, and provide various meta upgrades.
+ * Ideas / tech tree.
+ * Prefer unlockIdea / efficiencyIdea from defineIdea.ts when adding entries.
  */
 export const ideas: Record<string, Idea> = {
   // ==================== PREHISTORY ====================
 
-  nutRecognition: {
+  nutRecognition: efficiencyIdea({
     id: "nutRecognition",
     name: "Nut Recognition",
     description:
       "Learn to identify the best nuts by sight and smell. Find 2 nuts instead of 1 when foraging succeeds!",
-    category: "efficiency",
     era: "PREHISTORY",
     cost: { nuts: 50 },
     effects: {
@@ -22,21 +22,16 @@ export const ideas: Record<string, Idea> = {
         amount: 1,
       },
     },
-    researched: false,
     visible: true,
-  },
+  }),
 
-  efficientGathering: {
+  efficientGathering: efficiencyIdea({
     id: "efficientGathering",
     name: "Efficient Gathering",
     description:
       "Develop better foraging instincts. Increases success chance from 50% to 60%.",
-    category: "efficiency",
     era: "PREHISTORY",
-    requirements: {
-      nutsCollected: 100,
-    },
-    cost: { nuts: 150 },
+    cost: { nuts: 75 },
     effects: {
       upgradeJobsite: {
         jobsiteId: "jobless",
@@ -44,32 +39,25 @@ export const ideas: Record<string, Idea> = {
         amount: 0.1,
       },
     },
-    researched: false,
-    visible: false,
-  },
+    visible: true,
+  }),
 
-  keenNose: {
+  keenNose: efficiencyIdea({
     id: "keenNose",
     name: "Keen Nose",
     description:
       "Trust your instincts - your nose knows! Forage attempts happen 20% faster.",
-    category: "efficiency",
     era: "PREHISTORY",
-    requirements: {
-      nutsCollected: 175,
-      squirrelsCount: 2,
-    },
-    cost: { nuts: 200 },
+    cost: { nuts: 120 },
     effects: {
       upgradeJobsite: {
         jobsiteId: "jobless",
         property: "time",
-        amount: 300, // Reduces from 1500ms to 1200ms
+        amount: 300,
       },
     },
-    researched: false,
-    visible: false,
-  },
+    visible: true,
+  }),
 
   territorialAwareness: {
     id: "territorialAwareness",
@@ -78,11 +66,7 @@ export const ideas: Record<string, Idea> = {
       'Mark the best foraging spots. 20% more nuts from all your foraging! The concept of "work sites" begins to emerge...',
     category: "production",
     era: "PREHISTORY",
-    requirements: {
-      nutsCollected: 250,
-      squirrelsCount: 3,
-    },
-    cost: { nuts: 300 },
+    cost: { nuts: 200 },
     effects: {
       upgradeJobsite: {
         jobsiteId: "jobless",
@@ -91,105 +75,171 @@ export const ideas: Record<string, Idea> = {
       },
     },
     researched: false,
-    visible: false,
+    visible: true,
   },
 
-  divisionOfLabor: {
+  divisionOfLabor: unlockIdea({
     id: "divisionOfLabor",
     name: "Division of Labor",
     description:
-      "Organize your squirrels into specialized roles. Unlock the first jobsites!",
-    category: "production",
+      "Organize squirrels into specialized roles. Unlocks the Gatherer jobsite.",
     era: "PREHISTORY",
     cost: { nuts: 500 },
     effects: {
       unlockJobsites: ["gatherer"],
     },
-    persists: true,
-    researched: false,
-    visible: false,
-  },
+    visible: true,
+  }),
 
-  discoverRefinement: {
-    id: "discoverRefinement",
-    name: "Discover Refinement",
+  scavengerWork: unlockIdea({
+    id: "scavengerWork",
+    name: "Scavenger Routes",
     description:
-      "Your squirrels discover they can process nuts into refined materials! Unlock manual refinement.",
-    category: "production",
+      "Map the underbrush and scrap piles. Unlocks the Scavenger jobsite — a second place to staff while chasing NutWood.",
     era: "PREHISTORY",
     requirements: {
-      nutsCollected: 800,
-      squirrelsCount: 5,
       ideasResearched: ["divisionOfLabor"],
+      maxEraAvailable: "WOOD_AGE",
     },
     cost: { nuts: 800 },
     effects: {
+      unlockJobsites: ["scavenger"],
+    },
+  }),
+
+  nutwoodCraft: unlockIdea({
+    id: "nutwoodCraft",
+    name: "NutWood Craft",
+    description:
+      "Press and bind nut husks into NutWood by hand. Opens the Refinement tab — stockpile wood across winters to chase the Wood Age.",
+    era: "PREHISTORY",
+    requirements: {
+      ideasResearched: ["divisionOfLabor"],
+      maxEraAvailable: "WOOD_AGE",
+    },
+    cost: { nuts: 1200 },
+    effects: {
       unlockFeature: "refinement",
     },
-    persists: true,
-    researched: false,
-    visible: false,
-  },
+  }),
+
+  woodAge: unlockIdea({
+    id: "woodAge",
+    name: "The Wood Age",
+    description:
+      "Commit the colony to wooden tools and dens. Opens the Wood Age idea catalog (Stick Poker, Tree Climber, and more).",
+    era: "PREHISTORY",
+    requirements: {
+      ideasResearched: ["nutwoodCraft"],
+      maxEraAvailable: "WOOD_AGE",
+      minHibernations: 2,
+    },
+    cost: { nuts: 2000, nutwood: 25 },
+    effects: {
+      setEra: "WOOD_AGE",
+    },
+  }),
 
   // ==================== WOOD AGE ====================
 
-  airMethods: {
-    id: "airMethods",
+  stickPoker: unlockIdea({
+    id: "stickPoker",
+    name: "Stick Poker",
+    description:
+      "Sharpen sticks to pry nuts from tight spots. Unlocks the Stick Poker jobsite.",
+    era: "WOOD_AGE",
+    cost: { nuts: 2500, nutwood: 15 },
+    effects: {
+      unlockJobsites: ["stickPoker"],
+    },
+  }),
+
+  treeClimbing: unlockIdea({
+    id: "treeClimbing",
     name: "Climbing Techniques",
     description:
-      "Master the art of climbing to harvest nuts from the canopy above. Requires NutWood to build climbing tools.",
-    category: "production",
+      "Reach the canopy with wooden climbing gear. Unlocks the Tree Climber jobsite.",
     era: "WOOD_AGE",
     requirements: {
-      era: "WOOD_AGE",
+      ideasResearched: ["stickPoker"],
     },
-    cost: {
-      nuts: 750,
-      nutwood: 5,
-    },
+    cost: { nuts: 4000, nutwood: 25 },
     effects: {
       unlockJobsites: ["treeClimber"],
     },
-    persists: true,
-    researched: false,
-    visible: false,
-  },
+  }),
 
-  woodRefinement: {
-    id: "woodRefinement",
-    name: "Wood Refinement",
-    description: "Learn to process nuts into usable nutwood materials.",
-    category: "production",
-    era: "WOOD_AGE",
+  louderFlame: unlockIdea({
+    id: "louderFlame",
+    name: "Louder Flame",
+    description:
+      "Stack greener wood and taller piles. Unlocks Bonfire upgrades in Town — brighter signal, more travelers. A later-age craft.",
+    era: "STONE_AGE",
     requirements: {
-      nutsCollected: 2000,
-      jobsitesPurchased: 5,
+      ideasResearched: ["stickPoker"],
     },
-    cost: { nuts: 1500 },
+    cost: { nuts: 4500, nutwood: 30 },
     effects: {
-      unlockRefinement: ["nutWood"],
+      unlockBuildings: ["bonfireUpgrades"],
     },
-    persists: true,
-    researched: false,
-    visible: false,
-  },
+  }),
 
-  woodAgeEfficiency: {
-    id: "woodAgeEfficiency",
-    name: "Wood Age Mastery",
-    description: "Perfect your wooden tools and techniques.",
-    category: "efficiency",
+  bracedTools: efficiencyIdea({
+    id: "bracedTools",
+    name: "Braced Tools",
+    description:
+      "Lash sticks tighter. +10% efficiency at all production jobsites this season.",
+    era: "WOOD_AGE",
+    cost: { nuts: 1500, nutwood: 5 },
+    effects: {
+      globalEfficiency: 0.1,
+    },
+  }),
+
+  canopyPaths: efficiencyIdea({
+    id: "canopyPaths",
+    name: "Canopy Paths",
+    description:
+      "Mark routes through the branches. +15% global efficiency this season.",
     era: "WOOD_AGE",
     requirements: {
-      ideasResearched: ["basicForaging"],
+      ideasResearched: ["treeClimbing"],
     },
-    cost: { nuts: 2000 },
+    cost: { nuts: 3500, nutwood: 12 },
     effects: {
       globalEfficiency: 0.15,
     },
-    researched: false,
-    visible: false,
-  },
+  }),
+
+  woodAgeEfficiency: efficiencyIdea({
+    id: "woodAgeEfficiency",
+    name: "Wood Age Mastery",
+    description:
+      "Perfect wooden tools and dens. +20% global efficiency this season.",
+    era: "WOOD_AGE",
+    requirements: {
+      ideasResearched: ["stickPoker", "bracedTools"],
+    },
+    cost: { nuts: 5000, nutwood: 20 },
+    effects: {
+      globalEfficiency: 0.2,
+    },
+  }),
+
+  nutwoodRefinery: unlockIdea({
+    id: "nutwoodRefinery",
+    name: "NutWood Refinery",
+    description:
+      "Build a staffed press that binds husks while others forage. Automates NutWood — at the cost of a worker slot. A step toward Stone-age industry.",
+    era: "WOOD_AGE",
+    requirements: {
+      ideasResearched: ["treeClimbing", "woodAgeEfficiency"],
+    },
+    cost: { nuts: 8000, nutwood: 40 },
+    effects: {
+      unlockRefinement: ["nutwoodRefinement"],
+    },
+  }),
 
   // ==================== STONE AGE ====================
 
@@ -198,7 +248,7 @@ export const ideas: Record<string, Idea> = {
     name: "Stone Tooling",
     description:
       "Craft the first stone tools. A technological revolution begins!",
-    category: "production",
+    category: "unlock",
     era: "STONE_AGE",
     cost: { nuts: 3000 },
     effects: {
@@ -213,7 +263,7 @@ export const ideas: Record<string, Idea> = {
     id: "advancedStoneTools",
     name: "Advanced Stone Tools",
     description: "Develop more sophisticated stone implements.",
-    category: "production",
+    category: "unlock",
     era: "STONE_AGE",
     requirements: {
       ideasResearched: ["stoneTooling"],
@@ -264,7 +314,7 @@ export const ideas: Record<string, Idea> = {
     id: "agriculturalMethods",
     name: "Agricultural Methods",
     description: "Unlock farming techniques for sustainable nut production.",
-    category: "production",
+    category: "unlock",
     era: "BRONZE_AGE",
     requirements: {
       era: "BRONZE_AGE",
@@ -282,7 +332,7 @@ export const ideas: Record<string, Idea> = {
     id: "groupForaging",
     name: "Group Foraging",
     description: "Organize gathering parties for more efficient collection.",
-    category: "production",
+    category: "unlock",
     era: "BRONZE_AGE",
     requirements: {
       era: "BRONZE_AGE",
@@ -300,7 +350,7 @@ export const ideas: Record<string, Idea> = {
     id: "treeTechnology",
     name: "Tree Technology",
     description: "Develop tools to shake nuts from trees more effectively.",
-    category: "production",
+    category: "unlock",
     era: "BRONZE_AGE",
     requirements: {
       era: "BRONZE_AGE",
@@ -319,7 +369,7 @@ export const ideas: Record<string, Idea> = {
     id: "heightAdvantage",
     name: "Height Advantage",
     description: "Learn to use stilts to reach higher branches.",
-    category: "production",
+    category: "unlock",
     era: "BRONZE_AGE",
     requirements: {
       era: "BRONZE_AGE",
@@ -392,7 +442,7 @@ export const ideas: Record<string, Idea> = {
     id: "advancedFarming",
     name: "Advanced Farming",
     description: "Develop sophisticated crop tending techniques.",
-    category: "production",
+    category: "unlock",
     era: "IRON_AGE",
     requirements: {
       era: "IRON_AGE",
@@ -411,7 +461,7 @@ export const ideas: Record<string, Idea> = {
     id: "groundOptimization",
     name: "Ground Optimization",
     description: "Rake the forest floor for maximum nut collection.",
-    category: "production",
+    category: "unlock",
     era: "IRON_AGE",
     requirements: {
       era: "IRON_AGE",
@@ -429,7 +479,7 @@ export const ideas: Record<string, Idea> = {
     id: "mechanicalShaking",
     name: "Mechanical Shaking",
     description: "Create mechanical tree shakers for better yields.",
-    category: "production",
+    category: "unlock",
     era: "IRON_AGE",
     requirements: {
       era: "IRON_AGE",
@@ -448,7 +498,7 @@ export const ideas: Record<string, Idea> = {
     id: "verticalExpansion",
     name: "Vertical Expansion",
     description: "Build lift systems to access the highest branches.",
-    category: "production",
+    category: "unlock",
     era: "IRON_AGE",
     requirements: {
       era: "IRON_AGE",

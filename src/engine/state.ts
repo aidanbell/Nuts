@@ -23,7 +23,18 @@ import {
 } from "../types/meta";
 import { ideas } from "../data/ideas";
 import { storyCheckpoints } from "../data/storyCheckpoints";
-import { productionJobsites, refinementJobsites } from "../data/jobsites";
+import { getJobsiteTemplate, refinementJobsites } from "../data/jobsites";
+import { eraIndex } from "../data/eras";
+import {
+  TOWN_TAB_ID,
+  WOODEN_HOUSE,
+  BONFIRE,
+  BONFIRE_UPGRADES_ID,
+  getSettlementScale,
+  getWoodenHouseCost,
+  getBonfireStats,
+  getBonfireUpgradeCost,
+} from "../data/town";
 
 /** Immutable templates — store state is cloned from these so resets stay clean */
 const ideasTemplate: Record<string, Idea> = structuredClone(ideas);
@@ -97,6 +108,11 @@ const gameStateTemplate: GameState = {
   activeTab: "home",
   unlockedTabs: ["home"],
 
+  town: {
+    woodenHouses: 0,
+    bonfireLevel: 0,
+  },
+
   // Timer
   timer: {
     ms: 0,
@@ -114,6 +130,7 @@ function createFreshGameState(overrides: Partial<GameState> = {}): GameState {
     goldNuts: { ...gameStateTemplate.goldNuts, ...overrides.goldNuts },
     getButton: { ...gameStateTemplate.getButton, ...overrides.getButton },
     timer: { ...gameStateTemplate.timer, ...overrides.timer },
+    town: { woodenHouses: 0, bonfireLevel: 0, ...overrides.town },
     population: overrides.population ?? { jobless: [] },
     squirrels: overrides.squirrels ?? {},
   };
@@ -243,12 +260,114 @@ export const createSquirrel = () => {
   return true;
 };
 
-/** Soft population cap until housing exists */
+/** Soft population cap + seasonal wooden houses */
 export const getSquirrelCap = (): number => {
+  const houses = appState.game.town?.woodenHouses ?? 0;
+  const houseBonus = houses * WOODEN_HOUSE.capBonus;
   if (appState.meta.hibernations === 0) {
-    return SEASON_ZERO_SQUIRREL_CAP;
+    return SEASON_ZERO_SQUIRREL_CAP + houseBonus;
   }
-  return PRE_HOUSING_SQUIRREL_CAP;
+  return PRE_HOUSING_SQUIRREL_CAP + houseBonus;
+};
+
+export const getSettlementLabel = (): string => {
+  const pop = Object.keys(appState.game.squirrels).length;
+  const houses = appState.game.town?.woodenHouses ?? 0;
+  return getSettlementScale(pop, houses).label;
+};
+
+export const canBuildWoodenHouse = (): boolean => {
+  const houses = appState.game.town?.woodenHouses ?? 0;
+  if (houses >= WOODEN_HOUSE.maxPerSeason) return false;
+  // Available once Wood Age is the current era (or later)
+  if (eraIndex(appState.story.currentEra) < eraIndex("WOOD_AGE")) return false;
+  const cost = getWoodenHouseCost(houses);
+  const game = appState.game;
+  return game.nutsTotal >= cost.nuts && game.resources.nutwood >= cost.nutwood;
+};
+
+export const buildWoodenHouse = (): boolean => {
+  if (!canBuildWoodenHouse()) return false;
+  const houses = appState.game.town?.woodenHouses ?? 0;
+  const cost = getWoodenHouseCost(houses);
+  spendNuts(cost.nuts);
+  spendResource("nutwood", cost.nutwood);
+  setAppState("game", "town", "woodenHouses", (prev) => (prev ?? 0) + 1);
+  addLog(
+    `Built a wooden house (+${WOODEN_HOUSE.capBonus} squirrel capacity this season).`,
+    "success",
+  );
+  return true;
+};
+
+export const isTownBuildingUnlocked = (buildingId: string): boolean =>
+  appState.meta.unlockedTownBuildings.includes(buildingId);
+
+export const unlockTownBuildings = (buildingIds: string[]) => {
+  setAppState("meta", "unlockedTownBuildings", (prev) =>
+    Array.from(new Set([...prev, ...buildingIds])),
+  );
+  unlockTab(TOWN_TAB_ID);
+};
+
+export const canBuildBonfire = (): boolean => {
+  if (!isTownBuildingUnlocked(BONFIRE.id)) return false;
+  if ((appState.game.town?.bonfireLevel ?? 0) >= 1) return false;
+  const game = appState.game;
+  return (
+    game.nutsTotal >= BONFIRE.nutCost &&
+    game.resources.nutwood >= BONFIRE.nutwoodCost
+  );
+};
+
+export const buildBonfire = (): boolean => {
+  if (!canBuildBonfire()) return false;
+  spendNuts(BONFIRE.nutCost);
+  spendResource("nutwood", BONFIRE.nutwoodCost);
+  setAppState("game", "town", "bonfireLevel", 1);
+  addLog(
+    "Bonfire lit — travelers may notice the glow and wander in.",
+    "success",
+  );
+  return true;
+};
+
+export const canUpgradeBonfire = (): boolean => {
+  if (!isTownBuildingUnlocked(BONFIRE_UPGRADES_ID)) return false;
+  const level = appState.game.town?.bonfireLevel ?? 0;
+  if (level < 1 || level >= BONFIRE.maxLevel) return false;
+  const cost = getBonfireUpgradeCost(level);
+  const game = appState.game;
+  return game.nutsTotal >= cost.nuts && game.resources.nutwood >= cost.nutwood;
+};
+
+export const upgradeBonfire = (): boolean => {
+  if (!canUpgradeBonfire()) return false;
+  const level = appState.game.town.bonfireLevel;
+  const cost = getBonfireUpgradeCost(level);
+  spendNuts(cost.nuts);
+  spendResource("nutwood", cost.nutwood);
+  setAppState("game", "town", "bonfireLevel", level + 1);
+  const stats = getBonfireStats(level + 1);
+  addLog(
+    `Bonfire upgraded to Lv${level + 1} (${((stats?.chance ?? 0) * 100).toFixed(0)}% every ${Math.round((stats?.checkIntervalMs ?? 0) / 1000)}s).`,
+    "success",
+  );
+  return true;
+};
+
+/**
+ * RNG attraction roll — call from the game loop when the bonfire is lit.
+ * Returns true if a squirrel joined.
+ */
+export const tryBonfireAttraction = (): boolean => {
+  const level = appState.game.town?.bonfireLevel ?? 0;
+  const stats = getBonfireStats(level);
+  if (!stats) return false;
+  if (Math.random() >= stats.chance) return false;
+  if (!createSquirrel()) return false;
+  addLog("A squirrel followed the bonfire glow into town.", "success");
+  return true;
 };
 
 export const squirrelFoundNut = (squirrelId: number) => {
@@ -289,9 +408,7 @@ export const unlockJobsites = (jobsiteIds: string[]) => {
       return;
     }
 
-    const jobsiteTemplate =
-      productionJobsites.find((js) => js.id === id) ||
-      refinementJobsites.find((js) => js.id === id);
+    const jobsiteTemplate = getJobsiteTemplate(id);
 
     if (jobsiteTemplate) {
       // Level 0 = known but unbuilt; first upgrade builds it
@@ -578,78 +695,78 @@ export const setActiveTab = (tab: string) => {
 };
 
 export const unlockTab = (tab: string) => {
+  const resolved =
+    tab === "buildings" || tab === "clearing" ? TOWN_TAB_ID : tab;
   setAppState("game", "unlockedTabs", (prev) => {
-    if (!prev.includes(tab)) {
-      return [...prev, tab];
+    if (!prev.includes(resolved)) {
+      return [...prev, resolved];
     }
     return prev;
   });
   // Hibernate is seasonal — only unlock for the current winter
-  if (tab === "hibernate") return;
+  if (resolved === "hibernate") return;
   setAppState("meta", "unlockedTabs", (prev) => {
-    if (!prev.includes(tab)) {
-      return [...prev, tab];
+    if (!prev.includes(resolved)) {
+      return [...prev, resolved];
     }
     return prev;
   });
 };
 
 export const unlockTabs = (tabs: string[]) => {
-  setAppState("game", "unlockedTabs", (prev) => {
-    const newTabs = [...prev];
-    tabs.forEach((tab) => {
-      if (!newTabs.includes(tab)) {
-        newTabs.push(tab);
-      }
-    });
-    return newTabs;
-  });
-  const permanent = tabs.filter((tab) => tab !== "hibernate");
-  if (permanent.length === 0) return;
-  setAppState("meta", "unlockedTabs", (prev) => {
-    const newTabs = [...prev];
-    permanent.forEach((tab) => {
-      if (!newTabs.includes(tab)) {
-        newTabs.push(tab);
-      }
-    });
-    return newTabs;
-  });
+  tabs.forEach((tab) => unlockTab(tab));
 };
 
 // Hibernate action
+/** Scales season nut haul into Gold Nuts earned on hibernate */
+export const HIBERNATION_NUTS_K = 2;
+
+/**
+ * Expected colony nuts/sec (UI / balance tooling — not used for Gold reward).
+ */
+export const getEffectiveNps = (): number => {
+  const game = appState.game;
+  const goldMulti = appState.meta.goldForageMulti;
+  const jobless = game.jobSites.jobless;
+  const joblessCount = game.population.jobless.length;
+  const timeSec = Math.max(0.001, jobless.time / 1000);
+  const joblessNps =
+    joblessCount *
+    ((jobless.value * jobless.multi * jobless.chance) / timeSec) *
+    goldMulti;
+
+  let productionNps = 0;
+  for (const site of Object.values(game.jobSites.production)) {
+    if (site.level < 1) continue;
+    productionNps +=
+      (site.baseProduction + site.squirrelBonus * site.workers.length) *
+      site.multi *
+      goldMulti;
+  }
+
+  return joblessNps + productionNps;
+};
+
+/** Gold Nuts from nuts gathered this season (nutsAllTime resets each hibernate). */
 export const calculateHibernationReward = (
-  nutsAllTime: number,
-  multi: number,
+  nutsThisSeason: number = appState.game.nutsAllTime,
+  multi: number = appState.game.goldNuts.multi,
 ): number => {
-  // Early-game friendly: sqrt curve so first winter still pays Gold Nuts
   return Math.max(
     1,
-    Math.floor(Math.sqrt(Math.max(0, nutsAllTime)) * multi * 2),
+    Math.floor(
+      Math.sqrt(Math.max(0, nutsThisSeason)) * multi * HIBERNATION_NUTS_K,
+    ),
   );
 };
 
-/** Permanent forage bonus from banked Gold Nuts (~2% each) */
+/** Permanent production bonus from banked Gold Nuts (~2% each) */
 export const goldNutsToForageMulti = (goldNutsTotal: number): number =>
   1 + goldNutsTotal * 0.02;
 
 export const canEnterEra = (era: string): boolean => {
-  const order: IdeaEra[] = [
-    "PREHISTORY",
-    "WOOD_AGE",
-    "STONE_AGE",
-    "BRONZE_AGE",
-    "IRON_AGE",
-    "INDUSTRIAL_AGE",
-    "INFORMATION_AGE",
-    "TECHNOLOGY_AGE",
-    "SPACE_AGE",
-    "GALACTIC_AGE",
-  ];
-  const available = appState.meta.maxEraAvailable;
-  const wantIdx = order.indexOf(era as IdeaEra);
-  const maxIdx = order.indexOf(available);
-  if (wantIdx < 0 || maxIdx < 0) return false;
+  const wantIdx = eraIndex(era);
+  const maxIdx = eraIndex(appState.meta.maxEraAvailable);
   return wantIdx <= maxIdx;
 };
 
@@ -663,10 +780,7 @@ export const markWinterIncoming = () => {
  */
 export const hibernate = () => {
   const game = appState.game;
-  const goldenNutsEarned = calculateHibernationReward(
-    game.nutsAllTime,
-    game.goldNuts.multi,
-  );
+  const goldenNutsEarned = calculateHibernationReward();
 
   const newGoldTotal = game.goldNuts.total + goldenNutsEarned;
   const nextHibernations = appState.meta.hibernations + 1;
@@ -681,6 +795,7 @@ export const hibernate = () => {
   );
   const preservedStructure = [...appState.meta.structureIdeas];
   const preservedJobsites = [...appState.meta.unlockedJobsiteIds];
+  const preservedTownBuildings = [...appState.meta.unlockedTownBuildings];
 
   setAppState("meta", {
     hibernations: nextHibernations,
@@ -692,6 +807,7 @@ export const hibernate = () => {
     unlockedTabs: preservedTabs,
     structureIdeas: preservedStructure,
     unlockedJobsiteIds: preservedJobsites,
+    unlockedTownBuildings: preservedTownBuildings,
   });
 
   // Wipe run state from a clean template (never reuse store-mutated objects)
@@ -784,6 +900,20 @@ function restoreStructureKnowledge() {
   if (unlockedJobsiteIds.length > 0) {
     unlockJobsites(unlockedJobsiteIds);
   }
+
+  // Re-apply era / feature unlocks from structure ideas
+  for (const ideaId of structureIdeas) {
+    const idea = appState.ideas.ideas[ideaId];
+    if (!idea?.effects) continue;
+    if (idea.effects.setEra) {
+      setEra(idea.effects.setEra);
+    }
+    if (idea.effects.unlockFeature) {
+      unlockTabs([idea.effects.unlockFeature]);
+    }
+  }
+
+  refreshIdeaCatalog();
 }
 
 // Update timestamp
@@ -801,8 +931,16 @@ export const loadSaveData = (
     unlockedTabs?: string[];
     activeTab?: string;
     timer?: GameState["timer"];
+    clearing?: GameState["town"];
+    town?: GameState["town"];
   },
 ) => {
+  const rawTown = data.town ?? data.clearing ?? {};
+  const townState: GameState["town"] = {
+    woodenHouses: rawTown.woodenHouses ?? 0,
+    bonfireLevel: rawTown.bonfireLevel ?? 0,
+  };
+
   setAppState("game", (prev) => ({
     ...prev,
     ...data,
@@ -810,6 +948,7 @@ export const loadSaveData = (
     unlockedTabs: data.unlockedTabs ?? prev.unlockedTabs,
     activeTab: data.activeTab ?? prev.activeTab,
     timer: data.timer ?? prev.timer,
+    town: townState,
   }));
 
   if (data.meta) {
@@ -817,11 +956,21 @@ export const loadSaveData = (
   }
 
   // Permanent tabs: prefer meta, fall back to saved run tabs
-  const metaTabs = appState.meta.unlockedTabs;
-  const runTabs = data.unlockedTabs ?? appState.game.unlockedTabs;
+  const migrateTab = (tab: string) =>
+    tab === "buildings" || tab === "clearing" ? TOWN_TAB_ID : tab;
+  const metaTabs = appState.meta.unlockedTabs.map(migrateTab);
+  const runTabs = (data.unlockedTabs ?? appState.game.unlockedTabs).map(
+    migrateTab,
+  );
   const mergedTabs = Array.from(new Set(["home", ...metaTabs, ...runTabs]));
   setAppState("meta", "unlockedTabs", mergedTabs);
   setAppState("game", "unlockedTabs", mergedTabs);
+  if (
+    appState.game.activeTab === "buildings" ||
+    appState.game.activeTab === "clearing"
+  ) {
+    setAppState("game", "activeTab", TOWN_TAB_ID);
+  }
 
   if (data.story) {
     setAppState("story", "currentEra", data.story.currentEra);
@@ -838,7 +987,15 @@ export const loadSaveData = (
   }
 
   if (data.ideas?.researchedIdeas) {
-    data.ideas.researchedIdeas.forEach((ideaId) => {
+    const legacyIdeaMap: Record<string, string> = {
+      discoverRefinement: "nutwoodCraft",
+      woodRefinement: "nutwoodCraft",
+      airMethods: "treeClimbing",
+    };
+    const researched = data.ideas.researchedIdeas.map(
+      (id) => legacyIdeaMap[id] ?? id,
+    );
+    researched.forEach((ideaId) => {
       if (appState.ideas.ideas[ideaId]) {
         setAppState("ideas", "ideas", ideaId, "researched", true);
         setAppState("ideas", "ideas", ideaId, "visible", true);
@@ -849,8 +1006,8 @@ export const loadSaveData = (
         }
       }
     });
-    setAppState("ideas", "researchedIdeas", data.ideas.researchedIdeas);
-    setAppState("ideas", "researchedCount", data.ideas.researchedIdeas.length);
+    setAppState("ideas", "researchedIdeas", researched);
+    setAppState("ideas", "researchedCount", researched.length);
   }
 
   // Migrate known jobsites into meta from a mid-season save
@@ -863,6 +1020,30 @@ export const loadSaveData = (
       Array.from(new Set([...prev, ...knownIds])),
     );
   }
+
+  // Migrate legacy idea / jobsite ids
+  const legacyIdeaMap: Record<string, string> = {
+    discoverRefinement: "nutwoodCraft",
+    woodRefinement: "nutwoodCraft",
+    airMethods: "treeClimbing",
+  };
+  const legacySiteMap: Record<string, string> = {
+    rockThrower: "stickPoker",
+  };
+  setAppState("meta", "structureIdeas", (prev) =>
+    Array.from(
+      new Set(
+        prev
+          .map((id) => legacyIdeaMap[id] ?? id)
+          .filter((id) => appState.ideas.ideas[id]),
+      ),
+    ),
+  );
+  setAppState("meta", "unlockedJobsiteIds", (prev) =>
+    Array.from(new Set(prev.map((id) => legacySiteMap[id] ?? id))),
+  );
+
+  refreshIdeaCatalog();
 };
 
 // ============================================================================
@@ -1012,48 +1193,38 @@ export const showIdeas = (ideaIds: string[]) => {
   });
 };
 
-export const updateIdeaVisibility = (params: {
-  nutsCollected: number;
-  squirrelsCount: number;
-  currentEra: string;
-}) => {
-  const { nutsCollected, squirrelsCount, currentEra } = params;
-  const ideasList = appState.ideas.ideas;
+/**
+ * Era catalog: ideas for eras at or before currentEra.
+ * Prerequisite ideas (ideasResearched) also gate visibility — e.g. Wood Age
+ * only appears after NutWood Craft unlocks refinement.
+ */
+export const refreshIdeaCatalog = () => {
+  const current = appState.story.currentEra || "PREHISTORY";
+  const currentIdx = eraIndex(current);
 
-  Object.keys(ideasList).forEach((ideaId) => {
-    const idea = ideasList[ideaId];
-    if (idea.visible || idea.researched) return;
+  Object.keys(appState.ideas.ideas).forEach((ideaId) => {
+    const idea = appState.ideas.ideas[ideaId];
+    let shouldShow = eraIndex(idea.era) <= currentIdx;
 
-    const reqs = idea.requirements;
-    if (!reqs) {
-      setAppState("ideas", "ideas", ideaId, "visible", true);
-      return;
-    }
-
-    let meetsRequirements = true;
-
-    if (reqs.era && reqs.era !== currentEra) {
-      meetsRequirements = false;
-    }
-    if (reqs.nutsCollected && nutsCollected < reqs.nutsCollected) {
-      meetsRequirements = false;
-    }
-    if (reqs.squirrelsCount && squirrelsCount < reqs.squirrelsCount) {
-      meetsRequirements = false;
-    }
-    if (reqs.ideasResearched) {
-      const allResearched = reqs.ideasResearched.every(
+    if (shouldShow && idea.requirements?.ideasResearched?.length) {
+      shouldShow = idea.requirements.ideasResearched.every(
         (reqId) => appState.ideas.ideas[reqId]?.researched,
       );
-      if (!allResearched) {
-        meetsRequirements = false;
-      }
     }
 
-    if (meetsRequirements) {
-      setAppState("ideas", "ideas", ideaId, "visible", true);
+    if (idea.visible !== shouldShow) {
+      setAppState("ideas", "ideas", ideaId, "visible", shouldShow);
     }
   });
+};
+
+/** @deprecated Use refreshIdeaCatalog — kept for call-site compatibility */
+export const updateIdeaVisibility = (_params?: {
+  nutsCollected?: number;
+  squirrelsCount?: number;
+  currentEra?: string;
+}) => {
+  refreshIdeaCatalog();
 };
 
 export const resetIdeas = () => {
@@ -1061,15 +1232,9 @@ export const resetIdeas = () => {
   Object.keys(ideasList).forEach((ideaId) => {
     setAppState("ideas", "ideas", ideaId, "researched", false);
     setAppState("ideas", "ideas", ideaId, "researchedAt", undefined);
-    setAppState(
-      "ideas",
-      "ideas",
-      ideaId,
-      "visible",
-      !ideasList[ideaId].requirements,
-    );
   });
   setAppState("ideas", "researchedCount", 0);
+  refreshIdeaCatalog();
 };
 
 export const loadIdeasState = (data: Partial<IdeasState>) => {
@@ -1177,6 +1342,7 @@ export const setEra = (era: string) => {
     return;
   }
   setAppState("story", "currentEra", era);
+  refreshIdeaCatalog();
 };
 
 export const setPendingChoice = (checkpointId: string | null) => {

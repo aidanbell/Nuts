@@ -35,6 +35,7 @@ export const saveGame = (): void => {
       unlockedTabs: game.unlockedTabs,
       activeTab: game.activeTab,
       timer: game.timer,
+      town: game.town,
       meta: { ...meta },
       story: {
         completedCheckpoints: [...story.completedCheckpoints],

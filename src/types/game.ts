@@ -103,6 +103,16 @@ export interface GameState {
   activeTab: string;
   unlockedTabs: string[];
 
+  /**
+   * Seasonal settlement (wipes on hibernate).
+   * Durable buildings will live elsewhere later.
+   */
+  town: {
+    woodenHouses: number;
+    /** 0 = not built this season; 1+ = lit (attraction rolls) */
+    bonfireLevel: number;
+  };
+
   // Timer
   timer: {
     ms: number;
@@ -144,6 +154,8 @@ export interface SaveData {
   unlockedTabs?: string[];
   activeTab?: string;
   timer?: GameState["timer"];
+  clearing?: GameState["town"];
+  town?: GameState["town"];
   meta?: MetaState;
   story?: {
     completedCheckpoints: string[];

@@ -1,12 +1,13 @@
 import { type Component, For } from "solid-js";
-import { appState, setActiveTab } from "../engine/state";
+import { appState, setActiveTab, getSettlementLabel } from "../engine/state";
+import { TOWN_TAB_ID } from "../data/town";
 
 const tabs = [
   { id: "home", label: "Home" },
   { id: "ideas", label: "Ideas" },
   { id: "jobsites", label: "Jobsites" },
   { id: "refinement", label: "Refinement" },
-  { id: "buildings", label: "Buildings" },
+  { id: TOWN_TAB_ID, label: "Town" },
   { id: "population", label: "Population" },
   { id: "fourth", label: "Fourth" },
   { id: "hibernate", label: "Hibernate!" },
@@ -18,6 +19,13 @@ const Navigation: Component = () => {
 
   const visibleTabs = () =>
     tabs.filter((tab) => unlockedTabs().includes(tab.id));
+
+  const tabLabel = (tab: { id: string; label: string }) => {
+    if (tab.id === TOWN_TAB_ID) {
+      return getSettlementLabel();
+    }
+    return tab.label;
+  };
 
   return (
     <nav class="flex w-full shrink-0 flex-row flex-wrap gap-2 md:w-44 md:flex-col">
@@ -36,7 +44,7 @@ const Navigation: Component = () => {
                   : "border-moss/20 bg-paper/80 text-bark hover:-translate-y-0.5 hover:border-moss/40 hover:bg-white",
               ].join(" ")}
             >
-              {tab.label}
+              {tabLabel(tab)}
             </button>
           );
         }}

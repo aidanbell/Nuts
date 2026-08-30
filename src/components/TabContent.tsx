@@ -7,10 +7,11 @@ import HomeTab from "./tabs/HomeTab";
 import JobsiteTab from "./tabs/JobsiteTab";
 import IdeasTab from "./tabs/IdeasTab";
 import PopulationTab from "./tabs/PopulationTab";
-import BuildingsTab from "./tabs/BuildingsTab";
+import TownTab from "./tabs/TownTab";
 import FourthTab from "./tabs/FourthTab";
 import HibernateTab from "./tabs/HibernateTab";
 import RefinementTab from "./tabs/RefinementTab";
+import { TOWN_TAB_ID } from "../data/town";
 
 interface TabContentProps {
   activeTab: string;
@@ -32,8 +33,8 @@ const TabContent: Component<TabContentProps> = (props) => {
         <Match when={props.activeTab === "refinement"}>
           <RefinementTab />
         </Match>
-        <Match when={props.activeTab === "buildings"}>
-          <BuildingsTab />
+        <Match when={props.activeTab === TOWN_TAB_ID}>
+          <TownTab />
         </Match>
         <Match when={props.activeTab === "population"}>
           <PopulationTab />

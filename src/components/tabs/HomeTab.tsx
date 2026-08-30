@@ -1,26 +1,13 @@
 import { type Component, Show, For } from "solid-js";
-import { appState, setEra, canEnterEra } from "../../engine/state";
+import { appState } from "../../engine/state";
 import SquirrelDisplay from "../SquirrelDisplay";
 
 const HomeTab: Component = () => {
   const joblessSquirrels = () => appState.game.population.jobless;
   const currentEra = () => appState.story.currentEra;
-  const unlockedTabs = () => appState.game.unlockedTabs;
-  const nutsTotal = () => appState.game.nutsTotal;
   const seasonIndex = () => appState.meta.seasonIndex;
   const winterIncoming = () => appState.meta.winterIncoming;
-
-  const handleAdvanceEra = () => {
-    if (currentEra() === "PREHISTORY") {
-      setEra("WOOD_AGE");
-    }
-  };
-
-  const erasUnlocked = () => unlockedTabs().includes("eras");
-  const canAdvanceToWoodAge = () =>
-    erasUnlocked() && currentEra() === "PREHISTORY" && canEnterEra("WOOD_AGE");
-  const woodAgeTeased = () =>
-    erasUnlocked() && currentEra() === "PREHISTORY" && !canEnterEra("WOOD_AGE");
+  const maxEra = () => appState.meta.maxEraAvailable;
 
   return (
     <div class="tab-panel space-y-6" id="home-content">
@@ -34,53 +21,47 @@ const HomeTab: Component = () => {
         </p>
       </Show>
 
-      <Show when={erasUnlocked()}>
-        <section class="space-y-3">
-          <h2 class="section-title">Current Era</h2>
-          <p class="font-display text-lg font-semibold">
-            {currentEra()?.replace(/_/g, " ") || "PREHISTORY"}
+      <section class="space-y-2">
+        <h2 class="section-title">Current Era</h2>
+        <p class="font-display text-lg font-semibold">
+          {(currentEra() || "PREHISTORY").replace(/_/g, " ")}
+        </p>
+        <Show
+          when={
+            (currentEra() || "PREHISTORY") === "PREHISTORY" &&
+            maxEra() === "WOOD_AGE" &&
+            seasonIndex() >= 2
+          }
+        >
+          <p class="muted text-sm">
+            Wood Age is within reach — craft NutWood and research{" "}
+            <strong class="text-bark">The Wood Age</strong> in Ideas.
           </p>
-
-          <Show when={canAdvanceToWoodAge()}>
-            <div class="panel border-leaf/30 bg-leaf/10">
-              <h3 class="font-display text-lg font-bold">
-                🌳 The Wood Age Awaits
-              </h3>
-              <p class="muted mt-2">
-                Your squirrels have discovered refined materials! Choose when
-                you&apos;re ready to advance.
-              </p>
-              <p class="muted mt-2">
-                <strong>Tip:</strong> Gather more nuts before advancing. Current
-                nuts: {nutsTotal().toLocaleString()}
-              </p>
-              <button
-                type="button"
-                class="btn btn-success btn-lg mt-4"
-                onClick={handleAdvanceEra}
-              >
-                Advance to Wood Age →
-              </button>
-            </div>
-          </Show>
-
-          <Show when={woodAgeTeased()}>
-            <div class="panel border-amber/30 bg-amber/10">
-              <h3 class="font-display text-lg font-bold">
-                🌳 Dreams of the Wood Age
-              </h3>
-              <p class="muted mt-2">
-                You can almost taste NutWood tools and taller dens — but winter
-                will wipe this clearing first. Hibernate, keep your Gold Nuts,
-                and chase the Wood Age next spring.
-              </p>
-              <p class="mt-3 text-sm font-semibold text-amber">
-                Survive your first winter to unlock this era.
-              </p>
-            </div>
-          </Show>
-        </section>
-      </Show>
+        </Show>
+        <Show
+          when={
+            (currentEra() || "PREHISTORY") === "PREHISTORY" &&
+            maxEra() === "WOOD_AGE" &&
+            seasonIndex() === 1
+          }
+        >
+          <p class="muted text-sm">
+            Scavenger routes and NutWood craft are open. Stockpile wood —
+            another winter will come before you can commit to the Wood Age.
+          </p>
+        </Show>
+        <Show
+          when={
+            (currentEra() || "PREHISTORY") === "PREHISTORY" &&
+            maxEra() === "PREHISTORY"
+          }
+        >
+          <p class="muted text-sm">
+            Survive your first winter to unlock Scavenger routes and NutWood
+            craft.
+          </p>
+        </Show>
+      </section>
 
       <section>
         <h2 class="section-title">Population</h2>

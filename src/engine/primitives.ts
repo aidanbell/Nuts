@@ -9,16 +9,17 @@ import {
   spendNuts,
   spendResource,
   researchIdea,
-  updateIdeaVisibility,
+  refreshIdeaCatalog,
   completeCheckpoint,
   queueStories,
   addLog,
   loadSaveData,
   markWinterIncoming,
+  canEnterEra,
+  getEffectiveNps,
 } from "./state";
 import { processEffects, type GameEffect } from "./effectProcessor";
 import { saveGame, loadGame } from "./saveSystem";
-import type { GameState } from "../types/game";
 import type { Idea } from "../types/ideas";
 import type { StoryCheckpoint, CheckpointCondition } from "../types/story";
 import { STORY_MODAL_HIBERNATION_LIMIT } from "../types/meta";
@@ -121,6 +122,9 @@ function checkCondition(condition: CheckpointCondition): boolean {
       }
       break;
     }
+    case "wooden_houses":
+      currentValue = game.town?.woodenHouses ?? 0;
+      break;
     default:
       return false;
   }
@@ -151,16 +155,10 @@ function checkCondition(condition: CheckpointCondition): boolean {
 
 function seasonAllowsCheckpoint(checkpoint: StoryCheckpoint): boolean {
   const season = appState.meta.seasonIndex;
-  if (
-    checkpoint.minSeason !== undefined &&
-    season < checkpoint.minSeason
-  ) {
+  if (checkpoint.minSeason !== undefined && season < checkpoint.minSeason) {
     return false;
   }
-  if (
-    checkpoint.maxSeason !== undefined &&
-    season > checkpoint.maxSeason
-  ) {
+  if (checkpoint.maxSeason !== undefined && season > checkpoint.maxSeason) {
     return false;
   }
   return true;
@@ -256,7 +254,10 @@ function processCheckpoints() {
       checkpointId: checkpoint.id,
     });
 
-    if (checkpoint.id === "winterApproaching") {
+    if (
+      checkpoint.id === "winterApproaching" ||
+      checkpoint.id === "secondWinterApproaching"
+    ) {
       markWinterIncoming();
     }
 
@@ -290,6 +291,7 @@ export function createStoryCheckpoints() {
     void appState.ideas.researchedCount;
     void appState.meta.hibernations;
     void appState.game.jobSites.production.gatherer?.level;
+    void appState.game.town?.woodenHouses;
     processCheckpoints();
   });
 }
@@ -300,15 +302,66 @@ export function createStoryCheckpoints() {
 
 export function createIdeas() {
   createEffect(() => {
-    updateIdeaVisibility({
-      nutsCollected: appState.game.nutsTotal,
-      squirrelsCount: Object.keys(appState.game.squirrels).length,
-      currentEra: appState.story.currentEra || "WOOD_AGE",
-    });
+    void appState.story.currentEra;
+    void appState.meta.maxEraAvailable;
+    void appState.ideas.researchedCount;
+    refreshIdeaCatalog();
   });
+
+  const meetsRequirements = (idea: Idea): boolean => {
+    const reqs = idea.requirements;
+    if (!reqs) return true;
+
+    const game = appState.game;
+
+    if (reqs.era && reqs.era !== (appState.story.currentEra || "PREHISTORY")) {
+      return false;
+    }
+    if (reqs.maxEraAvailable && !canEnterEra(reqs.maxEraAvailable)) {
+      return false;
+    }
+    if (
+      reqs.minHibernations !== undefined &&
+      appState.meta.hibernations < reqs.minHibernations
+    ) {
+      return false;
+    }
+    if (reqs.nutsCollected && game.nutsTotal < reqs.nutsCollected) {
+      return false;
+    }
+    if (
+      reqs.squirrelsCount &&
+      Object.keys(game.squirrels).length < reqs.squirrelsCount
+    ) {
+      return false;
+    }
+    if (reqs.jobsitesPurchased) {
+      const levels =
+        Object.values(game.jobSites.production).reduce(
+          (t, s) => t + s.level,
+          0,
+        ) +
+        Object.values(game.jobSites.refinement).reduce(
+          (t, s) => t + s.level,
+          0,
+        );
+      if (levels < reqs.jobsitesPurchased) return false;
+    }
+    if (reqs.ideasResearched) {
+      if (
+        !reqs.ideasResearched.every(
+          (id) => appState.ideas.ideas[id]?.researched,
+        )
+      ) {
+        return false;
+      }
+    }
+    return true;
+  };
 
   const canAfford = (idea: Idea): boolean => {
     if (idea.researched) return false;
+    if (!meetsRequirements(idea)) return false;
 
     const game = appState.game;
     const nutCost = idea.cost.nuts || 0;
@@ -344,6 +397,8 @@ export function createIdeas() {
       sourceType: "idea",
       suppressLogs: true,
     });
+
+    refreshIdeaCatalog();
   };
 
   const visibleIdeas = createMemo(() =>
@@ -365,6 +420,7 @@ export function createIdeas() {
     affordableIdeas,
     researchedCount: () => appState.ideas.researchedCount,
     canAfford,
+    meetsRequirements,
     research,
   };
 }
@@ -374,27 +430,15 @@ export function createIdeas() {
 // ============================================================================
 
 /**
- * Expected nuts/sec for one jobless squirrel
+ * Glowing nut burst: ~15s of colony effective NPS, with light variance.
+ * Uses full economy (jobless + jobsites), so staffing sites does not tank the find.
  */
-const joblessNutsPerSecond = (jobless: GameState["jobSites"]["jobless"]) => {
-  const attemptsPerSec = 1000 / jobless.time;
-  return attemptsPerSec * jobless.chance * jobless.value * jobless.multi;
-};
-
-/**
- * Burst reward: ~15s of jobless production, with count bonus + roll variance.
- * Variance matters — without it, identical jobless state yields identical nuts.
- */
-export const calculateGoldenNutReward = (
-  joblessSite: GameState["jobSites"]["jobless"],
-  joblessCount: number,
-): number => {
-  const perSquirrel = joblessNutsPerSecond(joblessSite);
-  const burst = perSquirrel * Math.max(1, joblessCount) * 15;
-  const countBonus = 1 + Math.log2(1 + Math.max(0, joblessCount - 1)) * 0.15;
+export const calculateGoldenNutReward = (): number => {
+  const nps = getEffectiveNps();
+  const burst = Math.max(0.5, nps) * 15;
   // ±25% roll so back-to-back finds feel distinct
   const variance = 0.75 + Math.random() * 0.5;
-  return Math.max(5, Math.round(burst * countBonus * variance));
+  return Math.max(5, Math.round(burst * variance));
 };
 
 export interface GoldenNutState {
@@ -446,10 +490,7 @@ export function createGoldenNut() {
 
     const now = Date.now();
     const { x, y } = randomPosition();
-    const reward = calculateGoldenNutReward(
-      appState.game.jobSites.jobless,
-      joblessIds.length,
-    );
+    const reward = calculateGoldenNutReward();
 
     idRef.current += 1;
     setGoldenNut({

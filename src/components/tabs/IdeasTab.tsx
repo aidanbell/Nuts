@@ -3,8 +3,10 @@ import { createIdeas } from "../../engine/primitives";
 import { appState } from "../../engine/state";
 import type { Idea } from "../../types/ideas";
 import { formatNumber } from "../../utils/formatters";
+import { ERA_ORDER } from "../../data/eras";
 
 const categoryStyle: Record<string, string> = {
+  unlock: "bg-moss/15 text-moss",
   production: "bg-leaf/20 text-moss",
   efficiency: "bg-amber/15 text-amber",
   capacity: "bg-amber-light/25 text-bark",
@@ -13,6 +15,7 @@ const categoryStyle: Record<string, string> = {
 };
 
 const categoryIcon: Record<string, string> = {
+  unlock: "🔓",
   production: "🏭",
   efficiency: "⚡",
   capacity: "👥",
@@ -27,6 +30,10 @@ const getEffectDescription = (idea: Idea): string[] => {
   if (e.unlockJobsites) effects.push(`Unlocks: ${e.unlockJobsites.join(", ")}`);
   if (e.unlockBuildings)
     effects.push(`Unlocks: ${e.unlockBuildings.join(", ")}`);
+  if (e.unlockRefinement)
+    effects.push(`Refinement: ${e.unlockRefinement.join(", ")}`);
+  if (e.unlockFeature) effects.push(`Unlocks tab: ${e.unlockFeature}`);
+  if (e.setEra) effects.push(`Enter ${e.setEra.replace(/_/g, " ")}`);
   if (e.globalEfficiency)
     effects.push(
       `+${(e.globalEfficiency * 100).toFixed(0)}% Global Efficiency`,
@@ -48,13 +55,34 @@ interface IdeaCardProps {
   idea: Idea;
   onResearch: () => void;
   canAfford: boolean;
+  meetsRequirements: boolean;
   isExpanded: boolean;
   onToggle: () => void;
 }
 
-function researchButtonLabel(idea: Idea, canAfford: boolean): string {
+function researchButtonLabel(
+  idea: Idea,
+  canAfford: boolean,
+  meetsRequirements: boolean,
+): string {
   if (idea.researched) return "Researched";
+  if (!meetsRequirements) {
+    if (
+      idea.requirements?.minHibernations !== undefined &&
+      appState.meta.hibernations < idea.requirements.minHibernations
+    ) {
+      return "Survive another winter";
+    }
+    if (idea.requirements?.maxEraAvailable === "WOOD_AGE") {
+      return "Survive winter first";
+    }
+    if (idea.requirements?.ideasResearched?.length) {
+      return "Prerequisites needed";
+    }
+    return "Requirements not met";
+  }
   if (canAfford) return "Research";
+  if ((idea.cost.nutwood || 0) > 0) return "Need more resources";
   return "Not Enough Nuts";
 }
 
@@ -125,28 +153,27 @@ const IdeaCard: Component<IdeaCardProps> = (props) => (
             props.onResearch();
           }}
         >
-          {researchButtonLabel(props.idea, props.canAfford)}
+          {researchButtonLabel(
+            props.idea,
+            props.canAfford,
+            props.meetsRequirements,
+          )}
         </button>
       </div>
     </Show>
   </div>
 );
 
-const eraOrder = [
-  "PREHISTORY",
-  "WOOD_AGE",
-  "STONE_AGE",
-  "BRONZE_AGE",
-  "IRON_AGE",
-  "INDUSTRIAL_AGE",
-  "INFORMATION_AGE",
-  "TECHNOLOGY_AGE",
-  "SPACE_AGE",
-  "GALACTIC_AGE",
-];
+const eraOrder = [...ERA_ORDER];
 
 const IdeasTab: Component = () => {
-  const { visibleIdeas, researchedIdeas, canAfford, research } = createIdeas();
+  const {
+    visibleIdeas,
+    researchedIdeas,
+    canAfford,
+    meetsRequirements,
+    research,
+  } = createIdeas();
   const nutsTotal = () => appState.game.nutsTotal;
   const currentEra = () => appState.story.currentEra;
   const [showResearched, setShowResearched] = createSignal(false);
@@ -228,7 +255,8 @@ const IdeasTab: Component = () => {
         <div class="panel text-center">
           <p class="text-lg">🔒 No ideas available yet</p>
           <p class="muted mt-1">
-            Keep gathering nuts and growing your colony to unlock research.
+            Research ideas for your current era. Advance eras through big ideas
+            — not a menu button.
           </p>
         </div>
       </Show>
@@ -257,6 +285,7 @@ const IdeasTab: Component = () => {
                     idea={idea}
                     onResearch={() => research(idea.id)}
                     canAfford={canAfford(idea)}
+                    meetsRequirements={meetsRequirements(idea)}
                     isExpanded={expandedIdea() === idea.id}
                     onToggle={() =>
                       setExpandedIdea(
