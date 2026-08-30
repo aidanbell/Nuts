@@ -4,8 +4,7 @@ Incremental / idle game about squirrels, nuts, jobsites, and eras.
 
 ## Stack
 
-- React 19 + TypeScript + Vite
-- Redux Toolkit
+- SolidJS + TypeScript + Vite
 - Tailwind CSS v4
 
 ## Requirements
@@ -28,7 +27,9 @@ pnpm typecheck
 
 ## Docs
 
-Local only (`docs/`, gitignored):
+Local wiki (`docs/`, gitignored). Start at `docs/README.md`.
 
-- `DEVELOPMENT_PLAN.md` — roadmap
-- `UI.md` · `JOBSITES.md` · `REFINEMENT.md` · `IDEAS.md` — systems
+- `PROGRESSION.md` — seasons, eras, population
+- `JOBSITES.md` · `IDEAS.md` · `REFINEMENT.md` · `TOWN.md` — systems
+- `CONTENT_DX.md` — adding content
+- `notes.md` — raw brainstorming (not source of truth)
