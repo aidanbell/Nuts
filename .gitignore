@@ -15,9 +15,6 @@ dist-ssr
 # npm lockfile — this project uses pnpm
 package-lock.json
 
-# Local documentation (design notes, archives, personal plan)
-docs/
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
