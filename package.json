@@ -14,9 +14,12 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "preview": "vite preview",
+    "tui": "bun run src/tui/main.tsx",
     "verify": "pnpm run lint && pnpm run typecheck && pnpm run format"
   },
   "dependencies": {
+    "@opentui/core": "^0.5.9",
+    "@opentui/solid": "^0.5.9",
     "solid-js": "^1.9.3"
   },
   "devDependencies": {
