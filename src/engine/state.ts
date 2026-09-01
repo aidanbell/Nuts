@@ -20,17 +20,23 @@ import {
   TUTORIAL_CHECKPOINT_IDS,
   type MetaState,
 } from "../types/meta";
-import { getJobsiteTemplate, refinementJobsites } from "../data/jobsites";
+import {
+  getJobsiteTemplate,
+  refinementJobsites,
+  PRODUCTION_ROSTER_CAP,
+} from "../data/jobsites";
 import { eraIndex } from "../data/eras";
 import {
   TOWN_TAB_ID,
   WOODEN_HOUSE,
   BONFIRE,
   BONFIRE_UPGRADES_ID,
+  DURABLE_HOUSE,
   getSettlementScale,
   getWoodenHouseCost,
   getBonfireStats,
   getBonfireUpgradeCost,
+  getDurableHouseCost,
 } from "../data/town";
 import { appState, setAppState } from "./runtime";
 import {
@@ -103,10 +109,12 @@ export const createSquirrel = () => {
   return true;
 };
 
-/** Soft population cap + seasonal wooden houses */
+/** Soft population cap + seasonal wooden houses + durable (Stone+) housing */
 export const getSquirrelCap = (): number => {
   const houses = appState.game.town?.woodenHouses ?? 0;
-  const houseBonus = houses * WOODEN_HOUSE.capBonus;
+  const durable = appState.game.town?.durableHouses ?? 0;
+  const houseBonus =
+    houses * WOODEN_HOUSE.capBonus + durable * DURABLE_HOUSE.capBonus;
   if (appState.meta.hibernations === 0) {
     return SEASON_ZERO_SQUIRREL_CAP + houseBonus;
   }
@@ -138,6 +146,30 @@ export const buildWoodenHouse = (): boolean => {
   setAppState("game", "town", "woodenHouses", (prev) => (prev ?? 0) + 1);
   addLog(
     `Built a wooden house (+${WOODEN_HOUSE.capBonus} squirrel capacity this season).`,
+    "success",
+  );
+  return true;
+};
+
+export const canBuildDurableHouse = (): boolean => {
+  if (eraIndex(appState.story.currentEra) < eraIndex("STONE_AGE"))
+    return false;
+  const built = appState.game.town?.durableHouses ?? 0;
+  const cost = getDurableHouseCost(built);
+  const game = appState.game;
+  return game.nutsTotal >= cost.nuts && game.resources.nutwood >= cost.nutwood;
+};
+
+export const buildDurableHouse = (): boolean => {
+  if (!canBuildDurableHouse()) return false;
+  const built = appState.game.town?.durableHouses ?? 0;
+  const cost = getDurableHouseCost(built);
+  spendNuts(cost.nuts);
+  spendResource("nutwood", cost.nutwood);
+  setAppState("game", "town", "durableHouses", (prev) => (prev ?? 0) + 1);
+  setAppState("meta", "durableHouses", (prev) => (prev ?? 0) + 1);
+  addLog(
+    `Built a durable house (+${DURABLE_HOUSE.capBonus} squirrel capacity, survives winter).`,
     "success",
   );
   return true;
@@ -283,6 +315,20 @@ export const unlockJobsites = (jobsiteIds: string[]) => {
   });
 };
 
+/** True once the hard roster cap is enforced (Stone Age or later). */
+const rosterCapActive = (): boolean =>
+  eraIndex(appState.story.currentEra) >= eraIndex("STONE_AGE");
+
+/** Built (level >= 1) production sites — refinement is excluded by design. */
+export const getActiveProductionSiteCount = (): number =>
+  Object.values(appState.game.jobSites.production).filter(
+    (s) => s.level >= 1,
+  ).length;
+
+export const isProductionRosterFull = (): boolean =>
+  rosterCapActive() &&
+  getActiveProductionSiteCount() >= PRODUCTION_ROSTER_CAP;
+
 export const buyJobSiteCapacity = (jobSiteId: string) => {
   const game = appState.game;
   const jobSite =
@@ -299,6 +345,18 @@ export const buyJobSiteCapacity = (jobSiteId: string) => {
   const maxLevel = jobSite.maxLevel;
 
   if (maxLevel !== undefined && previousLevel >= maxLevel) return;
+
+  if (
+    siteType === "production" &&
+    previousLevel === 0 &&
+    isProductionRosterFull()
+  ) {
+    addLog(
+      `Roster full (${PRODUCTION_ROSTER_CAP} active sites) — retire one to build ${jobSite.name}.`,
+      "warning",
+    );
+    return;
+  }
 
   spendNuts(jobSite.cost);
 
@@ -418,6 +476,35 @@ export const removeSquirrelFromJobSite = (
     setAppState("game", "squirrels", squirrelId, "employed", false);
     setAppState("game", "squirrels", squirrelId, "jobSite", null);
   }
+};
+
+/**
+ * Retire a built production site back to level 0 (known but unbuilt), freeing
+ * its workers to jobless and dropping it from the active roster count so a
+ * new site can be built under the Stone+ hard cap.
+ */
+export const retireJobsite = (jobSiteId: string): boolean => {
+  const game = appState.game;
+  const jobSite = game.jobSites.production[jobSiteId];
+  if (!jobSite || jobSite.level < 1) return false;
+
+  [...jobSite.workers].forEach((sid) =>
+    removeSquirrelFromJobSite(sid, jobSiteId),
+  );
+
+  const template = getJobsiteTemplate(jobSiteId);
+  if (template) {
+    setAppState("game", "jobSites", "production", jobSiteId, {
+      ...template,
+      unlocked: true,
+      workers: [],
+      level: 0,
+      cost: template.baseCost,
+    });
+  }
+
+  addLog(`Retired ${jobSite.name} — squirrels reassigned to jobless.`, "info");
+  return true;
 };
 
 // Manual refinement (craft one at a time)
@@ -639,9 +726,13 @@ export const hibernate = () => {
   const newGoldTotal = game.goldNuts.total + goldenNutsEarned;
   const nextHibernations = appState.meta.hibernations + 1;
 
-  // After first winter, Wood Age becomes available next season
+  // After first winter, Wood Age becomes available; Stone Age after the fifth.
   const maxEra: IdeaEra =
-    nextHibernations >= 1 ? "WOOD_AGE" : appState.meta.maxEraAvailable;
+    nextHibernations >= 5
+      ? "STONE_AGE"
+      : nextHibernations >= 1
+        ? "WOOD_AGE"
+        : appState.meta.maxEraAvailable;
 
   // Preserve structure knowledge across the wipe (hibernate tab is seasonal)
   const preservedTabs = appState.meta.unlockedTabs.filter(
@@ -677,6 +768,12 @@ export const hibernate = () => {
       population: { jobless: [] },
       unlockedTabs: Array.from(new Set(["home", ...preservedTabs])),
       lastUpdate: Date.now(),
+      // Durable (Stone+) housing survives winter — everything else in town wipes
+      town: {
+        woodenHouses: 0,
+        bonfireLevel: 0,
+        durableHouses: appState.meta.durableHouses,
+      },
     }),
   );
 
@@ -790,10 +887,12 @@ export const loadSaveData = (
   },
 ) => {
   const rawTown = data.town ??
-    data.clearing ?? { woodenHouses: 0, bonfireLevel: 0 };
+    data.clearing ?? { woodenHouses: 0, bonfireLevel: 0, durableHouses: 0 };
   const townState: GameState["town"] = {
     woodenHouses: rawTown.woodenHouses ?? 0,
     bonfireLevel: rawTown.bonfireLevel ?? 0,
+    // Older saves predate durable housing — meta is the source of truth.
+    durableHouses: data.meta?.durableHouses ?? rawTown.durableHouses ?? 0,
   };
 
   setAppState("game", (prev) => ({

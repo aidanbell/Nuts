@@ -10,7 +10,7 @@ State bucket: `game.resources` (`nutwood`, `stone`, `bronze`, `iron`). The heade
 
 **Shipped:** NutWood only. Hand craft from the Refinement tab after **NutWood Craft**. Automated **NutWood Refinery** is a late-Wood unlock idea (staffed cycles). First NutWood fires story and, in season 1, the second winter.
 
-**Not shipped:** stone / bronze / iron as produced materials, spend sinks beyond houses / Wood ideas / the refinery itself, and refinement as a Town “industry sector.” All four resource keys exist so the UI doesn’t have to change later.
+**Not shipped:** stone / bronze / iron as produced materials — note Stone **Age** (the era) is now shipped, but stone the **material** is not; durable housing spends nuts + NutWood only. No spend sinks beyond houses / Wood+Stone ideas / the refinery itself, and no refinement as a Town “industry sector.” All four resource keys exist so the UI doesn’t have to change later.
 
 **Important:** refined resources **wipe on hibernate** with the rest of the run. You cannot bank NutWood across winters. Season 1 teaches the recipe; season 2+ is when you craft a Wood Age stockpile in one go.
 
@@ -53,7 +53,7 @@ Order that matches current design:
 
 1. Keep NutWood feeling scarce through Wood winters (houses + ideas).
 2. Staffed refinery as the late-Wood industrial tease.
-3. **Second material (stone)** only after Wood is deep — probably with durable housing and the Stone era idea.
+3. **Second material (stone)** — durable housing and the Stone era idea shipped without it (nuts + NutWood only); a stone jobsite/refinery chain is the natural next step now that Stone Age is live.
 4. Town refineries / smelters as settlement industry, not only a Jobsites row.
 5. Storage buildings so *some* refined goods survive winter (today: none do). Barns would do the same for nuts.
 

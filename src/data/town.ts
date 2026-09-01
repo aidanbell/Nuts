@@ -1,6 +1,6 @@
 /**
  * Town (settlement) — seasonal structures + display scale names.
- * Wooden buildings wipe on hibernate; durable ones come later (Stone+).
+ * Wooden buildings wipe on hibernate; Stone+ durable housing survives it.
  */
 
 export interface WoodenHouseConfig {
@@ -33,6 +33,35 @@ export function getWoodenHouseCost(housesBuilt: number): {
   return {
     nuts: Math.round(WOODEN_HOUSE.nutCost * mult),
     nutwood: Math.round(WOODEN_HOUSE.nutwoodCost * mult),
+  };
+}
+
+/** Stone+ durable housing — a slow permanent investment that survives winter. */
+export interface DurableHouseConfig {
+  nutCost: number;
+  nutwoodCost: number;
+  /** Cost multiplier per house already built (cumulative, never resets) */
+  costGrowthRate: number;
+  /** Extra squirrel soft-cap per house */
+  capBonus: number;
+}
+
+export const DURABLE_HOUSE: DurableHouseConfig = {
+  nutCost: 3000,
+  nutwoodCost: 200,
+  costGrowthRate: 1.6,
+  capBonus: 4,
+};
+
+/** Next durable house cost given how many are already built (all-time). */
+export function getDurableHouseCost(built: number): {
+  nuts: number;
+  nutwood: number;
+} {
+  const mult = Math.pow(DURABLE_HOUSE.costGrowthRate, Math.max(0, built));
+  return {
+    nuts: Math.round(DURABLE_HOUSE.nutCost * mult),
+    nutwood: Math.round(DURABLE_HOUSE.nutwoodCost * mult),
   };
 }
 

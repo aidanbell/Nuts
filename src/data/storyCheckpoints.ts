@@ -391,58 +391,6 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
     },
   },
 
-  stoneAgeChoice: {
-    id: "stoneAgeChoice",
-    name: "The Stone Revolution Awaits",
-    description: "Choose when to advance to the Stone Age",
-    priority: 72,
-    oneTime: true,
-    completed: false,
-
-    triggers: [
-      { type: "nuts_collected", value: 3000, operator: ">=" },
-      { type: "jobsites_purchased", value: 40, operator: ">=" },
-    ],
-
-    effects: {
-      showStory: true,
-      pauseGame: true,
-    },
-
-    story: {
-      title: "The Stone Revolution Awaits",
-      body: "Your inventors have discovered stone tooling! These harder, sharper tools could revolutionize your colony. Or you could master nutwood technology further for lasting benefits...",
-      character: "squirrel_inventor",
-      choices: [
-        {
-          id: "advance",
-          text: "Enter the Stone Age →",
-          description: "Unlock stone tools and advanced jobsites",
-          effects: {
-            setEra: "STONE_AGE",
-          },
-        },
-        {
-          id: "perfectWoodAge",
-          text: "Perfect Wood Age First",
-          description:
-            "Reach 5,000 nuts to earn +30% Stone Age production bonus",
-          requirements: [
-            { type: "nuts_collected", value: 5000, operator: ">=" },
-          ],
-          effects: {
-            setEra: "STONE_AGE",
-            grantBonus: {
-              type: "era_multiplier",
-              value: 1.3,
-              target: "STONE_AGE",
-            },
-          },
-        },
-      ],
-    },
-  },
-
   stoneAgeUnlock: {
     id: "stoneAgeUnlock",
     name: "The Stone Age",

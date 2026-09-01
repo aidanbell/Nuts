@@ -4,6 +4,8 @@ import {
   buyJobSiteCapacity,
   assignSquirrelToJobSite,
   removeSquirrelFromJobSite,
+  retireJobsite,
+  isProductionRosterFull,
 } from "../../engine/state";
 import { formatNumber, formatProductionRate } from "../../utils/formatters";
 import SquirrelDisplay from "../SquirrelDisplay";
@@ -47,9 +49,26 @@ const JobSiteCard: Component<JobSiteCardProps> = (props) => {
     return Boolean(site?.maxLevel !== undefined && site.level >= site.maxLevel);
   };
 
+  const isBuilt = () => {
+    const site = jobSite();
+    return Boolean(site && site.level >= 1);
+  };
+
+  const blockedByRoster = () => {
+    const site = jobSite();
+    return Boolean(
+      site &&
+      site.type === "production" &&
+      !isBuilt() &&
+      isProductionRosterFull(),
+    );
+  };
+
   const canAfford = () => {
     const site = jobSite();
-    return Boolean(site && !isMaxed() && nuts() >= site.cost);
+    return Boolean(
+      site && !isMaxed() && !blockedByRoster() && nuts() >= site.cost,
+    );
   };
 
   const canAddWorker = () => {
@@ -62,15 +81,21 @@ const JobSiteCard: Component<JobSiteCardProps> = (props) => {
     );
   };
 
-  const isBuilt = () => {
-    const site = jobSite();
-    return Boolean(site && site.level >= 1);
-  };
-
   const upgradeLabel = () => {
     if (isMaxed()) return "Maxed";
+    if (blockedByRoster()) return "Roster Full";
     if (!isBuilt()) return "Build";
     return "Upgrade";
+  };
+
+  const canRetire = () => {
+    const site = jobSite();
+    return Boolean(site && site.type === "production" && isBuilt());
+  };
+
+  const handleRetire = (e: MouseEvent) => {
+    e.stopPropagation();
+    retireJobsite(props.jobSiteId);
   };
 
   const canRemoveWorker = () => {
@@ -190,6 +215,15 @@ const JobSiteCard: Component<JobSiteCardProps> = (props) => {
                   >
                     - Remove
                   </button>
+                  <Show when={canRetire()}>
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      onClick={handleRetire}
+                    >
+                      Retire
+                    </button>
+                  </Show>
                 </div>
                 <div class="text-right">
                   <button
@@ -203,6 +237,11 @@ const JobSiteCard: Component<JobSiteCardProps> = (props) => {
                   <Show when={!isMaxed()}>
                     <p class="mt-1 text-sm font-semibold">
                       🥜 {formatNumber(site().cost)}
+                    </p>
+                  </Show>
+                  <Show when={blockedByRoster()}>
+                    <p class="muted mt-1 text-xs">
+                      Roster full — retire a site to build this one.
                     </p>
                   </Show>
                 </div>

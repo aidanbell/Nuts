@@ -8,9 +8,9 @@ Tab id: `town`. Config: `src/data/town.ts`. Seasonal state: `game.town`. Knowled
 
 ## Where this is
 
-**Shipped:** tab unlock at the population wall; wooden houses in Wood Age; bonfire after the Stick Poker housing story; scale names from Clearing up through a far-future ladder.
+**Shipped:** tab unlock at the population wall; wooden houses in Wood Age; durable housing in Stone Age (survives hibernate — `game.town.durableHouses` / `meta.durableHouses`); bonfire after the Stick Poker housing story, upgradeable once Louder Flame is researched in Stone Age; scale names from Clearing up through a far-future ladder.
 
-**Not shipped:** durable housing, barns, storage, tavern / hall / library, science lab, trading post, wonders/projects, Nut City as a separate layer. Population tab is still a placeholder — cap and attraction live here.
+**Not shipped:** barns, storage, tavern / hall / library, science lab, trading post, wonders/projects, Nut City as a separate layer. Population tab is still a placeholder — cap and attraction live here.
 
 ---
 
@@ -34,7 +34,18 @@ Wood Age only (`currentEra` at least Wood). Seasonal dens:
 
 This is the first real NutWood sink and the gate for Stick Poker travelers: they refuse to stay without a den. Building ≥1 house after Stick Poker joins two squirrels and teaches the bonfire.
 
-Stone+ housing in notes is **durable** (survives hibernate) and era-skinned. Don’t persist wooden houses to fake that.
+---
+
+## Durable housing (Stone+)
+
+`currentEra` at least Stone Age. Unlike wooden houses, this is a **permanent, cumulative** investment — no per-season cap, cost grows with total built (`getDurableHouseCost` in `town.ts`):
+
+| | |
+|--|--|
+| First cost | 3,000 nuts + **200 NutWood** |
+| Extra houses | ×**1.6** cost each (cumulative, never resets) |
+| Effect | **+4** squirrel soft cap each (`getSquirrelCap`) |
+| Winter | Count **survives** — stored on `meta.durableHouses`, re-seeded into `game.town.durableHouses` on wake |
 
 ---
 
@@ -49,7 +60,7 @@ Knowledge unlocks from that housing story (`unlockBuildings: ["bonfire"]`). The 
 | Cap | Rolls fail quietly when the colony is full |
 | Upgrades | **Louder Flame** idea (`bonfireUpgrades`) — authored as **Stone Age**, so Wood stays a Lv1 trickle |
 
-Upgrade math is already in `town.ts` (faster interval, higher chance, max level 5) but hidden until that idea is researched in Stone.
+Upgrade math is in `town.ts` (faster interval, higher chance, max level 5); reachable now that Stone Age is a real era via `stoneAge` in `ideas.ts`.
 
 ---
 
@@ -88,4 +99,4 @@ Town buildings always cost **refined** resources. Production-style town building
 
 Nut City as a named fantasy is the late scale of *this* tab, not a second settlement UI. Notes also say city buildings collapse between eras and must be upgraded — that’s far future.
 
-Until Stone, this tab is **houses + a campfire**.
+Today this tab is wooden + durable housing and a campfire; barns/storage/amenities are next.

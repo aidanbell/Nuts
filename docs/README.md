@@ -2,15 +2,15 @@
 
 Raw brainstorming lives in [`notes.md`](./notes.md). Do not treat that file as source of truth, and do not edit it as an agent.
 
-## Where we are (2026-08-30)
+## Where we are (2026-09-01)
 
-The game is playable through **Prehistory (two winters)** into a **Wood Age loop**.
+The game is playable through **Prehistory (two winters)**, a **Wood Age loop**, and into the **Stone Age**.
 
-A season starts with one squirrel in a bare clearing. You forage, research ideas, staff jobsites, and chase a winter trigger. Hibernate wipes nuts, squirrels, buildings, and seasonal ideas; you keep **Gold Nuts**, structure research, and known jobsites (rebuilt at level 0). Gold permanently boosts production.
+A season starts with one squirrel in a bare clearing. You forage, research ideas, staff jobsites, and chase a winter trigger. Hibernate wipes nuts, squirrels, seasonal buildings, and seasonal ideas; you keep **Gold Nuts**, structure research, known jobsites (rebuilt at level 0), and durable housing. Gold permanently boosts production.
 
-**Live content:** Gatherer → Scavenger → Stick Poker → Tree Climber; hand-crafted NutWood; seasonal wooden houses; a bonfire that slowly attracts squirrels; Wood Age efficiency ideas; a late-Wood staffed NutWood Refinery.
+**Live content:** Gatherer → Scavenger → Stick Poker → Tree Climber → Ground Tiller/Basket Carrier/Branch Beater/Ledge Percher; hand-crafted then staffed NutWood; seasonal wooden houses and durable (Stone+) housing; a bonfire that slowly attracts squirrels (upgradeable from Stone Age); Wood/Stone Age efficiency ideas; a hard cap of 4 active production sites with retire-to-swap from Stone Age on.
 
-**Not in play yet:** Stone Age as an era you can enter by design, hard jobsite cap / retire, durable housing, barns/storage, science, Bronze+ jobsites, equips.
+**Not in play yet:** Bronze+ jobsites (ideas point at ids with no templates), barns/storage, science, equips.
 
 ## Pages
 

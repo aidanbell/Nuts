@@ -5,6 +5,8 @@ import {
   getSettlementLabel,
   canBuildWoodenHouse,
   buildWoodenHouse,
+  canBuildDurableHouse,
+  buildDurableHouse,
   isTownBuildingUnlocked,
   canBuildBonfire,
   buildBonfire,
@@ -15,9 +17,11 @@ import {
   WOODEN_HOUSE,
   BONFIRE,
   BONFIRE_UPGRADES_ID,
+  DURABLE_HOUSE,
   getWoodenHouseCost,
   getBonfireStats,
   getBonfireUpgradeCost,
+  getDurableHouseCost,
 } from "../../data/town";
 import { eraIndex } from "../../data/eras";
 import { formatNumber } from "../../utils/formatters";
@@ -26,12 +30,16 @@ const TownTab: Component = () => {
   const squirrelCount = () => Object.keys(appState.game.squirrels).length;
   const cap = () => getSquirrelCap();
   const houses = () => appState.game.town?.woodenHouses ?? 0;
+  const durableHouses = () => appState.game.town?.durableHouses ?? 0;
   const bonfireLevel = () => appState.game.town?.bonfireLevel ?? 0;
   const settlement = () => getSettlementLabel();
   const woodAgeReached = () =>
     eraIndex(appState.story.currentEra) >= eraIndex("WOOD_AGE");
+  const stoneAgeReached = () =>
+    eraIndex(appState.story.currentEra) >= eraIndex("STONE_AGE");
   const atHouseCap = () => houses() >= WOODEN_HOUSE.maxPerSeason;
   const nextHouseCost = () => getWoodenHouseCost(houses());
+  const nextDurableHouseCost = () => getDurableHouseCost(durableHouses());
   const bonfireUnlocked = () => isTownBuildingUnlocked(BONFIRE.id);
   const bonfireUpgradesUnlocked = () =>
     isTownBuildingUnlocked(BONFIRE_UPGRADES_ID);
@@ -152,9 +160,36 @@ const TownTab: Component = () => {
         {renderBonfireSection()}
       </section>
 
-      <p class="muted text-center text-xs">
-        Durable halls and barns come much later. For now, wood is temporary.
-      </p>
+      <Show
+        when={stoneAgeReached()}
+        fallback={
+          <p class="muted text-center text-xs">
+            Durable halls and barns come once the colony reaches the Stone
+            Age. For now, wood is temporary.
+          </p>
+        }
+      >
+        <section class="panel space-y-3">
+          <h3 class="font-display text-lg font-bold">Durable House</h3>
+          <p class="muted text-sm">
+            Stone-set foundations. Unlike wooden dens, these survive winter —
+            a slow, permanent investment in the colony.
+          </p>
+          <p class="text-sm font-semibold">
+            Built: {durableHouses()} (+{DURABLE_HOUSE.capBonus} cap each,
+            permanent)
+          </p>
+          <button
+            type="button"
+            class={`btn ${canBuildDurableHouse() ? "btn-primary" : "btn-secondary"}`}
+            disabled={!canBuildDurableHouse()}
+            onClick={() => buildDurableHouse()}
+          >
+            Build durable house · 🥜 {formatNumber(nextDurableHouseCost().nuts)}{" "}
+            · 🪵 {formatNumber(nextDurableHouseCost().nutwood)}
+          </button>
+        </section>
+      </Show>
     </div>
   );
 };

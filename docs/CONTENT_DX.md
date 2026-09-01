@@ -67,7 +67,7 @@ After research, `refreshIdeaCatalog` runs so the next card can appear.
 3. Gate it with `maxEraAvailable` and/or `minHibernations` if winters must happen first.
 4. On hibernate, bump `meta.maxEraAvailable` when that era should become *reachable* (Wood is set after the first winter in `hibernate` today). Entering the era is still the idea.
 
-Do not unlock the next era’s jobsites from a story choice unless that *is* the gate. Stone should get a real era idea, not the leftover `stoneAgeChoice` checkpoint.
+Do not unlock the next era’s jobsites from a story choice unless that *is* the gate — Stone Age now follows this recipe (`stoneAge` idea in `ideas.ts`, `setEra: STONE_AGE`); use it as the template for Bronze.
 
 ---
 
