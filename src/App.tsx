@@ -1,18 +1,28 @@
 /**
- * Reactive game primitives (create* factories for component setup).
+ * Browser shell — Solid UI over the headless engine.
  */
 
 import { onCleanup } from "solid-js";
-import { createGameLoop } from "./engine/gameLoop";
-import { createAutoSave, createStoryCheckpoints } from "./engine/primitives";
+import { createEngine } from "./engine/createEngine";
+import { browserClock } from "./browser/clock";
+import { cookieStorage } from "./browser/cookieStorage";
 import GameContainer from "./components/GameContainer";
 import StoryModal from "./components/StoryModal";
 import DebugPanel from "./components/DebugPanel";
 
 export default function App() {
-  onCleanup(createGameLoop());
-  createAutoSave();
-  createStoryCheckpoints();
+  onCleanup(
+    createEngine({
+      clock: browserClock,
+      storage: cookieStorage,
+      shouldAutoSave: () =>
+        localStorage.getItem("debug_autosave_enabled") !== "false",
+      registerUnload: (save) => {
+        window.addEventListener("beforeunload", save);
+        return () => window.removeEventListener("beforeunload", save);
+      },
+    }),
+  );
 
   return (
     <>

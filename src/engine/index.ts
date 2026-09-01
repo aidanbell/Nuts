@@ -2,7 +2,6 @@
  * Engine public API
  */
 
-// State management
 export {
   appState,
   setAppState,
@@ -10,7 +9,6 @@ export {
   ideasState,
   storyState,
   gameLogState,
-  // Actions
   addNuts,
   spendNuts,
   addResource,
@@ -48,10 +46,10 @@ export {
   markWinterIncoming,
   goldNutsToForageMulti,
   getEffectiveNps,
+  calculateGoldenNutReward,
   loadSaveData,
   updateTimestamp,
   metaState,
-  // Ideas actions
   researchIdea,
   showIdea,
   showIdeas,
@@ -59,7 +57,6 @@ export {
   refreshIdeaCatalog,
   resetIdeas,
   loadIdeasState,
-  // Story actions
   completeCheckpoint,
   showStory,
   dismissStory,
@@ -70,10 +67,8 @@ export {
   makeChoice,
   resetCheckpoints,
   loadCheckpointState,
-  // Game log actions
   addLog,
   clearLogs,
-  // Types
   type SetAppState,
   type GameState,
   type Squirrel,
@@ -88,29 +83,25 @@ export {
   type LogLevel,
 } from "./state";
 
-// Game loop
-export { startGameLoop, createGameLoop, chance } from "./gameLoop";
+export { tryResearch, canAffordIdea, meetsIdeaRequirements } from "./research";
 
-// Primitives
-export {
-  createAutoSave,
-  createStoryCheckpoints,
-  createIdeas,
-  createGoldenNut,
-  calculateGoldenNutReward,
-  type GoldenNutState,
-} from "./primitives";
+export { attachStore } from "./runtime";
+export { createMemoryStore, type Store, type SetStoreFunction } from "./store";
+export { createEngine, type EngineDeps } from "./createEngine";
+export type { Clock, SaveStorage } from "./platform";
 
-// Save/Load
+export { startGameLoop, chance } from "./gameLoop";
+export { startCheckpoints, processCheckpoints } from "./checkpoints";
+
 export {
   saveGame,
   loadGame,
   clearSave,
   exportSave,
   importSave,
+  bindSaveStorage,
 } from "./saveSystem";
 
-// Effects
 export {
   processEffects,
   logEffects,

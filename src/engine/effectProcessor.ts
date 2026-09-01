@@ -1,6 +1,5 @@
 /**
- * SolidJS Effect Processor
- * Centralized effect processing for game effects from ideas and checkpoints.
+ * Apply game effects from ideas and checkpoints against the bound store.
  */
 
 import {
@@ -48,7 +47,7 @@ export interface EffectProcessorOptions {
 }
 
 /**
- * Apply game effects directly against the Solid store.
+ * Apply game effects against the bound store.
  */
 export const processEffects = (
   effects: GameEffect,
@@ -132,7 +131,7 @@ export const processEffects = (
     pauseGame();
   }
 
-  // Stories are queued by createStoryCheckpoints via queueStories —
+  // Stories are queued by processCheckpoints via queueStories —
   // do not set activeStory here or multi-checkpoint batches overwrite each other.
 };
 

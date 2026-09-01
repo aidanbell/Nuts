@@ -4,7 +4,7 @@ import Navigation from "./Navigation";
 import TabContent from "./TabContent";
 import GoldenNut from "./GoldenNut";
 import { appState } from "../engine/state";
-import { createGoldenNut } from "../engine/primitives";
+import { createGoldenNut } from "./createGoldenNut";
 
 const GameContainer: Component = () => {
   const activeTab = () => appState.game.activeTab;

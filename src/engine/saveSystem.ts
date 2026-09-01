@@ -1,11 +1,23 @@
 /**
- * Save/load via cookie storage, backed by the Solid store.
+ * Save/load via an injected SaveStorage, backed by the bound store.
  */
 
 import { appState, loadSaveData } from "./state";
 import type { SaveData } from "../types/game";
+import type { SaveStorage } from "./platform";
 
-const SAVE_COOKIE_NAME = "nuts_game_save";
+let saveStorage: SaveStorage | undefined;
+
+export function bindSaveStorage(storage: SaveStorage): void {
+  saveStorage = storage;
+}
+
+function requireStorage(): SaveStorage {
+  if (!saveStorage) {
+    throw new Error("Save storage not bound. Call bindSaveStorage first.");
+  }
+  return saveStorage;
+}
 
 const obfuscate = (data: string): string => {
   return btoa(data).split("").reverse().join("");
@@ -48,12 +60,7 @@ export const saveGame = (): void => {
     };
 
     const saveString = JSON.stringify(saveData);
-    const obfuscatedData = obfuscate(saveString);
-
-    const expirationDate = new Date();
-    expirationDate.setFullYear(expirationDate.getFullYear() + 1);
-
-    document.cookie = `${SAVE_COOKIE_NAME}=${obfuscatedData}; expires=${expirationDate.toUTCString()}; path=/; SameSite=Strict`;
+    requireStorage().write(obfuscate(saveString));
 
     console.log("Game saved successfully");
   } catch (error) {
@@ -63,16 +70,12 @@ export const saveGame = (): void => {
 
 export const loadGame = (): SaveData | null => {
   try {
-    const cookies = document.cookie.split(";");
-    const saveCookie = cookies.find((cookie) =>
-      cookie.trim().startsWith(`${SAVE_COOKIE_NAME}=`),
-    );
+    const obfuscatedData = requireStorage().read();
 
-    if (!saveCookie) {
+    if (!obfuscatedData) {
       return null;
     }
 
-    const obfuscatedData = saveCookie.split("=")[1];
     const saveString = deobfuscate(obfuscatedData);
     const saveData: SaveData = JSON.parse(saveString);
 
@@ -90,7 +93,7 @@ export const loadGame = (): SaveData | null => {
 };
 
 export const clearSave = (): void => {
-  document.cookie = `${SAVE_COOKIE_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+  requireStorage().clear();
   console.log("Save data cleared");
 };
 
