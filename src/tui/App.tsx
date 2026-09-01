@@ -1,4 +1,5 @@
 import type { Component } from "solid-js";
+import { useKeyboard } from "@opentui/solid";
 import { appState, getEffectiveNps } from "../engine/state";
 import { formatEraName } from "../data/eras";
 import {
@@ -7,7 +8,17 @@ import {
   formatTime,
 } from "../utils/formatters";
 
-const App: Component = () => {
+interface AppProps {
+  onQuit: () => void;
+}
+
+const App: Component<AppProps> = (props) => {
+  // Raw terminal mode disables the kernel's Ctrl+C -> SIGINT translation,
+  // so quitting has to be handled as a keystroke, not a process signal.
+  useKeyboard((key) => {
+    if ((key.ctrl && key.name === "c") || key.name === "q") props.onQuit();
+  });
+
   const nutsTotal = () => appState.game.nutsTotal;
   const nutsAllTime = () => appState.game.nutsAllTime;
   const squirrelCount = () => Object.keys(appState.game.squirrels).length;
@@ -35,7 +46,7 @@ const App: Component = () => {
           content={`Clock:     ${formatTime(timer().m, timer().s, timer().ms)}`}
         />
       </box>
-      <text content="Ctrl+C to save and quit." fg="#888888" />
+      <text content="Ctrl+C or q to save and quit." fg="#888888" />
     </box>
   );
 };

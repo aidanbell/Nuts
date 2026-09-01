@@ -11,27 +11,30 @@ attachStore(createSolidStore());
 
 const renderer = await createCliRenderer({ exitOnCtrlC: false });
 
-let unregisterUnload: (() => void) | undefined;
+let shutdown = () => {};
+let hasShutDown = false;
 
 const teardown = createEngine({
   clock: terminalClock,
   storage: fileStorage,
   registerUnload: (save) => {
-    const shutdown = () => {
+    shutdown = () => {
+      // Raw mode intercepts Ctrl+C as a keystroke, not a SIGINT — this can
+      // also be invoked directly from a useKeyboard handler, not just here.
+      if (hasShutDown) return;
+      hasShutDown = true;
       save();
-      unregisterUnload?.();
       teardown();
       renderer.destroy();
       process.exit(0);
     };
     process.on("SIGINT", shutdown);
     process.on("SIGTERM", shutdown);
-    unregisterUnload = () => {
+    return () => {
       process.off("SIGINT", shutdown);
       process.off("SIGTERM", shutdown);
     };
-    return unregisterUnload;
   },
 });
 
-await render(() => <App />, renderer);
+await render(() => <App onQuit={() => shutdown()} />, renderer);
