@@ -25,6 +25,8 @@ export interface MetaState {
   unlockedJobsiteIds: string[];
   /** Town building ids the colony knows how to raise (e.g. bonfire) */
   unlockedTownBuildings: string[];
+  /** Stone+ durable housing count — survives winter, unlike wooden houses */
+  durableHouses: number;
 }
 
 export const INITIAL_META_STATE: MetaState = {
@@ -38,6 +40,7 @@ export const INITIAL_META_STATE: MetaState = {
   structureIdeas: [],
   unlockedJobsiteIds: [],
   unlockedTownBuildings: [],
+  durableHouses: 0,
 };
 
 /** Gatherer level at which first winter begins (maxed site = natural stop) */

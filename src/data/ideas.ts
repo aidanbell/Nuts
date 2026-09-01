@@ -241,6 +241,23 @@ export const ideas: Record<string, Idea> = {
     },
   }),
 
+  stoneAge: unlockIdea({
+    id: "stoneAge",
+    name: "The Stone Age",
+    description:
+      "Commit the colony to worked stone. Opens the Stone Age idea catalog (Ground Tiller, Basket Carrier, and more) — production sites are capped at 4 active from here on; a fifth means retiring one.",
+    era: "WOOD_AGE",
+    requirements: {
+      ideasResearched: ["nutwoodRefinery"],
+      maxEraAvailable: "STONE_AGE",
+      minHibernations: 5,
+    },
+    cost: { nuts: 25000, nutwood: 150 },
+    effects: {
+      setEra: "STONE_AGE",
+    },
+  }),
+
   // ==================== STONE AGE ====================
 
   stoneTooling: {

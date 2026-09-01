@@ -111,6 +111,8 @@ export interface GameState {
     woodenHouses: number;
     /** 0 = not built this season; 1+ = lit (attraction rolls) */
     bonfireLevel: number;
+    /** Stone+; seeded from meta.durableHouses each spring — does NOT reset to 0 */
+    durableHouses: number;
   };
 
   // Timer

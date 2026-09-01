@@ -76,6 +76,7 @@ export const gameStateTemplate: GameState = {
   town: {
     woodenHouses: 0,
     bonfireLevel: 0,
+    durableHouses: 0,
   },
   timer: {
     ms: 0,
@@ -95,7 +96,12 @@ export function createFreshGameState(
     goldNuts: { ...gameStateTemplate.goldNuts, ...overrides.goldNuts },
     getButton: { ...gameStateTemplate.getButton, ...overrides.getButton },
     timer: { ...gameStateTemplate.timer, ...overrides.timer },
-    town: { woodenHouses: 0, bonfireLevel: 0, ...overrides.town },
+    town: {
+      woodenHouses: 0,
+      bonfireLevel: 0,
+      durableHouses: 0,
+      ...overrides.town,
+    },
     population: overrides.population ?? { jobless: [] },
     squirrels: overrides.squirrels ?? {},
   };

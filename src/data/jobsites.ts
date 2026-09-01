@@ -5,6 +5,9 @@ import type { JobSite } from "../types/game";
  * Refinement sites do not count toward the production roster soft/hard cap.
  */
 
+/** Stone+ hard roster cap — active (built, level >= 1) production sites. Refinement excluded. */
+export const PRODUCTION_ROSTER_CAP = 4;
+
 export const refinementJobsites: JobSite[] = [
   {
     id: "nutwoodRefinement",

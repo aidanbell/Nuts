@@ -10,9 +10,9 @@ See also: [Jobsites](./JOBSITES.md) · [Ideas](./IDEAS.md) · [Town](./TOWN.md) 
 
 ## Where this is
 
-**Shipped:** Prehistory (two winters) and a Wood Age catalog you can actually enter. Hibernate, Gold Nuts, population caps, Town, and the Stick Poker → house → bonfire story are all in the engine.
+**Shipped:** Prehistory (two winters), a Wood Age catalog you can actually enter, and now a real **Stone Age gate** — The Stone Age era idea (5 hibernations + NutWood Refinery), a hard roster cap of 4 active production sites with retire-to-swap, and durable housing that survives winter. Hibernate, Gold Nuts, population caps, Town, and the Stick Poker → house → bonfire story are all in the engine.
 
-**Next depth:** make each Wood winter feel distinct (more seasonal ideas / NutWood sinks), then a real Stone Age gate — era idea, hard roster of four, retire to swap sites.
+**Next depth:** make each Wood winter feel distinct (more seasonal ideas / NutWood sinks), then real Bronze Age jobsite templates and a second refined material (stone).
 
 ---
 
@@ -43,7 +43,7 @@ After two hibernations, spring story is console-only instead of a modal.
 - **Wood Age lasts ~2–4/5 winters** before Stone is in play.
 - **New jobsites always come from an `unlock` idea.**
 - Settlement nav uses the [Town](./TOWN.md) scale name (Clearing → Village → …), not a fixed “Town” label.
-- Early housing is **cheap wood that dies in winter**. Durable housing is Stone+.
+- Early housing is **cheap wood that dies in winter**. Durable housing is Stone+ (shipped — see Town).
 
 ---
 
@@ -109,19 +109,19 @@ Seasonal target: wake → rebuild sites + optional house → this season’s unl
 
 ---
 
-## Stone Age and later
+## Stone Age (~shipped)
 
-Deferred as **playable content**. Templates for the Stone quartet exist in `jobsites.ts` but nothing designed should *unlock* them yet.
+Gate: **The Stone Age** idea (Wood Age catalog, after NutWood Refinery, 5 hibernations, 25,000 nuts + 150 NutWood). `setEra: STONE_AGE`; `meta.maxEraAvailable` also advances to Stone Age at the 5th hibernation.
 
-Intended Stone beat:
-
-- An era idea (huge cost, after Wood feels long) opens the Stone catalog and a **hard cap of 4** active production sites — bringing a fifth online means **retiring** one.
+- Opens the Stone catalog (Stone Tooling → Advanced Stone Tools unlock the four jobsites; Stone Age Mastery; Organization Basics) and a **hard cap of 4** active production sites — bringing a fifth online means **retiring** one (`retireJobsite`).
 - Sites: Ground Tiller, Basket Carrier, Branch Beater, Ledge Percher.
-- Durable housing that survives winter; Louder Flame (already authored as a Stone-era idea) lets the bonfire upgrade past the Wood trickle.
+- Durable housing (Town tab) survives winter, unlike wooden houses; Louder Flame lets the bonfire upgrade past the Wood trickle.
 
-There is a leftover **stoneAgeChoice** story (3000 nuts + 40 total jobsite levels) that can jump era via a modal. That is not the intended gate. Bronze / Iron / later stories and ideas in the catalog are placeholders.
+The old **stoneAgeChoice** leftover story checkpoint (3000 nuts + 40 jobsite levels) has been removed — it was never the intended gate. `stoneAgeUnlock` still fires the celebratory beat on `era_reached == STONE_AGE`, regardless of path in.
 
-Later eras stay a name list and a jobsite horizon until Wood (then Stone) feel deep. See [Jobsites](./JOBSITES.md).
+## Bronze Age and later
+
+Bronze / Iron / later stories and ideas in the catalog are still placeholders — jobsite ids with no templates. Next up: real Bronze jobsite templates + a Bronze era idea, following the Stone pattern. Later eras stay a name list and a jobsite horizon until Bronze (then Iron) feel deep. See [Jobsites](./JOBSITES.md).
 
 ---
 
