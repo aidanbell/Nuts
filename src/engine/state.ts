@@ -1,8 +1,7 @@
 /**
- * Global game store — single source of truth for all game state.
+ * Game actions against the bound store (see runtime.attachStore).
  */
 
-import { createStore, type SetStoreFunction } from "solid-js/store";
 import type {
   GameState,
   JobSite,
@@ -10,7 +9,7 @@ import type {
   Population,
   Squirrel,
 } from "../types/game";
-import type { Idea, IdeaEra, IdeasState } from "../types/ideas";
+import type { IdeaEra, IdeasState } from "../types/ideas";
 import type { StoryState } from "../types/story";
 import type { GameLogState } from "../types/gameLog";
 import {
@@ -21,8 +20,6 @@ import {
   TUTORIAL_CHECKPOINT_IDS,
   type MetaState,
 } from "../types/meta";
-import { ideas } from "../data/ideas";
-import { storyCheckpoints } from "../data/storyCheckpoints";
 import { getJobsiteTemplate, refinementJobsites } from "../data/jobsites";
 import { eraIndex } from "../data/eras";
 import {
@@ -35,170 +32,16 @@ import {
   getBonfireStats,
   getBonfireUpgradeCost,
 } from "../data/town";
+import { appState, setAppState } from "./runtime";
+import {
+  checkpointsTemplate,
+  createFreshGameState,
+  ideasTemplate,
+  type AppState,
+} from "./initialState";
 
-/** Immutable templates — store state is cloned from these so resets stay clean */
-const ideasTemplate: Record<string, Idea> = structuredClone(ideas);
-const checkpointsTemplate = structuredClone(storyCheckpoints);
-const jobSitesTemplate: GameState["jobSites"] = {
-  jobless: {
-    time: 1500,
-    value: 1,
-    chance: 0.5,
-    multi: 1,
-    level: 0,
-    cost: 0,
-    method: "ground",
-  },
-  production: {},
-  refinement: {},
-};
-
-// ============================================================================
-// Initial State
-// ============================================================================
-
-/** Clean game template — never passed into the store (store would mutate it) */
-const gameStateTemplate: GameState = {
-  // Core resources
-  nutsTotal: 0,
-  nutsAllTime: 0,
-  goldNuts: {
-    total: 0,
-    multi: 0.12,
-  },
-
-  // Refined resources
-  resources: {
-    nutwood: 0,
-    stone: 0,
-    bronze: 0,
-    iron: 0,
-  },
-
-  // Population and jobs
-  squirrels: {
-    0: {
-      _id: 0,
-      employed: false,
-      jobSite: null,
-      total: 0,
-    },
-  },
-  nextSquirrelId: 1,
-  population: {
-    jobless: [0],
-  },
-
-  // JobSites
-  jobSites: structuredClone(jobSitesTemplate),
-
-  // Get button
-  getButton: {
-    value: 1,
-    mult: 1,
-  },
-
-  // Game settings
-  gameSpeed: 1,
-  isPaused: false,
-  tick: 0,
-  lastUpdate: Date.now(),
-
-  // UI state
-  activeTab: "home",
-  unlockedTabs: ["home"],
-
-  town: {
-    woodenHouses: 0,
-    bonfireLevel: 0,
-  },
-
-  // Timer
-  timer: {
-    ms: 0,
-    s: 0,
-    m: 0,
-  },
-};
-
-function createFreshGameState(overrides: Partial<GameState> = {}): GameState {
-  return {
-    ...structuredClone(gameStateTemplate),
-    ...overrides,
-    jobSites: structuredClone(jobSitesTemplate),
-    resources: { ...gameStateTemplate.resources, ...overrides.resources },
-    goldNuts: { ...gameStateTemplate.goldNuts, ...overrides.goldNuts },
-    getButton: { ...gameStateTemplate.getButton, ...overrides.getButton },
-    timer: { ...gameStateTemplate.timer, ...overrides.timer },
-    town: { woodenHouses: 0, bonfireLevel: 0, ...overrides.town },
-    population: overrides.population ?? { jobless: [] },
-    squirrels: overrides.squirrels ?? {},
-  };
-}
-
-const initialIdeasState: IdeasState = {
-  ideas: structuredClone(ideasTemplate),
-  researchedIdeas: [],
-  researchedCount: 0,
-  totalResearchPoints: 0,
-};
-
-const initialStoryState: StoryState = {
-  checkpoints: structuredClone(checkpointsTemplate),
-  activeStory: null,
-  storyQueue: [],
-  completedCheckpoints: [],
-  currentEra: "PREHISTORY",
-  storyProgress: 0,
-  eraBonuses: {},
-  pendingChoice: null,
-};
-
-const initialGameLogState: GameLogState = {
-  logs: [],
-  maxLogs: 50,
-};
-
-// ============================================================================
-// Combined App State
-// ============================================================================
-
-export interface AppState {
-  game: GameState;
-  ideas: IdeasState;
-  story: StoryState;
-  gameLog: GameLogState;
-  meta: MetaState;
-}
-
-const initialAppState: AppState = {
-  game: createFreshGameState({
-    squirrels: {
-      0: {
-        _id: 0,
-        employed: false,
-        jobSite: null,
-        total: 0,
-      },
-    },
-    nextSquirrelId: 1,
-    population: { jobless: [0] },
-  }),
-  ideas: initialIdeasState,
-  story: initialStoryState,
-  gameLog: initialGameLogState,
-  meta: { ...INITIAL_META_STATE },
-};
-
-// ============================================================================
-// Create SolidJS Store
-// ============================================================================
-
-// Create the store with deep merging for nested updates
-const [appState, setAppState] = createStore<AppState>(initialAppState);
-
-// Helper to set nested state with type safety
-export type SetAppState = SetStoreFunction<AppState>;
+export type { AppState };
+export type { SetAppState } from "./runtime";
 
 // ============================================================================
 // Game State Accessors
@@ -747,6 +590,17 @@ export const getEffectiveNps = (): number => {
   return joblessNps + productionNps;
 };
 
+/**
+ * Glowing nut burst: ~15s of colony effective NPS, with light variance.
+ * Uses full economy (jobless + jobsites), so staffing sites does not tank the find.
+ */
+export const calculateGoldenNutReward = (): number => {
+  const nps = getEffectiveNps();
+  const burst = Math.max(0.5, nps) * 15;
+  const variance = 0.75 + Math.random() * 0.5;
+  return Math.max(5, Math.round(burst * variance));
+};
+
 /** Gold Nuts from nuts gathered this season (nutsAllTime resets each hibernate). */
 export const calculateHibernationReward = (
   nutsThisSeason: number = appState.game.nutsAllTime,
@@ -935,7 +789,8 @@ export const loadSaveData = (
     town?: GameState["town"];
   },
 ) => {
-  const rawTown = data.town ?? data.clearing ?? {};
+  const rawTown = data.town ??
+    data.clearing ?? { woodenHouses: 0, bonfireLevel: 0 };
   const townState: GameState["town"] = {
     woodenHouses: rawTown.woodenHouses ?? 0,
     bonfireLevel: rawTown.bonfireLevel ?? 0,
@@ -1491,8 +1346,7 @@ export const clearLogs = () => {
 // Store Export
 // ============================================================================
 
-// Export the store for direct access
-export { appState, setAppState };
+export { appState, setAppState } from "./runtime";
 
 // Re-export types for convenience
 export type { GameState, Squirrel, JobSite, JoblessJobSite, Population };

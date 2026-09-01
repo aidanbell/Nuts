@@ -1,9 +1,21 @@
-import { type Component, Show, For, createSignal, createMemo } from "solid-js";
-import { createIdeas } from "../../engine/primitives";
-import { appState } from "../../engine/state";
+import {
+  type Component,
+  Show,
+  For,
+  createSignal,
+  createMemo,
+  createEffect,
+} from "solid-js";
+import {
+  appState,
+  refreshIdeaCatalog,
+  tryResearch,
+  canAffordIdea,
+  meetsIdeaRequirements,
+} from "../../engine";
 import type { Idea } from "../../types/ideas";
 import { formatNumber } from "../../utils/formatters";
-import { ERA_ORDER } from "../../data/eras";
+import { ERA_ORDER, eraIndex } from "../../data/eras";
 
 const categoryStyle: Record<string, string> = {
   unlock: "bg-moss/15 text-moss",
@@ -167,13 +179,19 @@ const IdeaCard: Component<IdeaCardProps> = (props) => (
 const eraOrder = [...ERA_ORDER];
 
 const IdeasTab: Component = () => {
-  const {
-    visibleIdeas,
-    researchedIdeas,
-    canAfford,
-    meetsRequirements,
-    research,
-  } = createIdeas();
+  createEffect(() => {
+    void appState.story.currentEra;
+    void appState.meta.maxEraAvailable;
+    void appState.ideas.researchedCount;
+    refreshIdeaCatalog();
+  });
+
+  const visibleIdeas = createMemo(() =>
+    Object.values(appState.ideas.ideas).filter((idea) => idea.visible),
+  );
+  const researchedIdeas = createMemo(() =>
+    Object.values(appState.ideas.ideas).filter((idea) => idea.researched),
+  );
   const nutsTotal = () => appState.game.nutsTotal;
   const currentEra = () => appState.story.currentEra;
   const [showResearched, setShowResearched] = createSignal(false);
@@ -191,8 +209,7 @@ const IdeasTab: Component = () => {
   });
 
   const erasToShow = createMemo(() => {
-    const currentEraIndex = eraOrder.indexOf(currentEra() || "PREHISTORY");
-    return eraOrder.slice(0, currentEraIndex + 1);
+    return eraOrder.slice(0, eraIndex(currentEra()) + 1);
   });
 
   const filteredVisible = createMemo(() =>
@@ -283,9 +300,9 @@ const IdeasTab: Component = () => {
                 {(idea) => (
                   <IdeaCard
                     idea={idea}
-                    onResearch={() => research(idea.id)}
-                    canAfford={canAfford(idea)}
-                    meetsRequirements={meetsRequirements(idea)}
+                    onResearch={() => tryResearch(idea.id)}
+                    canAfford={canAffordIdea(idea)}
+                    meetsRequirements={meetsIdeaRequirements(idea)}
                     isExpanded={expandedIdea() === idea.id}
                     onToggle={() =>
                       setExpandedIdea(
