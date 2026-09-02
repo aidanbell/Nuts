@@ -1,4 +1,4 @@
-import { type Component, Show, createSignal } from "solid-js";
+import { type Component, For, Show, createSignal } from "solid-js";
 import {
   appState,
   addNuts,
@@ -10,6 +10,15 @@ import {
   loadSaveData,
 } from "../engine/state";
 import { clearSave, saveGame, loadGame } from "../engine/saveSystem";
+import {
+  type SaveSlotMeta,
+  listSaveSlots,
+  saveToSlot,
+  loadFromSlot,
+  deleteSlot,
+} from "../utils/saveSlots";
+import { formatEraName } from "../data/eras";
+import { formatNumber } from "../utils/formatters";
 
 const DebugPanel: Component = () => {
   const gameState = () => appState.game;
@@ -22,6 +31,37 @@ const DebugPanel: Component = () => {
   const [showGameState, setShowGameState] = createSignal(false);
   const [showStoryState, setShowStoryState] = createSignal(false);
   const [copiedText, setCopiedText] = createSignal("");
+  const [saveSlots, setSaveSlots] = createSignal<SaveSlotMeta[]>(
+    listSaveSlots(),
+  );
+  const [newSlotName, setNewSlotName] = createSignal("");
+
+  const handleSaveSlot = () => {
+    const meta = saveToSlot(newSlotName());
+    if (meta) {
+      setSaveSlots(listSaveSlots());
+      setNewSlotName("");
+    } else {
+      alert("Failed to save slot!");
+    }
+  };
+
+  const handleLoadSlot = (id: string) => {
+    if (!window.confirm("Load this save state? Current progress is lost unless saved.")) {
+      return;
+    }
+    if (loadFromSlot(id)) {
+      alert("Save state loaded!");
+    } else {
+      alert("Failed to load save state!");
+    }
+  };
+
+  const handleDeleteSlot = (id: string) => {
+    if (!window.confirm("Delete this save state? This cannot be undone.")) return;
+    deleteSlot(id);
+    setSaveSlots(listSaveSlots());
+  };
 
   const handleAutoSaveToggle = () => {
     const next = !autoSaveEnabled();
@@ -181,6 +221,71 @@ const DebugPanel: Component = () => {
                 💾 Export
               </button>
             </div>
+          </section>
+
+          <section class="space-y-2 rounded-lg bg-sage/40 p-3">
+            <p class="text-sm font-bold">Save States</p>
+            <p class="text-xs text-muted">
+              Snapshots for playtesting — jump back to a stage of progression
+              without replaying from scratch.
+            </p>
+            <div class="flex gap-2">
+              <input
+                type="text"
+                class="min-w-0 flex-1 rounded border border-moss/30 bg-paper px-2 py-1 text-xs"
+                placeholder="e.g. Wood Age start"
+                value={newSlotName()}
+                onInput={(e) => setNewSlotName(e.currentTarget.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSaveSlot();
+                }}
+              />
+              <button
+                type="button"
+                class="btn btn-primary btn-sm shrink-0"
+                onClick={handleSaveSlot}
+              >
+                💾 Save Slot
+              </button>
+            </div>
+
+            <Show
+              when={saveSlots().length > 0}
+              fallback={<p class="text-xs text-muted">No save states yet.</p>}
+            >
+              <ul class="space-y-1">
+                <For each={saveSlots()}>
+                  {(slot) => (
+                    <li class="flex items-center justify-between gap-2 rounded bg-paper px-2 py-1 text-xs">
+                      <div class="min-w-0">
+                        <p class="truncate font-semibold">{slot.name}</p>
+                        <p class="text-muted">
+                          {formatEraName(slot.era)} · S{slot.season + 1} ·{" "}
+                          {formatNumber(slot.nuts)} nuts ·{" "}
+                          {new Date(slot.savedAt).toLocaleString()}
+                        </p>
+                      </div>
+                      <div class="flex shrink-0 gap-1">
+                        <button
+                          type="button"
+                          class="btn btn-secondary btn-sm"
+                          onClick={() => handleLoadSlot(slot.id)}
+                        >
+                          Load
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-danger btn-sm"
+                          onClick={() => handleDeleteSlot(slot.id)}
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </li>
+                  )}
+                </For>
+              </ul>
+            </Show>
           </section>
 
           <section class="space-y-2 rounded-lg bg-sage/40 p-3">
