@@ -259,10 +259,8 @@ const JobsiteTab: Component = () => {
     null,
   );
 
-  const jobSiteArray = () => [
-    ...Object.values(appState.game.jobSites.production),
-    ...Object.values(appState.game.jobSites.refinement),
-  ];
+  // Refinement jobsites (staffed, auto-cycling) live in the Refinement tab.
+  const jobSiteArray = () => Object.values(appState.game.jobSites.production);
 
   const population = () => appState.game.population;
 

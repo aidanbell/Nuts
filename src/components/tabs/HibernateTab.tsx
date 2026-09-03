@@ -10,15 +10,25 @@ const HibernateTab: Component = () => {
   const goldNuts = () => appState.game.goldNuts;
   const nutsThisSeason = () => appState.game.nutsAllTime;
   const meta = () => appState.meta;
-  const [showConfirm, setShowConfirm] = createSignal(false);
+  const [armed, setArmed] = createSignal(false);
 
   const goldNutReward = createMemo(() =>
     calculateHibernationReward(nutsThisSeason(), goldNuts().multi),
   );
 
-  const handleConfirmHibernate = () => {
+  // Hibernating should at least match the Gold Nuts already banked — otherwise
+  // you'd be trading a real stash for a smaller one. Season 0's total is
+  // always 0, so the very first hibernation is never blocked by this.
+  const breakEvenTarget = () => goldNuts().total;
+  const canHibernate = () => goldNutReward() >= breakEvenTarget();
+
+  const handleHibernateClick = () => {
+    if (!armed()) {
+      setArmed(true);
+      return;
+    }
     hibernate();
-    setShowConfirm(false);
+    setArmed(false);
   };
 
   return (
@@ -45,6 +55,9 @@ const HibernateTab: Component = () => {
           {meta().hibernations}
         </p>
         <p class="muted mt-1">
+          Gold Nuts banked: <strong class="text-gold">⭐ {formatNumber(goldNuts().total)}</strong>
+        </p>
+        <p class="muted mt-1">
           Nuts this season: <strong>🥜 {formatNumber(nutsThisSeason())}</strong>
         </p>
         <p class="muted mt-1">
@@ -63,57 +76,56 @@ const HibernateTab: Component = () => {
           ).
         </p>
 
-        <button
-          type="button"
-          class="btn btn-warning btn-lg mt-6"
-          onClick={() => setShowConfirm(true)}
-        >
-          💤 HIBERNATE NOW
-        </button>
+        <Show when={!canHibernate()}>
+          <p class="mt-3 rounded-lg border border-moss/30 bg-moss/10 px-3 py-2 text-sm">
+            Not ready yet — hibernating now would leave you with{" "}
+            <strong>{formatNumber(goldNutReward())}</strong> Gold Nuts, fewer
+            than the <strong>{formatNumber(breakEvenTarget())}</strong> you'd
+            be walking away from. Keep pushing.
+          </p>
+        </Show>
 
-        <Show when={showConfirm()}>
-          <div class="mt-6 rounded-xl border border-amber/40 bg-amber/10 p-4 text-left">
-            <h3 class="font-display text-lg font-bold">⚠️ Are you sure?</h3>
-            <p class="mt-2">If you hibernate, you will receive:</p>
-            <p
-              class="my-4 text-center font-display text-3xl font-bold text-gold"
-              id="gn-preview"
-            >
-              ⭐ {formatNumber(goldNutReward())} Gold Nuts
-            </p>
-            <p class="text-sm font-bold text-danger">
+        <Show when={armed()}>
+          <div class="mt-4 rounded-xl border border-amber/40 bg-amber/10 p-3 text-left text-sm">
+            <p class="font-bold text-danger">
               ⚠️ This wipes nuts, squirrels, jobsites, and research for this
               season!
             </p>
             <Show when={meta().hibernations === 0}>
-              <p class="muted mt-2 text-sm">
+              <p class="muted mt-1">
                 Next spring, Scavenger routes and NutWood craft open up.
               </p>
             </Show>
             <Show when={meta().hibernations === 1}>
-              <p class="muted mt-2 text-sm">
+              <p class="muted mt-1">
                 Next spring, with more Gold, you can stockpile NutWood and
                 research The Wood Age.
               </p>
             </Show>
-            <div class="mt-4 flex flex-wrap justify-center gap-3">
-              <button
-                type="button"
-                class="btn btn-danger btn-lg"
-                onClick={handleConfirmHibernate}
-              >
-                ✓ Confirm Hibernate
-              </button>
-              <button
-                type="button"
-                class="btn btn-secondary btn-lg"
-                onClick={() => setShowConfirm(false)}
-              >
-                ✕ Cancel
-              </button>
-            </div>
           </div>
         </Show>
+
+        <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <button
+            type="button"
+            class={`btn btn-lg ${armed() ? "btn-danger" : "btn-warning"}`}
+            onClick={handleHibernateClick}
+            disabled={!canHibernate()}
+          >
+            {armed()
+              ? `✓ Click to confirm — ⭐ ${formatNumber(goldNutReward())} Gold Nuts`
+              : "💤 HIBERNATE NOW"}
+          </button>
+          <Show when={armed()}>
+            <button
+              type="button"
+              class="btn btn-secondary btn-lg"
+              onClick={() => setArmed(false)}
+            >
+              ✕ Cancel
+            </button>
+          </Show>
+        </div>
       </div>
     </div>
   );

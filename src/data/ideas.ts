@@ -132,7 +132,6 @@ export const ideas: Record<string, Idea> = {
     requirements: {
       ideasResearched: ["nutwoodCraft"],
       maxEraAvailable: "WOOD_AGE",
-      minHibernations: 2,
     },
     cost: { nuts: 2000, nutwood: 25 },
     effects: {
@@ -211,21 +210,6 @@ export const ideas: Record<string, Idea> = {
     },
   }),
 
-  woodAgeEfficiency: efficiencyIdea({
-    id: "woodAgeEfficiency",
-    name: "Wood Age Mastery",
-    description:
-      "Perfect wooden tools and dens. +20% global efficiency this season.",
-    era: "WOOD_AGE",
-    requirements: {
-      ideasResearched: ["stickPoker", "bracedTools"],
-    },
-    cost: { nuts: 5000, nutwood: 20 },
-    effects: {
-      globalEfficiency: 0.2,
-    },
-  }),
-
   nutwoodRefinery: unlockIdea({
     id: "nutwoodRefinery",
     name: "NutWood Refinery",
@@ -233,7 +217,7 @@ export const ideas: Record<string, Idea> = {
       "Build a staffed press that binds husks while others forage. Automates NutWood — at the cost of a worker slot. A step toward Stone-age industry.",
     era: "WOOD_AGE",
     requirements: {
-      ideasResearched: ["treeClimbing", "woodAgeEfficiency"],
+      ideasResearched: ["treeClimbing"],
     },
     cost: { nuts: 8000, nutwood: 40 },
     effects: {
@@ -250,7 +234,6 @@ export const ideas: Record<string, Idea> = {
     requirements: {
       ideasResearched: ["nutwoodRefinery"],
       maxEraAvailable: "STONE_AGE",
-      minHibernations: 5,
     },
     cost: { nuts: 25000, nutwood: 150 },
     effects: {
@@ -294,36 +277,35 @@ export const ideas: Record<string, Idea> = {
     visible: false,
   },
 
-  stoneAgeEfficiency: {
-    id: "stoneAgeEfficiency",
-    name: "Stone Age Mastery",
-    description: "Master stone tool techniques for improved production.",
-    category: "efficiency",
+  stoneQuarrying: unlockIdea({
+    id: "stoneQuarrying",
+    name: "Stone Quarrying",
+    description:
+      "Break and grind raw stone into workable NutRock. Unlocks the Stone Quarry — a staffed refinery, same as the NutWood press before it. NutRock becomes the defining resource of the Stone Age.",
     era: "STONE_AGE",
     requirements: {
-      ideasResearched: ["woodAgeEfficiency"],
+      ideasResearched: ["stoneTooling"],
     },
-    cost: { nuts: 6000 },
+    cost: { nuts: 6000, nutwood: 30 },
     effects: {
-      globalEfficiency: 0.2,
+      unlockRefinement: ["nutRockQuarry"],
     },
-    researched: false,
     visible: false,
-  },
+  }),
 
-  organizationBasics: {
-    id: "organizationBasics",
-    name: "Organization Basics",
-    description: "Learn to organize your squirrels more effectively.",
-    category: "capacity",
+  scientificMethod: unlockIdea({
+    id: "scientificMethod",
+    name: "The Scientific Method",
+    description:
+      "Formalize inquiry into a discipline of its own. Unlocks the Research Lab — task squirrels there to generate Research Resin, the currency of the new Science tab.",
     era: "STONE_AGE",
-    cost: { nuts: 5000 },
+    cost: { nuts: 8000, nutwood: 50, stone: 15 },
     effects: {
-      unlockSquirrelCapacity: 5,
+      unlockJobsites: ["researchLab"],
+      unlockFeature: "science",
     },
-    researched: false,
     visible: false,
-  },
+  }),
 
   // ==================== BRONZE AGE ====================
 
@@ -396,59 +378,6 @@ export const ideas: Record<string, Idea> = {
       unlockJobsites: ["stiltWalker"],
     },
     persists: true,
-    researched: false,
-    visible: false,
-  },
-
-  bronzeEfficiency: {
-    id: "bronzeEfficiency",
-    name: "Bronze Age Efficiency",
-    description: "Master Bronze Age techniques to improve all production.",
-    category: "efficiency",
-    era: "BRONZE_AGE",
-    requirements: {
-      era: "BRONZE_AGE",
-      ideasResearched: ["stoneAgeEfficiency"],
-    },
-    cost: { nuts: 10000 },
-    effects: {
-      globalEfficiency: 0.15, // Additional 15% increase
-    },
-    researched: false,
-    visible: false,
-  },
-
-  expandedPopulation: {
-    id: "expandedPopulation",
-    name: "Expanded Population",
-    description: "Support a larger squirrel community.",
-    category: "capacity",
-    era: "BRONZE_AGE",
-    requirements: {
-      era: "BRONZE_AGE",
-      ideasResearched: ["organizationBasics"],
-    },
-    cost: { nuts: 8000 },
-    effects: {
-      unlockSquirrelCapacity: 10,
-    },
-    researched: false,
-    visible: false,
-  },
-
-  costReduction: {
-    id: "costReduction",
-    name: "Cost Reduction",
-    description: "Learn to build jobsites more efficiently.",
-    category: "meta",
-    era: "BRONZE_AGE",
-    requirements: {
-      era: "BRONZE_AGE",
-    },
-    cost: { nuts: 12000 },
-    effects: {
-      reduceJobsiteCost: 0.1, // 10% reduction in jobsite costs
-    },
     researched: false,
     visible: false,
   },
@@ -530,59 +459,6 @@ export const ideas: Record<string, Idea> = {
     visible: false,
   },
 
-  ironEfficiency: {
-    id: "ironEfficiency",
-    name: "Iron Age Mastery",
-    description: "Master Iron Age technology for massive efficiency gains.",
-    category: "efficiency",
-    era: "IRON_AGE",
-    requirements: {
-      era: "IRON_AGE",
-      ideasResearched: ["bronzeEfficiency"],
-    },
-    cost: { nuts: 75000 },
-    effects: {
-      globalEfficiency: 0.25, // Additional 25% increase
-    },
-    researched: false,
-    visible: false,
-  },
-
-  massProduction: {
-    id: "massProduction",
-    name: "Mass Production",
-    description: "Organize your colony for large-scale operations.",
-    category: "capacity",
-    era: "IRON_AGE",
-    requirements: {
-      era: "IRON_AGE",
-      ideasResearched: ["expandedPopulation"],
-    },
-    cost: { nuts: 80000 },
-    effects: {
-      unlockSquirrelCapacity: 25,
-    },
-    researched: false,
-    visible: false,
-  },
-
-  automation101: {
-    id: "automation101",
-    name: "Automation 101",
-    description: "Take the first steps toward automated production.",
-    category: "automation",
-    era: "IRON_AGE",
-    requirements: {
-      era: "IRON_AGE",
-      ideasResearched: ["mechanicalShaking"],
-    },
-    cost: { nuts: 100000 },
-    effects: {
-      globalEfficiency: 0.1, // Boost to all production
-    },
-    researched: false,
-    visible: false,
-  },
 };
 
 // Helper functions

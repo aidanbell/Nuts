@@ -4,7 +4,8 @@ export type IdeaCategory =
   | "efficiency" // Improve production rates
   | "capacity" // Unlock more squirrels or capacity
   | "automation" // Reduce manual clicking
-  | "meta"; // Other meta upgrades
+  | "meta" // Other meta upgrades
+  | "wonder"; // Era-defining Project (Town tab) — big, permanent, not first-run-achievable
 
 export type IdeaEra =
   | "PREHISTORY"
@@ -23,6 +24,8 @@ export interface IdeaCost {
   nutwood?: number;
   stone?: number;
   bronze?: number;
+  /** Science tab currency — produced at the Research Lab, not spendable elsewhere */
+  researchResin?: number;
   // Add more resources as needed
 }
 
@@ -43,6 +46,8 @@ export interface IdeaEffect {
   unlockFeature?: string; // Unlock a specific feature/tab
   increaseGetButton?: number; // Increase get button value
   setEra?: IdeaEra; // Advance current era (era-as-idea)
+  /** Wonders: make these already-seasonal ideas' effects permanent (survive hibernate) */
+  permanentlyPersistIdeas?: string[];
 }
 
 export interface Idea {
@@ -63,8 +68,6 @@ export interface Idea {
     ideasResearched?: string[];
     /** Meta must allow this era (e.g. Wood Age after first winter) */
     maxEraAvailable?: IdeaEra;
-    /** Completed hibernations required (e.g. Wood Age after second winter) */
-    minHibernations?: number;
   };
 
   // Cost to research

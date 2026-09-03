@@ -1,4 +1,11 @@
-import { type Component, Show } from "solid-js";
+import {
+  type Component,
+  Show,
+  For,
+  createSignal,
+  createMemo,
+  createEffect,
+} from "solid-js";
 import {
   appState,
   getSquirrelCap,
@@ -12,7 +19,9 @@ import {
   buildBonfire,
   canUpgradeBonfire,
   upgradeBonfire,
+  refreshIdeaCatalog,
 } from "../../engine/state";
+import { tryResearch, canAffordIdea, meetsIdeaRequirements } from "../../engine";
 import {
   WOODEN_HOUSE,
   BONFIRE,
@@ -25,6 +34,7 @@ import {
 } from "../../data/town";
 import { eraIndex } from "../../data/eras";
 import { formatNumber } from "../../utils/formatters";
+import { IdeaCard } from "./IdeaCard";
 
 const TownTab: Component = () => {
   const squirrelCount = () => Object.keys(appState.game.squirrels).length;
@@ -45,6 +55,21 @@ const TownTab: Component = () => {
     isTownBuildingUnlocked(BONFIRE_UPGRADES_ID);
   const bonfireStats = () => getBonfireStats(bonfireLevel());
   const bonfireUpgradeCost = () => getBonfireUpgradeCost(bonfireLevel());
+
+  createEffect(() => {
+    void appState.story.currentEra;
+    void appState.ideas.researchedCount;
+    refreshIdeaCatalog();
+  });
+
+  const wonders = createMemo(() =>
+    Object.values(appState.ideas.ideas).filter(
+      (idea) => idea.category === "wonder" && idea.visible,
+    ),
+  );
+  const [expandedWonder, setExpandedWonder] = createSignal<string | null>(
+    null,
+  );
 
   function houseButtonLabel() {
     if (atHouseCap()) return "Max houses this season";
@@ -188,6 +213,36 @@ const TownTab: Component = () => {
             Build durable house · 🥜 {formatNumber(nextDurableHouseCost().nuts)}{" "}
             · 🪵 {formatNumber(nextDurableHouseCost().nutwood)}
           </button>
+        </section>
+      </Show>
+
+      <Show when={wonders().length > 0}>
+        <section class="space-y-3">
+          <div>
+            <h3 class="font-display text-lg font-bold">🏛️ Projects</h3>
+            <p class="muted text-sm">
+              Monuments to the settlement itself, not any one squirrel's
+              skill — big, permanent, and not meant to come easy.
+            </p>
+          </div>
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <For each={wonders()}>
+              {(idea) => (
+                <IdeaCard
+                  idea={idea}
+                  onResearch={() => tryResearch(idea.id)}
+                  canAfford={canAffordIdea(idea)}
+                  meetsRequirements={meetsIdeaRequirements(idea)}
+                  isExpanded={expandedWonder() === idea.id}
+                  onToggle={() =>
+                    setExpandedWonder(
+                      expandedWonder() === idea.id ? null : idea.id,
+                    )
+                  }
+                />
+              )}
+            </For>
+          </div>
         </section>
       </Show>
     </div>

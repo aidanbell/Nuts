@@ -61,7 +61,6 @@ export const TUTORIAL_CHECKPOINT_IDS = [
   "secondSquirrel",
   "twoHundredNuts",
   "firstJobsite",
-  "tenJobsites",
   "woodAgeDream",
   "firstHibernation",
 ] as const;

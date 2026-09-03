@@ -5,6 +5,7 @@ import { TOWN_TAB_ID } from "../data/town";
 const tabs = [
   { id: "home", label: "Home" },
   { id: "ideas", label: "Ideas" },
+  { id: "science", label: "Science" },
   { id: "jobsites", label: "Jobsites" },
   { id: "refinement", label: "Refinement" },
   { id: TOWN_TAB_ID, label: "Town" },

@@ -9,7 +9,7 @@ import type {
   Population,
   Squirrel,
 } from "../types/game";
-import type { IdeaEra, IdeasState } from "../types/ideas";
+import type { IdeaEra, IdeaEffect, IdeasState } from "../types/ideas";
 import type { StoryState } from "../types/story";
 import type { GameLogState } from "../types/gameLog";
 import {
@@ -233,14 +233,33 @@ export const upgradeBonfire = (): boolean => {
 
 /**
  * RNG attraction roll — call from the game loop when the bonfire is lit.
- * Returns true if a squirrel joined.
+ * Chance ramps with each consecutive failed roll (while room is available),
+ * so an open house always fills within a bounded number of rolls instead of
+ * being left to pure luck. Returns true if a squirrel joined.
  */
 export const tryBonfireAttraction = (): boolean => {
   const level = appState.game.town?.bonfireLevel ?? 0;
   const stats = getBonfireStats(level);
   if (!stats) return false;
-  if (Math.random() >= stats.chance) return false;
+
+  // No room to fill — don't burn a pity roll on a cap that isn't the RNG's fault.
+  if (Object.keys(appState.game.squirrels).length >= getSquirrelCap()) {
+    return false;
+  }
+
+  const dryStreak = appState.game.town?.bonfireDryStreak ?? 0;
+  const chance = Math.min(
+    1,
+    stats.chance * Math.pow(BONFIRE.pityMultiplier, dryStreak),
+  );
+
+  if (Math.random() >= chance) {
+    setAppState("game", "town", "bonfireDryStreak", dryStreak + 1);
+    return false;
+  }
+
   if (!createSquirrel()) return false;
+  setAppState("game", "town", "bonfireDryStreak", 0);
   addLog("A squirrel followed the bonfire glow into town.", "success");
   return true;
 };
@@ -374,23 +393,45 @@ export const buyJobSiteCapacity = (jobSiteId: string) => {
     );
   }
 
-  // Every level, slightly increase production (5% boost to both base and bonus)
-  setAppState(
-    "game",
-    "jobSites",
-    siteType,
-    jobSiteId,
-    "baseProduction",
-    (prev) => prev * 1.05,
-  );
-  setAppState(
-    "game",
-    "jobSites",
-    siteType,
-    jobSiteId,
-    "squirrelBonus",
-    (prev) => prev * 1.05,
-  );
+  if (siteType === "refinement") {
+    // Refinement output scales via cycle time (down) and batch size (up) —
+    // baseProduction/squirrelBonus are unused for this jobsite type.
+    setAppState(
+      "game",
+      "jobSites",
+      siteType,
+      jobSiteId,
+      "time",
+      (prev) => Math.max(3000, Math.round(prev * 0.95)),
+    );
+    setAppState(
+      "game",
+      "jobSites",
+      siteType,
+      jobSiteId,
+      "produces",
+      "amount",
+      (prev) => Math.round(prev * 1.08 * 100) / 100,
+    );
+  } else {
+    // Every level, slightly increase production (5% boost to both base and bonus)
+    setAppState(
+      "game",
+      "jobSites",
+      siteType,
+      jobSiteId,
+      "baseProduction",
+      (prev) => prev * 1.05,
+    );
+    setAppState(
+      "game",
+      "jobSites",
+      siteType,
+      jobSiteId,
+      "squirrelBonus",
+      (prev) => prev * 1.05,
+    );
+  }
 
   // Next cost from the level we just reached
   const newCost = Math.floor(baseCost * Math.pow(costGrowthRate, newLevel));
@@ -507,33 +548,35 @@ export const retireJobsite = (jobSiteId: string): boolean => {
   return true;
 };
 
-// Manual refinement (craft one at a time)
-export const craftRefinement = (refinementId: string) => {
+// Manual refinement (craft `times` in one go — all-or-nothing on affordability)
+export const craftRefinement = (refinementId: string, times: number = 1) => {
   const game = appState.game;
   const refinement = refinementJobsites.find((js) => js.id === refinementId);
 
-  if (!refinement || !refinement.consumes || !refinement.produces) return;
+  if (!refinement || !refinement.consumes?.length || !refinement.produces)
+    return;
 
-  const { resource: consumeType, amount: consumeAmount } = refinement.consumes;
   const { resource: produceType, amount: produceAmount } = refinement.produces;
 
-  // Check if we have enough resources
-  const availableResource =
-    consumeType === "nuts"
-      ? game.nutsTotal
-      : game.resources[consumeType as keyof typeof game.resources];
+  const canAfford = refinement.consumes.every(({ resource, amount }) => {
+    const available =
+      resource === "nuts"
+        ? game.nutsTotal
+        : game.resources[resource as keyof typeof game.resources];
+    return available >= amount * times;
+  });
 
-  if (availableResource >= consumeAmount) {
-    // Consume input resource
-    if (consumeType === "nuts") {
-      spendNuts(consumeAmount);
+  if (!canAfford) return;
+
+  refinement.consumes.forEach(({ resource, amount }) => {
+    if (resource === "nuts") {
+      spendNuts(amount * times);
     } else {
-      spendResource(consumeType as keyof typeof game.resources, consumeAmount);
+      spendResource(resource as keyof typeof game.resources, amount * times);
     }
+  });
 
-    // Produce output resource
-    addResource(produceType, produceAmount);
-  }
+  addResource(produceType, produceAmount * times);
 };
 
 // Batch update for performance
@@ -726,18 +769,23 @@ export const hibernate = () => {
   const newGoldTotal = game.goldNuts.total + goldenNutsEarned;
   const nextHibernations = appState.meta.hibernations + 1;
 
-  // After first winter, Wood Age becomes available; Stone Age after the fifth.
+  // After first winter, Wood Age becomes available; Stone Age after the second.
   const maxEra: IdeaEra =
-    nextHibernations >= 5
+    nextHibernations >= 2
       ? "STONE_AGE"
       : nextHibernations >= 1
         ? "WOOD_AGE"
         : appState.meta.maxEraAvailable;
 
-  // Preserve structure knowledge across the wipe (hibernate tab is seasonal)
+  // Preserve structure knowledge across the wipe. The hibernate tab is
+  // scripted (story-gated) through the first winter, then stays unlocked
+  // permanently once Wood Age is reachable — the player chooses when to go.
   const preservedTabs = appState.meta.unlockedTabs.filter(
     (tab) => tab !== "hibernate",
   );
+  if (nextHibernations >= 1 && !preservedTabs.includes("hibernate")) {
+    preservedTabs.push("hibernate");
+  }
   const preservedStructure = [...appState.meta.structureIdeas];
   const preservedJobsites = [...appState.meta.unlockedJobsiteIds];
   const preservedTownBuildings = [...appState.meta.unlockedTownBuildings];
@@ -773,6 +821,7 @@ export const hibernate = () => {
         woodenHouses: 0,
         bonfireLevel: 0,
         durableHouses: appState.meta.durableHouses,
+        bonfireDryStreak: 0,
       },
     }),
   );
@@ -852,7 +901,9 @@ function restoreStructureKnowledge() {
     unlockJobsites(unlockedJobsiteIds);
   }
 
-  // Re-apply era / feature unlocks from structure ideas
+  // Re-apply era / feature / stat-mutating effects from structure ideas.
+  // Runs after jobsites are rebuilt above, since upgradeJobsite can target
+  // a production/refinement site by id, not just "jobless".
   for (const ideaId of structureIdeas) {
     const idea = appState.ideas.ideas[ideaId];
     if (!idea?.effects) continue;
@@ -862,6 +913,7 @@ function restoreStructureKnowledge() {
     if (idea.effects.unlockFeature) {
       unlockTabs([idea.effects.unlockFeature]);
     }
+    applyIdeaStatEffects(idea.effects);
   }
 
   refreshIdeaCatalog();
@@ -887,18 +939,26 @@ export const loadSaveData = (
   },
 ) => {
   const rawTown = data.town ??
-    data.clearing ?? { woodenHouses: 0, bonfireLevel: 0, durableHouses: 0 };
+    data.clearing ?? {
+      woodenHouses: 0,
+      bonfireLevel: 0,
+      durableHouses: 0,
+      bonfireDryStreak: 0,
+    };
   const townState: GameState["town"] = {
     woodenHouses: rawTown.woodenHouses ?? 0,
     bonfireLevel: rawTown.bonfireLevel ?? 0,
     // Older saves predate durable housing — meta is the source of truth.
     durableHouses: data.meta?.durableHouses ?? rawTown.durableHouses ?? 0,
+    // Older saves predate the pity ramp.
+    bonfireDryStreak: rawTown.bonfireDryStreak ?? 0,
   };
 
   setAppState("game", (prev) => ({
     ...prev,
     ...data,
-    resources: data.resources ?? prev.resources,
+    // Older saves predate Research Resin.
+    resources: { ...prev.resources, ...data.resources },
     unlockedTabs: data.unlockedTabs ?? prev.unlockedTabs,
     activeTab: data.activeTab ?? prev.activeTab,
     timer: data.timer ?? prev.timer,
@@ -1004,26 +1064,14 @@ export const loadSaveData = (
 // Ideas Actions
 // ============================================================================
 
-export const researchIdea = (ideaId: string) => {
-  const idea = appState.ideas.ideas[ideaId];
-
-  if (!idea || idea.researched) return;
-
-  setAppState("ideas", "ideas", ideaId, "researched", true);
-  setAppState("ideas", "ideas", ideaId, "researchedAt", Date.now());
-  setAppState("ideas", "researchedIdeas", (prev) => [...prev, ideaId]);
-  setAppState("ideas", "researchedCount", (prev) => prev + 1);
-
-  // Structure research survives winter
-  if (idea.persists) {
-    setAppState("meta", "structureIdeas", (prev) =>
-      prev.includes(ideaId) ? prev : [...prev, ideaId],
-    );
-  }
-
-  // Apply research effects that mutate game state
-  const effects = idea.effects;
-
+/**
+ * Apply the stat-mutating side of an idea's effects (jobsite/jobless stat
+ * boosts). Split out from researchIdea so structure ideas can re-apply these
+ * every spring — a fresh game state resets jobless/jobsite stats to template
+ * defaults, so a persisted idea's boost has to be reapplied, not just its
+ * `researched` flag.
+ */
+function applyIdeaStatEffects(effects: IdeaEffect) {
   if (effects.upgradeJobsite) {
     const { jobsiteId, property, amount } = effects.upgradeJobsite;
 
@@ -1134,6 +1182,44 @@ export const researchIdea = (ideaId: string) => {
       "value",
       (prev) => prev + effects.increaseGetButton!,
     );
+  }
+}
+
+/** Mark a structure idea's ideas permanent — persist across hibernate, not just this season. */
+function persistIdeasPermanently(ideaIds: string[]) {
+  ideaIds.forEach((id) => {
+    if (!appState.ideas.ideas[id]) return;
+    setAppState("ideas", "ideas", id, "persists", true);
+    if (appState.ideas.ideas[id].researched) {
+      setAppState("meta", "structureIdeas", (prev) =>
+        prev.includes(id) ? prev : [...prev, id],
+      );
+    }
+  });
+}
+
+export const researchIdea = (ideaId: string) => {
+  const idea = appState.ideas.ideas[ideaId];
+
+  if (!idea || idea.researched) return;
+
+  setAppState("ideas", "ideas", ideaId, "researched", true);
+  setAppState("ideas", "ideas", ideaId, "researchedAt", Date.now());
+  setAppState("ideas", "researchedIdeas", (prev) => [...prev, ideaId]);
+  setAppState("ideas", "researchedCount", (prev) => prev + 1);
+
+  // Structure research survives winter
+  if (idea.persists) {
+    setAppState("meta", "structureIdeas", (prev) =>
+      prev.includes(ideaId) ? prev : [...prev, ideaId],
+    );
+  }
+
+  const effects = idea.effects;
+  applyIdeaStatEffects(effects);
+
+  if (effects.permanentlyPersistIdeas) {
+    persistIdeasPermanently(effects.permanentlyPersistIdeas);
   }
 };
 

@@ -9,6 +9,8 @@ import type { StoryState } from "../types/story";
 import type { GameLogState } from "../types/gameLog";
 import { INITIAL_META_STATE, type MetaState } from "../types/meta";
 import { ideas } from "../data/ideas";
+import { scienceIdeas } from "../data/science";
+import { wonders } from "../data/wonders";
 import { storyCheckpoints } from "../data/storyCheckpoints";
 
 export interface AppState {
@@ -19,7 +21,11 @@ export interface AppState {
   meta: MetaState;
 }
 
-export const ideasTemplate: Record<string, Idea> = structuredClone(ideas);
+export const ideasTemplate: Record<string, Idea> = structuredClone({
+  ...ideas,
+  ...scienceIdeas,
+  ...wonders,
+});
 export const checkpointsTemplate = structuredClone(storyCheckpoints);
 
 export const jobSitesTemplate: GameState["jobSites"] = {
@@ -49,6 +55,7 @@ export const gameStateTemplate: GameState = {
     stone: 0,
     bronze: 0,
     iron: 0,
+    researchResin: 0,
   },
   squirrels: {
     0: {
@@ -77,6 +84,7 @@ export const gameStateTemplate: GameState = {
     woodenHouses: 0,
     bonfireLevel: 0,
     durableHouses: 0,
+    bonfireDryStreak: 0,
   },
   timer: {
     ms: 0,
@@ -100,6 +108,7 @@ export function createFreshGameState(
       woodenHouses: 0,
       bonfireLevel: 0,
       durableHouses: 0,
+      bonfireDryStreak: 0,
       ...overrides.town,
     },
     population: overrides.population ?? { jobless: [] },

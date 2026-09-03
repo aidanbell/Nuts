@@ -6,6 +6,7 @@ import { type Component, Switch, Match } from "solid-js";
 import HomeTab from "./tabs/HomeTab";
 import JobsiteTab from "./tabs/JobsiteTab";
 import IdeasTab from "./tabs/IdeasTab";
+import ScienceTab from "./tabs/ScienceTab";
 import PopulationTab from "./tabs/PopulationTab";
 import TownTab from "./tabs/TownTab";
 import FourthTab from "./tabs/FourthTab";
@@ -29,6 +30,9 @@ const TabContent: Component<TabContentProps> = (props) => {
         </Match>
         <Match when={props.activeTab === "ideas"}>
           <IdeasTab />
+        </Match>
+        <Match when={props.activeTab === "science"}>
+          <ScienceTab />
         </Match>
         <Match when={props.activeTab === "refinement"}>
           <RefinementTab />

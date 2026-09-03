@@ -17,8 +17,11 @@ export interface WoodenHouseConfig {
 }
 
 export const WOODEN_HOUSE: WoodenHouseConfig = {
-  nutCost: 800,
-  nutwoodCost: 50,
+  nutCost: 400,
+  // 50 was steeper than the Wood Age idea that unlocks housing in the first
+  // place (Stick Poker needs 15 nutwood) — a house shouldn't outcost the
+  // content that leads to it. Growth curve stays steep on purpose.
+  nutwoodCost: 15,
   costGrowthRate: 2.5,
   capBonus: 2,
   maxPerSeason: 3,
@@ -82,20 +85,25 @@ export interface BonfireConfig {
   upgradeNutwoodCost: number;
   upgradeCostGrowth: number;
   maxLevel: number;
+  /** Roll chance is multiplied by this per consecutive failed roll (room
+   * available) — doubling means level 1's 20%/30s guarantees a join by the
+   * 4th roll (20% → 40% → 80% → 100%), a 2min worst-case wait. */
+  pityMultiplier: number;
 }
 
 export const BONFIRE: BonfireConfig = {
   id: "bonfire",
   nutCost: 600,
   nutwoodCost: 20,
-  checkIntervalMs: 60_000,
-  baseChance: 0.1,
+  checkIntervalMs: 30_000,
+  baseChance: 0.2,
   upgradeIntervalFactor: 0.85,
   upgradeChanceBonus: 0.04,
   upgradeNutCost: 1200,
   upgradeNutwoodCost: 25,
   upgradeCostGrowth: 2.0,
   maxLevel: 5,
+  pityMultiplier: 2,
 };
 
 /** Town unlock id — research Louder Flame before upgrades appear */
