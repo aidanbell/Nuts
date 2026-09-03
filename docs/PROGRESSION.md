@@ -114,7 +114,7 @@ Seasonal target: wake → rebuild sites + optional house → this season’s unl
 Gate: **The Stone Age** idea (Wood Age catalog, after NutWood Refinery, 5 hibernations, 25,000 nuts + 150 NutWood). `setEra: STONE_AGE`; `meta.maxEraAvailable` also advances to Stone Age at the 5th hibernation.
 
 - Opens the Stone catalog (Stone Tooling → Advanced Stone Tools unlock the four jobsites; Stone Age Mastery; Organization Basics) and a **hard cap of 4** active production sites — bringing a fifth online means **retiring** one (`retireJobsite`).
-- Sites: Ground Tiller, Basket Carrier, Branch Beater, Ledge Percher.
+- Sites: Ground Tiller, Basket Carrier, Branch Beater, Ledge Percher. Deliberately priced (`baseCost` 600–1,950, `costGrowthRate` 1.2 — steeper than the 1.15 Wood sites use) so retiring a maxed Wood site for a fresh Stone one is a **real, felt dip**: ~5–8 minutes of reinvestment to re-cross the retired site's old output, recoverable within a season but not free. Ceiling is untouched, so a maxed Stone site still beats a maxed Wood site — the roster is meant to fully turn over to Stone, not stay mixed.
 - Durable housing (Town tab) survives winter, unlike wooden houses; Louder Flame lets the bonfire upgrade past the Wood trickle.
 
 The old **stoneAgeChoice** leftover story checkpoint (3000 nuts + 40 jobsite levels) has been removed — it was never the intended gate. `stoneAgeUnlock` still fires the celebratory beat on `era_reached == STONE_AGE`, regardless of path in.

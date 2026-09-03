@@ -23,12 +23,13 @@ export interface JobSite {
   value: number; // Legacy: base value for calculations
 
   // Refinement system (for type: "refinement")
+  /** All entries must be affordable before a cycle starts — deducted up front. */
   consumes?: {
     resource: "nuts" | "nutwood" | "stone" | "bronze" | "iron";
     amount: number; // Amount consumed per production cycle
-  };
+  }[];
   produces?: {
-    resource: "nutwood" | "stone" | "bronze" | "iron";
+    resource: "nutwood" | "stone" | "bronze" | "iron" | "researchResin";
     amount: number; // Amount produced per production cycle
   };
 
@@ -75,6 +76,8 @@ export interface GameState {
     stone: number;
     bronze: number;
     iron: number;
+    /** Science currency — produced by squirrels staffed at the Research Lab */
+    researchResin: number;
   };
 
   // Population and jobs
@@ -113,6 +116,8 @@ export interface GameState {
     bonfireLevel: number;
     /** Stone+; seeded from meta.durableHouses each spring — does NOT reset to 0 */
     durableHouses: number;
+    /** Consecutive failed attraction rolls (with room available) — pity ramp */
+    bonfireDryStreak: number;
   };
 
   // Timer

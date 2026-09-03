@@ -54,10 +54,10 @@ Refinement sites use **cycles** (see [Refinement](./REFINEMENT.md)). They do **n
 | Wood Age | Stick Poker | `stickPoker` | ground | 12 | 350 | 1.22 | 0.7 | 3.5 | Stick Poker |
 | Wood Age | Tree Climber | `treeClimber` | air | 12 | 500 | 1.2 | 0.9 | 4.6 | Climbing Techniques |
 | Wood Age | NutWood Refinery | `nutwoodRefinement` | refinement | — | 100 | 1.15 | — | — | NutWood Refinery (late Wood); cycles 100 nuts → 1 NutWood / 30s / worker |
-| Stone Age | Ground Tiller | `groundTiller` | ground | 15 | 100 | 1.15 | 1.2 | 5.5 | Stone Tooling |
-| Stone Age | Basket Carrier | `basketCarrier` | ground | 15 | 150 | 1.15 | 1.5 | 7.0 | Stone Tooling |
-| Stone Age | Branch Beater | `branchBeater` | ground | 15 | 225 | 1.15 | 1.9 | 9.0 | Advanced Stone Tools |
-| Stone Age | Ledge Percher | `ledgePercher` | air | 15 | 325 | 1.15 | 2.4 | 11.5 | Advanced Stone Tools |
+| Stone Age | Ground Tiller | `groundTiller` | ground | 15 | 600 | 1.2 | 1.2 | 5.5 | Stone Tooling |
+| Stone Age | Basket Carrier | `basketCarrier` | ground | 15 | 900 | 1.2 | 1.5 | 7.0 | Stone Tooling |
+| Stone Age | Branch Beater | `branchBeater` | ground | 15 | 1350 | 1.2 | 1.9 | 9.0 | Advanced Stone Tools |
+| Stone Age | Ledge Percher | `ledgePercher` | air | 15 | 1950 | 1.2 | 2.4 | 11.5 | Advanced Stone Tools |
 
 ---
 

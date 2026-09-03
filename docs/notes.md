@@ -96,7 +96,14 @@ Production buildings will scale with how many are built through staff. Each leve
 
 ### PROJECTS:
 
-- These can be like Wonders. They'll maybe give a production boost, but for the most part signify the end of an era, and the readiness to progress. Costs will be extreme to give some gating.
+These can be like Wonders. They'll maybe give a production boost, but for the most part signify the mastery of an era. These will be something that need to be researched, and then built. With a wonder built for an era (eg, Wood Wonder) you can start the next age in that era.
+
+| ERA        | NAME             | COST       | BONUS                          |
+| ---------- | ---------------- | ---------- | ------------------------------ |
+| PREHISTORY | Paths and Trails | 10k Nuts   | All prehistory buffs unlocked  |
+| WOOD AGE   | Canopy Ladders   | 2k NutWood | +20% to all Wood age Buildings |
+| STONE AGE  | Stone Mill       |            |                                |
+| BRONZE AGE | Durable Tools    |            |                                |
 
 ## POPULATION
 
@@ -108,17 +115,17 @@ Later on we can send squirrels on expeditions to go and find more squirrels, and
 
 Nuts can be crafted into building materials after unlocking them. First it is done manually (we'll add a x5, x10, all buttons eventually to make it quicker). After getting farther into the age, we'll be able to automatically refine resources, this will come obviously at a time cost, but also be treated as a building that needs to be staffed.
 
-| MATERIAL                  | AGE UNLOCKED    |
-| ------------------------- | --------------- |
-| NutWood                   | WOOD AGE        |
-| NutRock                   | STONE AGE       |
-| NutMetal                  | BRONZE AGE      |
-| NutAlloy                  | IRON AGE        |
-| NutFuel                   | INDUSTRIAL AGE  |
-| NutChips                  | INFORMATION AGE |
-| NutProcessingUnits (NPUs) | TECHNOLOGY AGE  |
-| NutRocketParts            | SPACE AGE       |
-| Nut Matter                | GALACTIC AGE    |
+| ICON | MATERIAL                  | AGE UNLOCKED    | COST       |
+| ---- | ------------------------- | --------------- | ---------- |
+| 🪵   | NutWood                   | WOOD AGE        | 100N       |
+| 🪨   | NutRock                   | STONE AGE       | 1kN + 10NW |
+| 🥉   | NutMetal                  | BRONZE AGE      |            |
+| 🪙   | NutAlloy                  | IRON AGE        |            |
+| 🛢️   | NutFuel                   | INDUSTRIAL AGE  |            |
+| 💽   | NutChips                  | INFORMATION AGE |            |
+| 🖥️   | NutProcessingUnits (NPUs) | TECHNOLOGY AGE  |            |
+| 🚀   | NutRocketParts            | SPACE AGE       |            |
+| 📡   | Nut Matter                | GALACTIC AGE    |            |
 
 ## SCIENCE
 
@@ -146,3 +153,7 @@ Jobless Success Rate
 | 3   | +(21% - 25%) |
 | 4   | +(26% - 30%) |
 | 5   | +(31% - 35%) |
+
+TEMP NOTES:
+
+- I fee like the hard lock on second season hibernation isn't great. I can easily unlock wood age on second season, and I think that even after unlocking, the next upgrade is far away, so it would encourage a hiberation

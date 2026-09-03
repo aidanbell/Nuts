@@ -256,29 +256,6 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
     },
   },
 
-  tenJobsites: {
-    id: "tenJobsites",
-    name: "Efficient Operation",
-    description: "Build up to 10 jobsites",
-    priority: 73,
-    oneTime: true,
-    completed: false,
-    maxSeason: 0,
-
-    triggers: [{ type: "jobsites_purchased", value: 10, operator: ">=" }],
-
-    effects: {
-      nutReward: 100,
-      showStory: true,
-    },
-
-    story: {
-      title: "Growing Operations",
-      body: "With 10 jobsites, you're becoming a real operation! Other squirrels are taking notice. The colony's productivity earns a bonus! (+100 nuts)",
-      character: "narrator",
-    },
-  },
-
   // ==================== WOOD AGE ====================
 
   firstRefinement: {
@@ -466,7 +443,7 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
 
     effects: {
       unlockJobsites: ["cropTender", "floorRakers", "treeShaker", "treeLifts"],
-      unlockBuildings: ["townHall", "researchLab"],
+      unlockBuildings: ["townHall"],
       unlockTabs: ["population"],
       showStory: true,
       pauseGame: true,
@@ -511,17 +488,16 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
     completed: false,
 
     triggers: [
-      { type: "building_built", value: "researchLab", operator: "==" },
+      { type: "idea_researched", value: "scientificMethod", operator: "==" },
     ],
 
     effects: {
-      unlockTabs: ["science"],
       showStory: true,
     },
 
     story: {
       title: "The Pursuit of Knowledge",
-      body: "With the Research Lab complete, your squirrels can now pursue scientific knowledge! Research new technologies to improve your operations.",
+      body: "With inquiry formalized into a discipline of its own, the Research Lab stands ready. Task a squirrel there to generate Research Resin — the currency of the new Science tab — and start trading production slots for compounding, colony-wide upside.",
       character: "squirrel_scientist",
     },
   },
@@ -593,7 +569,7 @@ export const storyCheckpoints: Record<string, StoryCheckpoint> = {
 
     story: {
       title: "Wood Before the Freeze",
-      body: "You've pressed your first NutWood — and already the nights bite harder. The Wood Age will take a full stockpile, and this season won't give you the time. Hibernate with what you've learned. Next spring, Gold in your teeth, you can bind enough husks to commit the colony to wood.",
+      body: "You've pressed your first NutWood — and already the nights bite harder. You could chase the full stockpile for the Wood Age before the freeze, but the smart money says bank what you've learned now: hibernate, and next spring's Gold makes the real stockpile go far faster.",
       character: "narrator",
     },
   },

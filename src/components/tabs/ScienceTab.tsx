@@ -20,13 +20,7 @@ import { IdeaCard } from "./IdeaCard";
 
 const eraOrder = [...ERA_ORDER];
 
-/** Science-tab ideas (priced in Research Resin) live in their own tab. */
-const isScienceIdea = (idea: Idea) => idea.cost.researchResin !== undefined;
-/** Wonders (Projects) live in the Town tab. */
-const isWonder = (idea: Idea) => idea.category === "wonder";
-const belongsElsewhere = (idea: Idea) => isScienceIdea(idea) || isWonder(idea);
-
-const IdeasTab: Component = () => {
+const ScienceTab: Component = () => {
   createEffect(() => {
     void appState.story.currentEra;
     void appState.meta.maxEraAvailable;
@@ -34,17 +28,18 @@ const IdeasTab: Component = () => {
     refreshIdeaCatalog();
   });
 
-  const visibleIdeas = createMemo(() =>
+  const scienceIdeas = createMemo(() =>
     Object.values(appState.ideas.ideas).filter(
-      (idea) => idea.visible && !belongsElsewhere(idea),
+      (idea) => idea.cost.researchResin !== undefined,
     ),
+  );
+  const visibleIdeas = createMemo(() =>
+    scienceIdeas().filter((idea) => idea.visible),
   );
   const researchedIdeas = createMemo(() =>
-    Object.values(appState.ideas.ideas).filter(
-      (idea) => idea.researched && !belongsElsewhere(idea),
-    ),
+    scienceIdeas().filter((idea) => idea.researched),
   );
-  const nutsTotal = () => appState.game.nutsTotal;
+  const researchResin = () => appState.game.resources.researchResin;
   const currentEra = () => appState.story.currentEra;
   const [showResearched, setShowResearched] = createSignal(false);
   const [expandedIdea, setExpandedIdea] = createSignal<string | null>(null);
@@ -64,10 +59,6 @@ const IdeasTab: Component = () => {
     return eraOrder.slice(0, eraIndex(currentEra()) + 1);
   });
 
-  const filteredVisible = createMemo(() =>
-    visibleIdeas().filter((idea) => showResearched() || !idea.researched),
-  );
-
   const erasWithIdeas = createMemo(() =>
     erasToShow()
       .map((era) => {
@@ -86,10 +77,14 @@ const IdeasTab: Component = () => {
       .filter((entry): entry is NonNullable<typeof entry> => entry !== null),
   );
 
+  const filteredVisible = createMemo(() =>
+    visibleIdeas().filter((idea) => showResearched() || !idea.researched),
+  );
+
   return (
-    <div class="tab-panel space-y-5" id="ideas-content">
+    <div class="tab-panel space-y-5" id="science-content">
       <div class="flex flex-wrap items-start justify-between gap-4">
-        <h2 class="section-title">💡 Ideas & Research</h2>
+        <h2 class="section-title">🧪 Science</h2>
         <div class="space-y-1 text-right text-sm">
           <Show when={currentEra()}>
             <p class="muted">
@@ -105,7 +100,7 @@ const IdeasTab: Component = () => {
               {researchedIdeas().length} / {visibleIdeas().length}
             </strong>
           </p>
-          <p class="font-semibold">🥜 {formatNumber(nutsTotal())}</p>
+          <p class="font-semibold">🧪 {formatNumber(researchResin())}</p>
           <label class="flex items-center justify-end gap-2 text-sm">
             Show researched
             <input
@@ -118,14 +113,19 @@ const IdeasTab: Component = () => {
         </div>
       </div>
 
+      <p class="muted text-sm">
+        Colony-wide upgrades, priced in Research Resin. Task squirrels to the
+        Research Lab from the Jobsites tab to generate it.
+      </p>
+
       <hr class="border-moss/15" />
 
       <Show when={filteredVisible().length === 0}>
         <div class="panel text-center">
-          <p class="text-lg">🔒 No ideas available yet</p>
+          <p class="text-lg">🔒 No science available yet</p>
           <p class="muted mt-1">
-            Research ideas for your current era. Advance eras through big ideas
-            — not a menu button.
+            Research the Scientific Method in the Ideas tab to unlock the
+            Research Lab and start generating Research Resin.
           </p>
         </div>
       </Show>
@@ -172,4 +172,4 @@ const IdeasTab: Component = () => {
   );
 };
 
-export default IdeasTab;
+export default ScienceTab;

@@ -121,7 +121,7 @@ function processJobSites(
     if (
       jobSite.level < 1 ||
       jobSite.workers.length === 0 ||
-      !jobSite.consumes ||
+      !jobSite.consumes?.length ||
       !jobSite.produces
     )
       return;
@@ -130,32 +130,50 @@ function processJobSites(
       lastRefinementCycle.set(jobSite.id, new Map());
     }
 
+    // Cycle start time per worker, keyed by squirrel id; absent = idle
+    // (not currently mid-cycle). Consuming happens when a cycle starts,
+    // producing only once it finishes — so a batch you can't see yet is
+    // still a batch you already paid for.
     const siteCycles = lastRefinementCycle.get(jobSite.id)!;
-    const { resource: consumeType, amount: consumeAmount } = jobSite.consumes;
+    const inputs = jobSite.consumes;
     const { resource: produceType, amount: produceAmount } = jobSite.produces;
 
+    // Drop cycles for workers no longer staffed here (reassigned/removed) —
+    // otherwise a stale start time could pay out instantly on reassignment.
+    for (const workerId of siteCycles.keys()) {
+      if (!jobSite.workers.includes(workerId)) {
+        siteCycles.delete(workerId);
+      }
+    }
+
     jobSite.workers.forEach((workerId) => {
-      const lastCycle = siteCycles.get(workerId) ?? 0;
+      const cycleStart = siteCycles.get(workerId);
 
-      if (currentTime - lastCycle >= jobSite.time) {
-        const availableResource =
-          consumeType === "nuts"
-            ? game.nutsTotal
-            : game.resources[consumeType as keyof typeof game.resources];
+      if (cycleStart === undefined) {
+        const canAfford = inputs.every(({ resource, amount }) => {
+          const available =
+            resource === "nuts"
+              ? game.nutsTotal
+              : game.resources[resource as keyof typeof game.resources];
+          return available >= amount;
+        });
 
-        if (availableResource >= consumeAmount) {
-          if (consumeType === "nuts") {
-            spendNuts(consumeAmount);
-          } else {
-            spendResource(
-              consumeType as keyof typeof game.resources,
-              consumeAmount,
-            );
-          }
-
-          addResource(produceType, produceAmount);
+        if (canAfford) {
+          inputs.forEach(({ resource, amount }) => {
+            if (resource === "nuts") {
+              spendNuts(amount);
+            } else {
+              spendResource(resource as keyof typeof game.resources, amount);
+            }
+          });
           siteCycles.set(workerId, currentTime);
         }
+        return;
+      }
+
+      if (currentTime - cycleStart >= jobSite.time) {
+        addResource(produceType, produceAmount);
+        siteCycles.delete(workerId);
       }
     });
   });
